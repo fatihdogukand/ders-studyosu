@@ -113,6 +113,8 @@
         <option value="dark">Gece Modu</option>
       </select>
       <button id="micBtn" class="btn-mic" onclick="toggleDictation()" title="Hocayı canlı dinle ve yaz">🎙️ Dikte</button>
+      <button id="micBtn" class="btn-mic" onclick="toggleDictation()" title="Hocayı canlı dinle ve yaz (İnternet gerekir)">🎙️ Dikte</button>
+      <button id="recBtn" class="btn-mic" onclick="toggleAudioRecord()" title="İnternetsiz ses kaydı al ve indir">🔴 Kayıt</button>
       <button onclick="document.getElementById('pdfInput').click()" title="Derste anlık PDF slayt aç ve yanına not al">📄 PDF Slayt</button>
       <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="loadPdfSlide(event)">
       <button id="backToNoteBtn" style="display:none" onclick="closePdfMode()">← Nota Dön</button>
@@ -120,6 +122,7 @@
     <div class="grp">
       <button onclick="highlight('#fef08a')" style="background:#fef08a;color:#000">Sarı</button>
       <button onclick="highlight('#bbf7d0')" style="background:#bbf7d0;color:#000">Yeşil</button>
+      <button onclick="highlight('transparent')" title="Seçili yerin işaretlemesini kaldır">🧹 Sil</button>
       <button class="btn-blue" onclick="copyForGemini()" title="Bu notu Gemini/NotebookLM'e güncelleme için kopyala">✨ Gemini'ye Aktar</button>
       <button class="btn-accent" onclick="window.print()">🖨️ PDF Al</button>
     </div>
@@ -324,6 +327,44 @@
       }
     };
     rec.start();
+  }
+  // İnternetsiz Ses Kaydı (Tarih + Gün + Saat İsimli İndirme)
+  let mediaRec = null, audioChunks = [], isAudioRec = false;
+  async function toggleAudioRecord() {
+    if (isAudioRec && mediaRec) { mediaRec.stop(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+      mediaRec = new MediaRecorder(stream);
+      mediaRec.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+      mediaRec.onstop = () => {
+        isAudioRec = false;
+        const btn = document.getElementById('recBtn');
+        btn.classList.remove('recording');
+        btn.textContent = '🔴 Kayıt';
+        stream.getTracks().forEach(t => t.stop());
+        if (audioChunks.length && confirm('Ses kaydı cihazına indirilsin mi?')) {
+          const now = new Date();
+          const gun = now.toLocaleDateString('tr-TR', { weekday: 'long' });
+          const tarih = now.toISOString().slice(0, 10);
+          const saat = now.toTimeString().slice(0, 5).replace(':', '-');
+          const baslik = (document.getElementById('noteTitle').value || 'Ders_Notu').trim().replace(/[\\/:*?"<>|\s]+/g, '_');
+          const mime = mediaRec.mimeType || 'audio/webm';
+          const ext = mime.includes('mp4') ? 'm4a' : 'webm';
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob(audioChunks, { type: mime }));
+          a.download = `${baslik}_${tarih}_${gun}_${saat}.${ext}`;
+          a.click();
+        }
+      };
+      mediaRec.start();
+      isAudioRec = true;
+      const btn = document.getElementById('recBtn');
+      btn.classList.add('recording');
+      btn.textContent = '⏹ Durdur';
+    } catch (e) {
+      alert('Mikrofon izni verilmedi veya cihaz desteklemiyor: ' + e.message);
+    }
   }
 
   // Anlık PDF Slayt Okuyucu + Sayfa Bazlı Not Alma
