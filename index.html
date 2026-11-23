@@ -84,6 +84,11 @@
       h1,h2,h3 { break-after:avoid; }
       tr, pre, .katex-display { break-inside:avoid; }
     }
+    #notePaper, #noteBody { max-width: 100%; overflow-wrap: break-word; box-sizing: border-box; }
+    #noteBody * { max-width: 100% !important; box-sizing: border-box !important; }
+    #noteBody pre { white-space: pre-wrap !important; word-break: break-word !important; overflow-x: auto; }
+    #noteBody table { display: block; overflow-x: auto; width: 100% !important; }
+    #noteBody img { height: auto !important; }
   </style>
 </head>
 <body>
