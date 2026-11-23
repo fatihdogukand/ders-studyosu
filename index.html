@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Ders Çalışma Stüdyosu v2</title>
+  <title>Ders Çalışma Stüdyosu v2.1</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -17,7 +17,7 @@
       --bg: #ece8df;
       --paper: #fcfaf5;
       --card: #ffffff;
-      --card-user: #f3f8ff;
+      --card-user: #f0f6ff;
       --side: #f4f1ea;
       --text: #1e293b;
       --muted: #64748b;
@@ -63,7 +63,7 @@
     }
 
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; max-width: 100vw; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
       background: var(--bg);
@@ -76,11 +76,11 @@
     /* Zen / Odak Modu */
     body.zen-mode .sidebar { display: none !important; }
     body.zen-mode .workspace { padding: 14px 18px; }
-    body.zen-mode .paper { max-width: 940px; }
+    body.zen-mode .paper { max-width: 1060px; }
 
-    /* Sol Klasör Paneli */
+    /* Sol Klasör Paneli & Sürükle-Bırak */
     .sidebar {
-      width: 286px;
+      width: 290px;
       background: var(--side);
       border-right: 1px solid var(--border);
       display: flex;
@@ -135,6 +135,19 @@
       border-bottom: 1px solid var(--border);
     }
     .tree { flex: 1; overflow-y: auto; padding: 8px; }
+    .root-drop-zone {
+      display: none;
+      padding: 7px;
+      margin-bottom: 6px;
+      border: 2px dashed var(--accent);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .root-drop-zone.visible { display: block; }
     .folder-item, .note-item {
       display: flex;
       align-items: center;
@@ -145,9 +158,18 @@
       margin-bottom: 2px;
       font-size: 13px;
       gap: 4px;
+      border: 1.5px solid transparent;
+      transition: background 0.12s, border-color 0.12s;
     }
     .folder-item:hover, .note-item:hover { background: rgba(15, 118, 110, 0.09); }
     .folder-item.selected-folder { background: var(--accent-soft); }
+    .folder-item.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.25);
+    }
+    .note-item[draggable="true"] { cursor: grab; }
+    .note-item.dragging { opacity: 0.45; }
     .note-item.active { background: var(--accent); color: #fff; font-weight: 600; }
     .item-label {
       overflow: hidden;
@@ -163,7 +185,7 @@
       border-left: 1px dashed var(--border);
       margin-left: 8px;
     }
-    .item-btns { display: flex; gap: 2px; opacity: 0.55; flex-shrink: 0; }
+    .item-btns { display: flex; gap: 2px; opacity: 0.6; flex-shrink: 0; }
     .folder-item:hover .item-btns, .note-item:hover .item-btns { opacity: 1; }
     .mini-btn {
       border: none;
@@ -181,7 +203,7 @@
     .topbar {
       background: var(--topbar);
       color: #f8fafc;
-      padding: 7px 12px;
+      padding: 7px 10px;
       display: flex;
       gap: 6px;
       align-items: center;
@@ -192,7 +214,7 @@
     .topbar-scroll {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
@@ -205,7 +227,7 @@
       background: #283548;
       color: #f8fafc;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 6px 10px;
+      padding: 6px 9px;
       border-radius: 7px;
       font-size: 12.5px;
       font-weight: 600;
@@ -216,14 +238,15 @@
     }
     button:hover { background: #37475e; }
     button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.42; cursor: not-allowed; }
     .btn-accent { background: #0d9488; border-color: #14b8a6; }
     .btn-accent:hover { background: #0f766e; }
     .btn-blue { background: #2563eb; border-color: #3b82f6; }
     .btn-blue:hover { background: #1d4ed8; }
     .btn-amber { background: #d97706; border-color: #f59e0b; color: #fff; }
-    .btn-red { background: #b91c1c; }
+    .btn-red { background: #b91c1c; border-color: #ef4444; }
     .btn-active-pill { background: #0d9488 !important; box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.45); }
-    .btn-mic.recording { background: #dc2626; animation: pulse 1s infinite; }
+    .btn-mic.recording { background: #dc2626 !important; animation: pulse 1s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
     /* Araçlar Açılır Menüsü */
@@ -232,13 +255,13 @@
       display: none;
       position: fixed;
       top: 46px;
-      right: 12px;
+      right: 10px;
       background: #1e293b;
       border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: 12px;
       padding: 8px;
       z-index: 400;
-      min-width: 220px;
+      min-width: 230px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
       flex-direction: column;
       gap: 5px;
@@ -273,7 +296,8 @@
     .workspace {
       flex: 1;
       overflow-y: auto;
-      padding: 20px 26px 90px 22px;
+      overflow-x: hidden;
+      padding: 18px 24px 96px 18px;
       display: flex;
       gap: 18px;
       justify-content: center;
@@ -282,10 +306,10 @@
     }
     .paper {
       flex: 1;
-      max-width: 860px;
+      max-width: 1020px;
       width: 100%;
       background: var(--paper);
-      padding: 26px 30px;
+      padding: 24px 28px;
       border-radius: 14px;
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
@@ -302,7 +326,7 @@
     }
     .note-title {
       flex: 1;
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 700;
       color: var(--heading);
       background: transparent;
@@ -311,11 +335,11 @@
       min-width: 0;
     }
 
-    /* Kart / Blok Mimarisi (Eklenti Kalitesinde Okuma + Kişisel Not & Pin) */
+    /* Kart / Blok Mimarisi (PC/iPad'de Yan Hizalı Not & Fotoğraf, Mobilde Alt Yığın) */
     .blocks-container {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 6px;
       font-size: var(--note-fs);
       line-height: 1.68;
     }
@@ -324,16 +348,36 @@
       border: 1px solid var(--border);
       border-left: 4px solid var(--accent);
       border-radius: 12px;
-      padding: 14px 16px;
+      padding: 13px 15px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
-      transition: opacity 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      transition: opacity 0.25s ease, box-shadow 0.2s ease, border-color 0.2s ease;
       position: relative;
       max-width: 100%;
       overflow-wrap: break-word;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px 16px;
+    }
+    @media (min-width: 920px) {
+      .study-card.has-margin {
+        grid-template-columns: minmax(0, 1fr) 265px;
+        align-items: start;
+      }
+      .study-card.has-margin .card-head,
+      .study-card.has-margin .page-break-badge {
+        grid-column: 1 / -1;
+      }
     }
     .study-card.role-user {
       background: var(--card-user);
       border-left-color: #2563eb;
+    }
+    .study-card.active-target {
+      box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.25);
+    }
+    .study-card.card-selected {
+      border: 2px dashed #dc2626 !important;
+      opacity: 0.78;
     }
     .study-card[data-pin="red"] { border-left-width: 6px; border-left-color: #ef4444; }
     .study-card[data-pin="yellow"] { border-left-width: 6px; border-left-color: #eab308; }
@@ -345,10 +389,11 @@
       filter: grayscale(0.6);
     }
     .blocks-container.mode-dim .study-card[data-pin="none"]:hover {
-      opacity: 0.85;
+      opacity: 0.88;
       filter: none;
     }
-    .blocks-container.mode-only .study-card[data-pin="none"] {
+    .blocks-container.mode-only .study-card[data-pin="none"],
+    .blocks-container.mode-only .card-inserter {
       display: none !important;
     }
     .blocks-container.filter-red .study-card:not([data-pin="red"]),
@@ -362,10 +407,20 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      margin-bottom: 8px;
       padding-bottom: 6px;
       border-bottom: 1px dashed var(--border);
       flex-wrap: wrap;
+    }
+    .card-left-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .card-chk {
+      width: 15px;
+      height: 15px;
+      accent-color: #dc2626;
+      cursor: pointer;
     }
     .card-role {
       font-size: 11px;
@@ -378,6 +433,7 @@
       align-items: center;
       gap: 5px;
     }
+    .study-card.role-user .card-role { color: #2563eb; }
     .pin-badge {
       font-size: 11px;
       padding: 2px 7px;
@@ -404,18 +460,19 @@
       font-weight: 600;
     }
     .c-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
-    .c-btn.pin-active { ring: 2px solid var(--accent); background: var(--accent-soft); }
+    .c-btn.pin-active { background: var(--accent-soft); border-color: var(--accent); }
+    .c-btn.margin-btn-active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
     .card-body {
       outline: none;
-      min-height: 28px;
+      min-height: 26px;
       max-width: 100%;
       overflow-wrap: break-word;
     }
     .card-body * { max-width: 100% !important; box-sizing: border-box !important; }
     .card-body h1, .card-body h2, .card-body h3, .card-body h4 {
       color: var(--heading);
-      margin-top: 10px;
+      margin-top: 8px;
       margin-bottom: 6px;
     }
     .card-body table {
@@ -441,24 +498,30 @@
       overflow-x: auto;
     }
     .card-body img { height: auto !important; border-radius: 8px; }
+    .dictated-chip {
+      background: var(--accent-soft);
+      padding: 1px 5px;
+      border-radius: 5px;
+      border-bottom: 1.5px dashed var(--accent);
+    }
 
-    /* Kart İçi Kişisel Not & Fotoğraf Ek Alanı */
+    /* Kart Hizasında Yan Not & Tahta Fotoğrafı Alanı */
     .card-margin {
-      margin-top: 10px;
-      padding: 10px 12px;
+      padding: 10px 11px;
       background: var(--code-bg);
-      border: 1px dashed var(--accent);
-      border-radius: 9px;
+      border: 1.5px dashed var(--accent);
+      border-radius: 10px;
       display: none;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
     }
     .card-margin.open { display: flex; }
     .margin-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11.5px;
+      gap: 4px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--accent);
     }
@@ -468,24 +531,27 @@
       background: var(--paper);
       color: var(--text);
       border-radius: 7px;
-      padding: 7px 9px;
+      padding: 7px 8px;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 12.5px;
+      line-height: 1.5;
       resize: vertical;
-      min-height: 52px;
+      min-height: 62px;
       outline: none;
     }
     .margin-photos {
       display: flex;
-      gap: 8px;
+      gap: 7px;
       flex-wrap: wrap;
     }
     .margin-photo-wrap {
       position: relative;
       display: inline-block;
+      max-width: 100%;
     }
     .margin-photo-wrap img {
-      max-height: 130px;
+      max-height: 140px;
+      max-width: 100%;
       border-radius: 7px;
       border: 1px solid var(--border);
       cursor: zoom-in;
@@ -507,10 +573,39 @@
       text-align: center;
     }
 
+    /* Kartlar Arası Hızlı Ekleme Şeridi (Araya Kart / Foto / Dikte Açma) */
+    .card-inserter {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 3px 0;
+      opacity: 0.42;
+      transition: opacity 0.15s;
+      flex-wrap: wrap;
+    }
+    .card-inserter:hover, .card-inserter:focus-within { opacity: 1; }
+    @media (max-width: 840px) {
+      .card-inserter { opacity: 0.85; }
+    }
+    .ins-btn {
+      background: var(--paper);
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .ins-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
     /* PDF Sayfa Kesme İşareti */
     .page-break-badge {
       display: none;
-      margin-top: 8px;
       text-align: center;
       font-size: 11px;
       color: var(--muted);
@@ -522,11 +617,11 @@
     /* Sağ Kenar Renkli Minimap ve Atlama Çubuğu */
     .minimap {
       position: fixed;
-      right: 5px;
-      top: 58px;
+      right: 4px;
+      top: 56px;
       bottom: 64px;
-      width: 14px;
-      background: rgba(100, 116, 139, 0.12);
+      width: 13px;
+      background: rgba(100, 116, 139, 0.13);
       border-radius: 99px;
       z-index: 90;
       display: none;
@@ -534,7 +629,7 @@
     .minimap.visible { display: block; }
     .minimap-dot {
       position: absolute;
-      left: 2px;
+      left: 1.5px;
       width: 10px;
       height: 10px;
       border-radius: 50%;
@@ -550,18 +645,18 @@
 
     .jump-pill {
       position: fixed;
-      right: 16px;
-      bottom: 16px;
+      right: 14px;
+      bottom: 14px;
       background: var(--topbar);
       color: #fff;
-      padding: 6px 10px;
+      padding: 5px 9px;
       border-radius: 99px;
       display: none;
       align-items: center;
       gap: 6px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.35);
       z-index: 120;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 700;
     }
     .jump-pill.visible { display: flex; }
@@ -607,7 +702,7 @@
       outline: none;
     }
 
-    /* Modallar (Akıllı Yapıştır, Vurgu Özeti, İçindekiler, Foto Lightbox) */
+    /* Modallar */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -670,14 +765,15 @@
     .mobile-menu-btn { display: none; }
     .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 240; }
     @media (max-width: 840px) {
-      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
+      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); width: 84vw; max-width: 310px; }
       .sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35); }
       .sidebar.open + .sidebar-backdrop { display: block; }
       .mobile-menu-btn { display: inline-block; }
-      .workspace { padding: 10px 16px 85px 10px; }
-      .paper { padding: 16px 14px; border-radius: 10px; }
-      .note-title { font-size: 19px; }
-      .study-card { padding: 12px; }
+      .workspace { padding: 8px 14px 86px 8px; }
+      .paper { padding: 14px 12px; border-radius: 10px; }
+      .note-title { font-size: 18px; }
+      .study-card { padding: 11px; }
+      .c-btn { padding: 4px 7px; font-size: 11px; }
       .pdf-panel.active { flex-direction: column; }
     }
 
@@ -685,7 +781,7 @@
     @media print {
       @page { size: A4; margin: 13mm; }
       html, body { height: auto; overflow: visible; display: block; background: #fff !important; color: #000 !important; }
-      .sidebar, .sidebar-backdrop, .topbar, .pin-bar, .pdf-panel, .card-actions, .minimap, .jump-pill, .add-block-footer { display: none !important; }
+      .sidebar, .sidebar-backdrop, .topbar, .pin-bar, .pdf-panel, .card-actions, .card-chk, .card-inserter, .minimap, .jump-pill, .add-block-footer { display: none !important; }
       .workspace { padding: 0; display: block; overflow: visible; }
       .paper { max-width: 100%; border: none; box-shadow: none; padding: 0; background: #fff !important; }
       .study-card { break-inside: avoid; border: 1px solid #cbd5e1; box-shadow: none; margin-bottom: 10px; opacity: 1 !important; display: block !important; filter: none !important; }
@@ -700,7 +796,7 @@
 
 <aside class="sidebar" id="sidebar">
   <div class="side-head">
-    <h2>🦉 Ders Stüdyosu <span class="side-badge">v2</span></h2>
+    <h2>🦉 Ders Stüdyosu <span class="side-badge">v2.1</span></h2>
     <button class="mini-btn mobile-menu-btn" onclick="toggleSide()">✕</button>
   </div>
   <div class="side-search">
@@ -734,7 +830,8 @@
       <div class="tb-sep"></div>
 
       <button class="btn-accent" onclick="smartPasteDirect()" title="Gemini/NotebookLM cevabını temizleyerek kart olarak yapıştır">📋 Akıllı Yapıştır</button>
-      <button id="undoBtn" onclick="undoAction()" title="Son işlemi geri al" disabled style="opacity:0.5">↩️</button>
+      <button id="micTopBtn" class="btn-mic" onclick="toggleDictation()" title="Aktif karta veya seçili araya canlı ses dikte et">🎙️ Dikte</button>
+      <button id="undoBtn" onclick="undoAction()" title="Son işlemi geri al" disabled>↩️</button>
 
       <div class="tb-sep"></div>
 
@@ -754,10 +851,11 @@
     <div class="dropdown-wrap">
       <button onclick="toggleToolsMenu(event)">🧰 Araçlar ▾</button>
       <div class="tools-menu" id="toolsMenu">
+        <button onclick="selectAllQuestionCards();toggleToolsMenu()">☑️ Tüm Soru Kartlarını Seç</button>
+        <button id="delSelectedCardsBtn" class="btn-red" onclick="deleteSelectedCards();toggleToolsMenu()" disabled>🗑 Seçili Kartları Sil (0)</button>
         <button onclick="openTocModal();toggleToolsMenu()">📑 İçindekiler / Hızlı Atlama</button>
         <button onclick="moveActiveNotePrompt();toggleToolsMenu()">📂 Notu Başka Klasöre Taşı</button>
         <button onclick="document.getElementById('universalFileInput').click();toggleToolsMenu()">📄 PDF / PPTX / HTML Aç</button>
-        <button id="micBtn" class="btn-mic" onclick="toggleDictation();toggleToolsMenu()">🌐 Canlı Dikte (Ses → Yazı)</button>
         <button id="recBtn" class="btn-mic" onclick="toggleAudioRecord();toggleToolsMenu()">📼 Offline Ses Kaydı</button>
         <button class="btn-blue" onclick="copyForGemini();toggleToolsMenu()">✨ Gemini'ye Aktar</button>
         <button class="btn-accent" onclick="window.print();toggleToolsMenu()">🖨️ PDF Al / Yazdır</button>
@@ -786,10 +884,11 @@
         <button class="c-btn" id="pinNoteTopBtn" onclick="togglePinNote(activeNoteId)" title="Notu klasörün en üstüne sabitle">📌 Sabitle</button>
       </div>
       <div id="blocksContainer" class="blocks-container"></div>
-      <div class="add-block-footer" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="c-btn" onclick="addNewBlock('ai')">+ Ders Notu Bloğu Ekle</button>
-        <button class="c-btn" onclick="addNewBlock('user')">+ Soru Bloğu Ekle</button>
-        <button class="c-btn" onclick="openSmartPasteModal()">📋 Yapıştırma Penceresi Aç</button>
+      <div class="add-block-footer" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="c-btn" onclick="insertNewBlockAt(-1, 'ai')">+ Ders Notu Kartı</button>
+        <button class="c-btn" onclick="insertNewBlockAt(-1, 'user')">+ Soru Kartı</button>
+        <button class="c-btn" onclick="insertPhotoCardAt(-1)">+ 📷 Tahta Fotosu Kartı</button>
+        <button class="c-btn" onclick="openSmartPasteModal()">📋 Yapıştırma Penceresi</button>
       </div>
     </div>
 
@@ -807,7 +906,7 @@
       <div class="pdf-notes">
         <h3 style="margin:0;color:var(--heading)">📌 Bu Sayfa İçin Hoca Uyarısı / Not</h3>
         <textarea id="slideNoteBox" placeholder="Örn: Hoca bu grafikten vizede yorum soracağım dedi..." oninput="saveSlideNote()"></textarea>
-        <button class="btn-accent" onclick="appendSlideNotesToCurrent()">+ Aktif Nota Blok Olarak Ekle</button>
+        <button class="btn-accent" onclick="appendSlideNotesToCurrent()">+ Aktif Nota Kart Olarak Ekle</button>
         <button class="btn-blue" onclick="copyAllSlideNotes()">✨ Tüm Slayt Notlarını Gemini İçin Kopyala</button>
       </div>
     </div>
@@ -822,7 +921,7 @@
   </div>
 </main>
 
-<!-- Akıllı Yapıştır Modalı (Mobil tarayıcı pano izni vermediğinde yedek olarak da açılır) -->
+<!-- Akıllı Yapıştır Modalı -->
 <div class="modal-backdrop" id="pasteModal">
   <div class="modal-box">
     <div class="modal-head">
@@ -875,10 +974,8 @@
 <input type="file" id="cardPhotoInput" accept="image/*" style="display:none" onchange="handleCardPhotoUpload(event)">
 
 <script>
-  // Service Worker (Offline)
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-  // Veri Yapısı (v1 ile tam uyumlu DB_KEY + v2 blok desteği)
   const DB_KEY = 'ders_studyosu_db_v1';
   let db = JSON.parse(localStorage.getItem(DB_KEY) || 'null') || {
     folders: [
@@ -896,7 +993,7 @@
             id: 'b_1',
             role: 'ai',
             pin: 'star',
-            html: '<p><b>Ders Stüdyosu v2 Hazır!</b> Buraya ders notlarını yazabilir, <b>📋 Akıllı Yapıştır</b> ile Gemini veya NotebookLM sohbetlerini temiz kartlar halinde çekebilirsin.</p><p>Örnek Darcy formülü: $$k = \\frac{q \\mu L}{A \\Delta P}$$</p>',
+            html: '<p><b>Ders Stüdyosu v2.1 Hazır!</b> Sol menüden notları sürükleyip klasörler arasına bırakabilir, her kartın yanına kişisel not &amp; tahta fotoğrafı ekleyebilir veya kartların arasındaki <b>+ Araya Ekle</b> butonlarıyla araya yeni kart/dikte/fotoğraf açabilirsin.</p><p>Örnek Darcy formülü: $$k = \\frac{q \\mu L}{A \\Delta P}$$</p>',
             marginNote: 'Hoca birim dönüşümlerine (darcy -> mD, cp, atm) özellikle dikkat edin dedi.',
             photos: [],
             pageBreak: false
@@ -910,13 +1007,15 @@
 
   let activeNoteId = db.notes[0]?.id || null;
   let activeFolderId = db.folders[0]?.id || null;
+  let activeBlockId = null; // Dikte ve hızlı eklemeler için odaklanılan kart
   let undoStack = [];
-  let spotlightMode = 'all'; // 'all' | 'dim' | 'only'
-  let pinFilter = 'all';     // 'all' | 'red' | 'yellow' | 'star'
+  let spotlightMode = 'all';
+  let pinFilter = 'all';
   let currentPinIdx = -1;
-  let pendingPhotoBlockId = null;
+  let pendingPhotoTarget = null; // { mode: 'margin', bid } veya { mode: 'insert', index }
+  let draggedItem = null; // { type: 'note'|'folder', id }
 
-  // Tercihler (Tema & Yazı Boyutu)
+  // Tema & Yazı Boyutu
   const savedTheme = localStorage.getItem('ds_theme') || 'warm';
   document.documentElement.setAttribute('data-theme', savedTheme);
   document.getElementById('themeSelect').value = savedTheme;
@@ -934,7 +1033,7 @@
     updateMinimap();
   }
 
-  // Firebase Cloud Sync Köprüsü (cloud.js tarafından çağrılır)
+  // Firebase Cloud Sync Köprüsü
   window.getAppDb = () => db;
   window.setAppDb = (newDb) => {
     db = newDb;
@@ -964,24 +1063,22 @@
     if (m && !e.target.closest('.dropdown-wrap')) m.classList.remove('open');
   });
 
-  // Klavye Kısayolları (Ctrl+K Global Arama, Ctrl+Z Undo)
+  // Ctrl+K Global Arama
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      const sb = document.getElementById('sidebar');
-      sb.classList.add('open');
+      document.getElementById('sidebar').classList.add('open');
       const inp = document.getElementById('globalSearchInput');
       inp.focus();
       inp.select();
     }
   });
 
-  // HTML Temizleyici (Dışarıdan gelen eklenti/Gemini/NotebookLM HTML'ini güvenli kartlara dönüştürür)
+  // HTML Temizleyici & Kart Ayrıştırıcı
   function sanitizeIncomingHtml(rawHtml) {
     const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
     doc.querySelectorAll('script, style, button, input, select, textarea, mat-icon, svg, [role="button"], .toolbar, .controls, .no-print, .message-actions, .response-footer, .citation-marker, .citations-container, sup.citation, mat-chip').forEach(el => el.remove());
 
-    // KaTeX formüllerini koru
     doc.querySelectorAll('.katex').forEach(k => {
       const tex = k.querySelector('annotation[encoding="application/x-tex"]');
       if (!tex) return;
@@ -991,7 +1088,6 @@
       k.replaceWith(span);
     });
 
-    // Bozuk genişlik/stil sızıntılarını temizle
     doc.querySelectorAll('*').forEach(el => {
       const style = el.getAttribute('style') || '';
       const isUserStyle = /#2563eb|#3b82f6|eff6ff|f0f7ff/i.test(style);
@@ -1010,8 +1106,7 @@
 
   function parseHtmlToBlocks(rawHtml) {
     const body = sanitizeIncomingHtml(rawHtml);
-    // Eğer eklentiden gelen kart yapısı (.card / article / top-level div blokları) varsa onları ayrı bloklara böl
-    const candidateBlocks = [...body.children].filter(el => el.innerText.trim().length > 0);
+    const candidateBlocks = [...body.children].filter(el => el.innerText.trim().length > 0 || el.querySelector('img'));
     if (candidateBlocks.length >= 2) {
       return candidateBlocks.map(el => {
         const isUser = el.getAttribute('data-detected-role') === 'user' || el.querySelector('[data-detected-role="user"]') !== null;
@@ -1038,7 +1133,6 @@
     }];
   }
 
-  // Eski v1 notlarını otomatik olarak v2 blok yapısına yükseltir (veri kaybı sıfır)
   function ensureNoteBlocks(note) {
     if (!note.blocks || !Array.isArray(note.blocks) || note.blocks.length === 0) {
       note.blocks = parseHtmlToBlocks(note.html || '<p></p>');
@@ -1062,14 +1156,12 @@
     }).join('<hr>');
   }
 
-  // Geri Al (Undo) Desteği
+  // Geri Al (Undo)
   function pushUndo(note) {
     if (!note) return;
     undoStack.push(JSON.stringify({ id: note.id, title: note.title, blocks: note.blocks }));
-    if (undoStack.length > 20) undoStack.shift();
-    const btn = document.getElementById('undoBtn');
-    btn.disabled = false;
-    btn.style.opacity = '1';
+    if (undoStack.length > 25) undoStack.shift();
+    document.getElementById('undoBtn').disabled = false;
   }
   function undoAction() {
     if (!undoStack.length) return;
@@ -1082,11 +1174,78 @@
       persist();
       openNote(n.id);
     }
-    if (!undoStack.length) {
-      const btn = document.getElementById('undoBtn');
-      btn.disabled = true;
-      btn.style.opacity = '0.5';
+    if (!undoStack.length) document.getElementById('undoBtn').disabled = true;
+  }
+
+  // Sürükle-Bırak (Drag & Drop) Klasör ve Not Taşıma
+  function onDragStart(e, type, id) {
+    draggedItem = { type, id };
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', `${type}:${id}`);
+    e.currentTarget.classList.add('dragging');
+    if (type === 'folder') {
+      document.getElementById('rootDropZone')?.classList.add('visible');
     }
+  }
+  function onDragEnd(e) {
+    e.currentTarget.classList.remove('dragging');
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    document.getElementById('rootDropZone')?.classList.remove('visible');
+    draggedItem = null;
+  }
+  function onDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
+  }
+  function onDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+  function onDropOnFolder(e, targetFolderId) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('drag-over');
+    if (!draggedItem) return;
+
+    if (draggedItem.type === 'note') {
+      const note = db.notes.find(n => n.id === draggedItem.id);
+      if (note && note.folderId !== targetFolderId) {
+        note.folderId = targetFolderId;
+        activeFolderId = targetFolderId;
+        persist();
+        renderTree();
+      }
+    } else if (draggedItem.type === 'folder') {
+      if (draggedItem.id === targetFolderId) return;
+      // Kendi alt klasörünün içine bırakılmasını engelle
+      const descendants = new Set([draggedItem.id]);
+      let added = true;
+      while (added) {
+        added = false;
+        db.folders.forEach(x => { if (descendants.has(x.parentId) && !descendants.has(x.id)) { descendants.add(x.id); added = true; } });
+      }
+      if (descendants.has(targetFolderId)) return;
+      const folder = db.folders.find(f => f.id === draggedItem.id);
+      if (folder) {
+        folder.parentId = targetFolderId;
+        persist();
+        renderTree();
+      }
+    }
+    draggedItem = null;
+  }
+  function onDropOnRoot(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    if (draggedItem && draggedItem.type === 'folder') {
+      const folder = db.folders.find(f => f.id === draggedItem.id);
+      if (folder) {
+        folder.parentId = null;
+        persist();
+        renderTree();
+      }
+    }
+    draggedItem = null;
   }
 
   // Klasör Ağacı + Global Arama
@@ -1095,7 +1254,6 @@
     const q = (document.getElementById('globalSearchInput')?.value || '').trim().toLowerCase();
     root.innerHTML = '';
 
-    // Eğer arama kutusunda metin varsa düz sonuç listesi göster
     if (q) {
       const matches = db.notes.filter(n => {
         ensureNoteBlocks(n);
@@ -1117,26 +1275,44 @@
       return;
     }
 
+    // Klasör sürüklerken en üste taşıma alanı
+    const rootDrop = document.createElement('div');
+    rootDrop.id = 'rootDropZone';
+    rootDrop.className = 'root-drop-zone';
+    rootDrop.textContent = '⬆️ Ana Dizine (En Üste) Taşımak İçin Buraya Bırak';
+    rootDrop.ondragover = onDragOver;
+    rootDrop.ondragleave = onDragLeave;
+    rootDrop.ondrop = onDropOnRoot;
+    root.appendChild(rootDrop);
+
     const buildLevel = (parentId, container) => {
       db.folders.filter(f => f.parentId === parentId).forEach(f => {
         const div = document.createElement('div');
         const isSel = f.id === activeFolderId;
-        div.innerHTML = `
-          <div class="folder-item ${isSel ? 'selected-folder' : ''}" onclick="activeFolderId='${f.id}';renderTree()">
-            <span class="item-label">📁 <b>${f.name}</b></span>
-            <span class="item-btns">
-              <button class="mini-btn" title="Yeni Not" onclick="event.stopPropagation();createNote('${f.id}')">📄+</button>
-              <button class="mini-btn" title="Alt Klasör" onclick="event.stopPropagation();createFolder('${f.id}')">📁+</button>
-              <button class="mini-btn" title="Yeniden Adlandır" onclick="event.stopPropagation();renameFolder('${f.id}')">✏️</button>
-              <button class="mini-btn" title="Klasörü Taşı" onclick="event.stopPropagation();moveFolder('${f.id}')">↗️</button>
-              <button class="mini-btn" title="Tarihli ZIP İndir" onclick="event.stopPropagation();downloadFolderZip('${f.id}')">📦</button>
-              <button class="mini-btn" title="Sil" onclick="event.stopPropagation();deleteFolder('${f.id}')">🗑</button>
-            </span>
-          </div>`;
+
+        const fRow = document.createElement('div');
+        fRow.className = `folder-item ${isSel ? 'selected-folder' : ''}`;
+        fRow.draggable = true;
+        fRow.ondragstart = (e) => onDragStart(e, 'folder', f.id);
+        fRow.ondragend = onDragEnd;
+        fRow.ondragover = onDragOver;
+        fRow.ondragleave = onDragLeave;
+        fRow.ondrop = (e) => onDropOnFolder(e, f.id);
+        fRow.onclick = () => { activeFolderId = f.id; renderTree(); };
+        fRow.innerHTML = `
+          <span class="item-label">📁 <b>${f.name}</b></span>
+          <span class="item-btns">
+            <button class="mini-btn" title="Yeni Not" onclick="event.stopPropagation();createNote('${f.id}')">📄+</button>
+            <button class="mini-btn" title="Alt Klasör" onclick="event.stopPropagation();createFolder('${f.id}')">📁+</button>
+            <button class="mini-btn" title="Yeniden Adlandır" onclick="event.stopPropagation();renameFolder('${f.id}')">✏️</button>
+            <button class="mini-btn" title="Tarihli ZIP İndir" onclick="event.stopPropagation();downloadFolderZip('${f.id}')">📦</button>
+            <button class="mini-btn" title="Sil" onclick="event.stopPropagation();deleteFolder('${f.id}')">🗑</button>
+          </span>`;
+        div.appendChild(fRow);
+
         const childBox = document.createElement('div');
         childBox.className = 'folder-children';
 
-        // Sabitlenen notlar en üstte
         const folderNotes = db.notes
           .filter(n => n.folderId === f.id)
           .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
@@ -1144,8 +1320,14 @@
         folderNotes.forEach(n => {
           const nEl = document.createElement('div');
           nEl.className = 'note-item' + (n.id === activeNoteId ? ' active' : '');
+          nEl.draggable = true;
+          nEl.ondragstart = (e) => onDragStart(e, 'note', n.id);
+          nEl.ondragend = onDragEnd;
+          nEl.ondragover = onDragOver;
+          nEl.ondragleave = onDragLeave;
+          nEl.ondrop = (e) => onDropOnFolder(e, f.id); // Notun üstüne bırakılırsa o notun klasörüne taşır
           nEl.innerHTML = `
-            <span class="item-label">${n.pinned ? '📌' : '📝'} ${n.title || 'Adsız Not'}</span>
+            <span class="item-label" title="Başka klasöre taşımak için sürükle">${n.pinned ? '📌' : '📝'} ${n.title || 'Adsız Not'}</span>
             <span class="item-btns">
               <button class="mini-btn" title="Sabitle/Kaldır" onclick="event.stopPropagation();togglePinNote('${n.id}')">📌</button>
               <button class="mini-btn" title="Klasöre Taşı" onclick="event.stopPropagation();moveNoteToFolder('${n.id}')">📂</button>
@@ -1163,7 +1345,7 @@
     buildLevel(null, root);
   }
 
-  // Klasör ve Not Yönetim Fonksiyonları
+  // Klasör ve Not Yönetimi
   function createFolder(parentId) {
     const name = prompt('Klasör adı (örn: PETE 220, Lab, Soru Çözümleri):');
     if (!name?.trim()) return;
@@ -1179,27 +1361,6 @@
     const name = prompt('Yeni klasör adı:', f.name);
     if (!name?.trim()) return;
     f.name = name.trim();
-    persist();
-    renderTree();
-  }
-  function moveFolder(id) {
-    const f = db.folders.find(x => x.id === id);
-    if (!f) return;
-    // Alt klasörlerini bul (kendisinin altına taşınmasını engelle)
-    const descendants = new Set([id]);
-    let added = true;
-    while (added) {
-      added = false;
-      db.folders.forEach(x => { if (descendants.has(x.parentId) && !descendants.has(x.id)) { descendants.add(x.id); added = true; } });
-    }
-    const candidates = db.folders.filter(x => !descendants.has(x.id));
-    const list = ['0: [Ana Dizin (En Üst)]', ...candidates.map((c, i) => `${i + 1}: ${c.name}`)].join('\n');
-    const ans = prompt(`"${f.name}" klasörünü nereye taşımak istersin? Numara gir:\n\n${list}`);
-    if (ans === null) return;
-    const idx = parseInt(ans.trim(), 10);
-    if (idx === 0) f.parentId = null;
-    else if (candidates[idx - 1]) f.parentId = candidates[idx - 1].id;
-    else return alert('Geçersiz seçim.');
     persist();
     renderTree();
   }
@@ -1265,7 +1426,6 @@
     if (activeNoteId) openNote(activeNoteId);
   }
 
-  // Not Açma & Blokları Render Etme
   function updatePinTopBtn() {
     const n = db.notes.find(x => x.id === activeNoteId);
     const btn = document.getElementById('pinNoteTopBtn');
@@ -1283,6 +1443,7 @@
     document.getElementById('noteTitle').value = n.title || '';
     updatePinTopBtn();
     ensureNoteBlocks(n);
+    activeBlockId = n.blocks[0]?.id || null;
     renderBlocks();
     renderTree();
     document.getElementById('sidebar').classList.remove('open');
@@ -1303,8 +1464,9 @@
     ensureNoteBlocks(n);
 
     n.blocks.forEach((b, idx) => {
+      const hasMargin = (b.marginNote && b.marginNote.trim().length > 0) || (b.photos && b.photos.length > 0) || b._marginOpen;
       const card = document.createElement('article');
-      card.className = `study-card role-${b.role}${b.pageBreak ? ' has-page-break' : ''}`;
+      card.className = `study-card role-${b.role}${b.pageBreak ? ' has-page-break' : ''}${hasMargin ? ' has-margin' : ''}${b.id === activeBlockId ? ' active-target' : ''}`;
       card.dataset.blockId = b.id;
       card.dataset.pin = b.pin || 'none';
 
@@ -1312,7 +1474,6 @@
         ? `<span class="pin-badge ${b.pin}">${PIN_META[b.pin].icon} ${PIN_META[b.pin].label}</span>`
         : '';
 
-      const hasMargin = (b.marginNote && b.marginNote.trim().length > 0) || (b.photos && b.photos.length > 0);
       const photosHtml = (b.photos || []).map((src, pIdx) => `
         <div class="margin-photo-wrap">
           <img src="${src}" onclick="openPhotoModal('${src}')" title="Büyütmek için tıkla">
@@ -1322,38 +1483,46 @@
 
       card.innerHTML = `
         <div class="card-head">
-          <span class="card-role" onclick="toggleBlockRole('${b.id}')" title="Rolü değiştir (Soru / Ders Notu)">
-            ${b.role === 'user' ? '💬 SORU' : '📘 DERS NOTU'} ${pinBadgeHtml}
-          </span>
+          <div class="card-left-meta">
+            <input type="checkbox" class="card-chk" onchange="onCardSelectChange(this)" title="Toplu silmek için seç">
+            <span class="card-role" onclick="toggleBlockRole('${b.id}')" title="Rolü değiştir (Soru / Ders Notu)">
+              ${b.role === 'user' ? '💬 BENİM SORUM' : '📘 DERS NOTU'} ${pinBadgeHtml}
+            </span>
+          </div>
           <div class="card-actions">
             <button class="c-btn ${b.pin==='red'?'pin-active':''}" onclick="setBlockPin('${b.id}','red')" title="Anlamadım işareti">🔴</button>
             <button class="c-btn ${b.pin==='yellow'?'pin-active':''}" onclick="setBlockPin('${b.id}','yellow')" title="Tekrar Bak işareti">🟡</button>
             <button class="c-btn ${b.pin==='star'?'pin-active':''}" onclick="setBlockPin('${b.id}','star')" title="Kritik / Çıkar işareti">⭐</button>
-            <button class="c-btn" onclick="toggleMarginBox('${b.id}')" title="Kişisel not veya fotoğraf ekle">📝 Not / 📷</button>
+            <button class="c-btn ${hasMargin?'margin-btn-active':''}" onclick="toggleMarginBox('${b.id}')" title="Sağ hizaya kişisel not veya tahta fotoğrafı ekle">📝 Yan Not / 📷</button>
             <button class="c-btn" onclick="togglePageBreak('${b.id}')" title="PDF çıktısında buradan yeni sayfaya geç">✂</button>
             <button class="c-btn" onclick="moveBlock('${b.id}', -1)" title="Yukarı taşı">↑</button>
             <button class="c-btn" onclick="moveBlock('${b.id}', 1)" title="Aşağı taşı">↓</button>
-            <button class="c-btn" onclick="deleteBlock('${b.id}')" title="Bu bloğu sil">🗑</button>
+            <button class="c-btn" onclick="deleteBlock('${b.id}')" title="Bu kartı sil">🗑</button>
           </div>
         </div>
         <div class="card-body" contenteditable="true" data-bid="${b.id}">${b.html}</div>
         <div class="card-margin ${hasMargin ? 'open' : ''}" id="margin_${b.id}">
           <div class="margin-head">
-            <span>📌 Kişisel Not & Görsel Eki</span>
-            <button class="c-btn" onclick="triggerCardPhoto('${b.id}')">📷 Fotoğraf Ekle (Otomatik Sıkıştırılır)</button>
+            <span>📌 Yan Not &amp; Tahta Fotoğrafı</span>
+            <button class="c-btn" onclick="triggerMarginPhoto('${b.id}')">📷 Foto Ekle</button>
           </div>
-          <textarea class="margin-text" placeholder="Bu bölümle ilgili kendi notunu, formül ipucunu veya hoca uyarısını yaz..." oninput="updateMarginNote('${b.id}', this.value)">${b.marginNote || ''}</textarea>
+          <textarea class="margin-text" data-bid="${b.id}" placeholder="Bu kartın hizasına kendi notunu, formül ipucunu veya hoca uyarısını yaz..." oninput="updateMarginNote('${b.id}', this.value)">${b.marginNote || ''}</textarea>
           <div class="margin-photos">${photosHtml}</div>
         </div>
         <div class="page-break-badge">✂ PDF Sayfa Sonu (Buradan yeni sayfa başlar)</div>
       `;
+
+      card.addEventListener('focusin', () => {
+        activeBlockId = b.id;
+        document.querySelectorAll('.study-card.active-target').forEach(el => el.classList.remove('active-target'));
+        card.classList.add('active-target');
+      });
 
       const bodyEl = card.querySelector('.card-body');
       bodyEl.addEventListener('input', () => {
         b.html = bodyEl.innerHTML;
         syncNoteHtmlAndSave(false);
       });
-      // Normal yapıştırmada bile masaüstü CSS taşmalarını engelle
       bodyEl.addEventListener('paste', (e) => {
         const htmlData = e.clipboardData?.getData('text/html');
         if (htmlData) {
@@ -1366,6 +1535,17 @@
       });
 
       container.appendChild(card);
+
+      // Her kartın hemen altına "Araya Kart / Foto / Dikte Ekle" şeridi
+      const ins = document.createElement('div');
+      ins.className = 'card-inserter';
+      ins.innerHTML = `
+        <button class="ins-btn" onclick="insertNewBlockAt(${idx + 1}, 'ai')" title="Bu kartın hemen altına yeni ders notu kartı aç">+ 📘 Araya Not</button>
+        <button class="ins-btn" onclick="insertNewBlockAt(${idx + 1}, 'user')" title="Bu kartın hemen altına soru kartı aç">+ 💬 Soru</button>
+        <button class="ins-btn" onclick="insertPhotoCardAt(${idx + 1})" title="Bu kartın hemen altına tahta fotoğrafı kartı ekle">+ 📷 Tahta Fotosu</button>
+        <button class="ins-btn" onclick="dictateAt(${idx + 1})" title="Bu araya sesli dikte ile yeni kart aç">+ 🎙️ Buraya Dikte</button>
+      `;
+      container.appendChild(ins);
     });
 
     if (typeof renderMathInElement === 'function') {
@@ -1377,6 +1557,7 @@
         throwOnError: false
       });
     }
+    updateBulkSelectUI();
     updateMinimap();
   }
 
@@ -1391,17 +1572,35 @@
   }
   function onTitleInput() { syncNoteHtmlAndSave(true); }
 
-  // Kart / Blok Düzenleme İşlemleri
-  function addNewBlock(role = 'ai') {
+  // Kart / Blok Düzenleme ve Araya Ekleme İşlemleri
+  function insertNewBlockAt(index, role = 'ai', initialHtml = '<p></p>') {
     const n = db.notes.find(x => x.id === activeNoteId);
     if (!n) return;
     pushUndo(n);
-    n.blocks.push({ id: uid('b'), role, pin: 'none', html: '<p></p>', marginNote: '', photos: [], pageBreak: false });
+    const newB = { id: uid('b'), role, pin: 'none', html: initialHtml, marginNote: '', photos: [], pageBreak: false };
+    if (index < 0 || index >= n.blocks.length) n.blocks.push(newB);
+    else n.blocks.splice(index, 0, newB);
+    activeBlockId = newB.id;
     syncNoteHtmlAndSave(false);
     renderBlocks();
-    const bodies = document.querySelectorAll('.card-body');
-    if (bodies.length) bodies[bodies.length - 1].focus();
+    const targetBody = document.querySelector(`.card-body[data-bid="${newB.id}"]`);
+    if (targetBody) {
+      targetBody.focus();
+      targetBody.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return newB;
   }
+
+  function insertPhotoCardAt(index) {
+    pendingPhotoTarget = { mode: 'insert', index };
+    document.getElementById('cardPhotoInput').click();
+  }
+
+  function dictateAt(index) {
+    const newB = insertNewBlockAt(index, 'ai', '<p></p>');
+    if (newB && !isRec) toggleDictation();
+  }
+
   function toggleBlockRole(bid) {
     const n = db.notes.find(x => x.id === activeNoteId);
     const b = n?.blocks.find(x => x.id === bid);
@@ -1448,13 +1647,60 @@
     renderBlocks();
   }
 
-  // Kart İçi Kişisel Not & Otomatik Sıkıştırılmış Fotoğraf (~50 KB, Firebase 1MB Dostu)
-  function toggleMarginBox(bid) {
-    const box = document.getElementById('margin_' + bid);
-    if (box) {
-      box.classList.toggle('open');
-      if (box.classList.contains('open')) box.querySelector('textarea')?.focus();
+  // Toplu Kart Seçimi ve Silme (Eklentideki Soruları Seç / Seçilenleri Sil)
+  function onCardSelectChange(chk) {
+    chk.closest('.study-card')?.classList.toggle('card-selected', chk.checked);
+    updateBulkSelectUI();
+  }
+  function updateBulkSelectUI() {
+    const cnt = document.querySelectorAll('.study-card .card-chk:checked').length;
+    const btn = document.getElementById('delSelectedCardsBtn');
+    if (btn) {
+      btn.disabled = cnt === 0;
+      btn.textContent = `🗑 Seçili Kartları Sil (${cnt})`;
     }
+  }
+  function selectAllQuestionCards() {
+    const qChks = document.querySelectorAll('.study-card.role-user .card-chk');
+    if (!qChks.length) return alert('Bu notta seçilecek soru kartı bulunamadı.');
+    const allChecked = [...qChks].every(c => c.checked);
+    qChks.forEach(c => {
+      c.checked = !allChecked;
+      c.closest('.study-card')?.classList.toggle('card-selected', c.checked);
+    });
+    updateBulkSelectUI();
+  }
+  function deleteSelectedCards() {
+    const checked = [...document.querySelectorAll('.study-card .card-chk:checked')];
+    if (!checked.length) return;
+    if (!confirm(`${checked.length} adet seçili kart silinsin mi?`)) return;
+    const n = db.notes.find(x => x.id === activeNoteId);
+    if (!n) return;
+    pushUndo(n);
+    const idsToRemove = new Set(checked.map(c => c.closest('.study-card')?.dataset.blockId));
+    n.blocks = n.blocks.filter(b => !idsToRemove.has(b.id));
+    if (!n.blocks.length) n.blocks.push({ id: uid('b'), role: 'ai', pin: 'none', html: '<p></p>', marginNote: '', photos: [], pageBreak: false });
+    syncNoteHtmlAndSave(false);
+    renderBlocks();
+  }
+
+  // Yan Not & Otomatik Sıkıştırılmış Tahta Fotoğrafı (~50 KB, Firebase 1MB Dostu)
+  function toggleMarginBox(bid) {
+    const n = db.notes.find(x => x.id === activeNoteId);
+    const b = n?.blocks.find(x => x.id === bid);
+    if (!b) return;
+    const card = document.querySelector(`.study-card[data-block-id="${bid}"]`);
+    const box = document.getElementById('margin_' + bid);
+    const currentlyOpen = box?.classList.contains('open');
+    b._marginOpen = !currentlyOpen;
+    if (card) card.classList.toggle('has-margin', !currentlyOpen);
+    if (box) {
+      box.classList.toggle('open', !currentlyOpen);
+      if (!currentlyOpen) box.querySelector('textarea')?.focus();
+    }
+    const btn = card?.querySelector('.card-actions button[onclick*="toggleMarginBox"]');
+    if (btn) btn.classList.toggle('margin-btn-active', !currentlyOpen);
+    updateMinimap();
   }
   function updateMarginNote(bid, val) {
     const n = db.notes.find(x => x.id === activeNoteId);
@@ -1463,8 +1709,8 @@
     b.marginNote = val;
     syncNoteHtmlAndSave(false);
   }
-  function triggerCardPhoto(bid) {
-    pendingPhotoBlockId = bid;
+  function triggerMarginPhoto(bid) {
+    pendingPhotoTarget = { mode: 'margin', bid };
     document.getElementById('cardPhotoInput').click();
   }
   function compressImageToDataUrl(file, maxW = 900, quality = 0.65) {
@@ -1489,13 +1735,29 @@
   }
   async function handleCardPhotoUpload(e) {
     const file = e.target.files[0];
-    if (!file || !pendingPhotoBlockId) return;
+    if (!file || !pendingPhotoTarget) return;
     try {
       const compressed = await compressImageToDataUrl(file, 900, 0.65);
       const n = db.notes.find(x => x.id === activeNoteId);
-      const b = n?.blocks.find(x => x.id === pendingPhotoBlockId);
-      if (b) {
-        b.photos.push(compressed);
+      if (!n) return;
+      pushUndo(n);
+
+      if (pendingPhotoTarget.mode === 'margin') {
+        const b = n.blocks.find(x => x.id === pendingPhotoTarget.bid);
+        if (b) {
+          b.photos.push(compressed);
+          b._marginOpen = true;
+          syncNoteHtmlAndSave(false);
+          renderBlocks();
+        }
+      } else if (pendingPhotoTarget.mode === 'insert') {
+        const timeTag = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        const photoHtml = `<p><b>📷 Tahta / Ders Görseli (${timeTag}):</b></p><p><img src="${compressed}" style="max-width:100%;border-radius:8px"></p>`;
+        const newB = { id: uid('b'), role: 'ai', pin: 'star', html: photoHtml, marginNote: '', photos: [], pageBreak: false, _marginOpen: true };
+        const idx = pendingPhotoTarget.index;
+        if (idx < 0 || idx >= n.blocks.length) n.blocks.push(newB);
+        else n.blocks.splice(idx, 0, newB);
+        activeBlockId = newB.id;
         syncNoteHtmlAndSave(false);
         renderBlocks();
       }
@@ -1503,12 +1765,13 @@
       alert('Fotoğraf işlenemedi: ' + err.message);
     }
     e.target.value = '';
-    pendingPhotoBlockId = null;
+    pendingPhotoTarget = null;
   }
   function deleteCardPhoto(bid, pIdx) {
     const n = db.notes.find(x => x.id === activeNoteId);
     const b = n?.blocks.find(x => x.id === bid);
     if (!b) return;
+    pushUndo(n);
     b.photos.splice(pIdx, 1);
     syncNoteHtmlAndSave(false);
     renderBlocks();
@@ -1598,7 +1861,7 @@
     scrollToPinnedCard(pinnedCards[currentPinIdx], pinnedCards.length);
   }
 
-  // Akıllı Yapıştır (Tek Tık Pano Okuma + Mobil Yedek Modalı)
+  // Akıllı Yapıştır
   async function smartPasteDirect() {
     try {
       if (navigator.clipboard && navigator.clipboard.read) {
@@ -1628,7 +1891,6 @@
       }
       openSmartPasteModal();
     } catch (e) {
-      // Mobil tarayıcı doğrudan okumayı kısıtlarsa temiz yapıştırma kutusunu aç
       openSmartPasteModal();
     }
   }
@@ -1653,12 +1915,12 @@
     }
     pushUndo(n);
     const newBlocks = parseHtmlToBlocks(rawHtml);
-    // Eğer notta sadece boş tek bir paragraf varsa onun yerine koy
     if (n.blocks.length === 1 && n.blocks[0].html.replace(/<[^>]+>/g, '').trim() === '') {
       n.blocks = newBlocks;
     } else {
       n.blocks.push(...newBlocks);
     }
+    activeBlockId = newBlocks[newBlocks.length - 1]?.id || null;
     syncNoteHtmlAndSave(false);
     renderBlocks();
   }
@@ -1692,7 +1954,7 @@
     } else {
       body.innerHTML = items.map(it => `
         <div style="padding:10px 12px;margin-bottom:8px;border-radius:8px;background:var(--card);border:1px solid var(--border);border-left:5px solid ${it.bg}">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Blok #${it.blockIdx}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Kart #${it.blockIdx}</div>
           <div>${it.text}</div>
         </div>
       `).join('');
@@ -1743,7 +2005,7 @@
       if (headings.length) {
         headings.forEach(h => items.push({ label: h.innerText.trim(), el: h, badge: pin !== 'none' ? PIN_META[pin].icon : '📑' }));
       } else if (pin && pin !== 'none') {
-        const preview = card.querySelector('.card-body')?.innerText.trim().slice(0, 65) || `Blok ${idx + 1}`;
+        const preview = card.querySelector('.card-body')?.innerText.trim().slice(0, 65) || `Kart ${idx + 1}`;
         items.push({ label: preview + '...', el: card, badge: PIN_META[pin].icon });
       }
     });
@@ -1767,7 +2029,7 @@
 
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-  // Eklenti / Bookmarklet Doğrudan Veri Alıcısı (?incoming=1)
+  // Eklenti / Bookmarklet Doğrudan Veri Alıcısı
   window.addEventListener('message', (e) => {
     if (e.data && e.data.type === 'IMPORT_NOTE') {
       const folderId = activeFolderId || db.folders[0]?.id;
@@ -1791,7 +2053,7 @@
     window.opener.postMessage('STUDIO_READY', '*');
   }
 
-  // Tarihli ve Alt Klasör Yapısını Koruyan ZIP İndirme
+  // Tarihli ZIP İndirme
   async function downloadFolderZip(folderId) {
     const rootFolder = db.folders.find(f => f.id === folderId);
     if (!rootFolder) return;
@@ -1819,7 +2081,7 @@
     a.click();
   }
 
-  // Canlı Ses -> Metin Diktesi (Web Speech API)
+  // Canlı Ses -> Metin Diktesi (Odaklanılan Kartın İçine veya Hizasına Ekler)
   let rec = null, isRec = false;
   function toggleDictation() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1829,27 +2091,48 @@
     rec.lang = 'tr-TR';
     rec.continuous = true;
     rec.interimResults = false;
-    rec.onstart = () => { isRec = true; document.getElementById('micBtn').classList.add('recording'); };
-    rec.onend = () => { isRec = false; document.getElementById('micBtn').classList.remove('recording'); };
+    const micBtn = document.getElementById('micTopBtn');
+    rec.onstart = () => {
+      isRec = true;
+      micBtn.classList.add('recording');
+      micBtn.textContent = '⏹ Dinliyor...';
+    };
+    rec.onend = () => {
+      isRec = false;
+      micBtn.classList.remove('recording');
+      micBtn.textContent = '🎙️ Dikte';
+    };
     rec.onresult = e => {
-      const txt = e.results[e.results.length - 1][0].transcript;
+      const txt = e.results[e.results.length - 1][0].transcript.trim();
+      if (!txt) return;
       if (document.getElementById('pdfPanel').classList.contains('active')) {
         const box = document.getElementById('slideNoteBox');
         box.value += (box.value ? ' ' : '') + txt;
         saveSlideNote();
-      } else {
-        const n = db.notes.find(x => x.id === activeNoteId);
-        if (n) {
-          n.blocks.push({ id: uid('b'), role: 'ai', pin: 'none', html: `<p>🎙️ ${txt}</p>`, marginNote: '', photos: [], pageBreak: false });
-          syncNoteHtmlAndSave(false);
-          renderBlocks();
-        }
+        return;
+      }
+      const n = db.notes.find(x => x.id === activeNoteId);
+      if (!n) return;
+      // Eğer imleç şu an bir yan not kutusundaysa doğrudan oraya yaz
+      const activeEl = document.activeElement;
+      if (activeEl && activeEl.classList.contains('margin-text')) {
+        activeEl.value += (activeEl.value ? ' ' : '') + txt;
+        updateMarginNote(activeEl.dataset.bid, activeEl.value);
+        return;
+      }
+      // Odaklanılan kart varsa o kartın içine düzenli satır olarak ekle
+      const targetB = n.blocks.find(b => b.id === activeBlockId) || n.blocks[n.blocks.length - 1];
+      if (targetB) {
+        const cleanPrev = targetB.html.replace(/<p><\/p>/g, '').trim();
+        targetB.html = cleanPrev + `<p><span class="dictated-chip">🎙️ ${txt}</span></p>`;
+        syncNoteHtmlAndSave(false);
+        renderBlocks();
       }
     };
     rec.start();
   }
 
-  // İnternetsiz Ses Kaydı (Tarih + Gün + Saat İsimli İndirme)
+  // İnternetsiz Ses Kaydı
   let mediaRec = null, audioChunks = [], isAudioRec = false;
   async function toggleAudioRecord() {
     if (isAudioRec && mediaRec) { mediaRec.stop(); return; }
@@ -1898,7 +2181,6 @@
     const ext = file.name.split('.').pop().toLowerCase();
     const buf = await file.arrayBuffer();
 
-    // 0. Eklenti / Bookmarklet HTML Notu -> Temiz Kartlar Olarak İçeri Al
     if (ext === 'html' || ext === 'htm') {
       const raw = await file.text();
       const folderId = activeFolderId || db.folders[0]?.id;
@@ -1920,7 +2202,6 @@
       return;
     }
 
-    // 1. Word (.docx)
     if (ext === 'docx') {
       try {
         const res = await mammoth.convertToHtml({ arrayBuffer: buf });
@@ -1936,7 +2217,6 @@
       return;
     }
 
-    // 2. Düz Metin (.txt / .md)
     if (ext === 'txt' || ext === 'md') {
       const txt = await file.text();
       const folderId = activeFolderId || db.folders[0]?.id;
@@ -1951,7 +2231,6 @@
       return;
     }
 
-    // 3. PowerPoint (.pptx)
     if (ext === 'pptx') {
       try {
         const zip = await JSZip.loadAsync(buf);
@@ -1982,7 +2261,6 @@
       return;
     }
 
-    // 4. PDF Slayt
     if (ext === 'pdf') {
       viewMode = 'pdf';
       pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
@@ -2034,7 +2312,7 @@
     const n = db.notes.find(x => x.id === activeNoteId);
     if (n) {
       pushUndo(n);
-      const html = '<h3>📌 Slayt Notları & Hoca Uyarıları</h3><ul>' + entries.map(([p, t]) => `<li><b>Sayfa ${p}:</b> ${t}</li>`).join('') + '</ul>';
+      const html = '<h3>📌 Slayt Notları &amp; Hoca Uyarıları</h3><ul>' + entries.map(([p, t]) => `<li><b>Sayfa ${p}:</b> ${t}</li>`).join('') + '</ul>';
       n.blocks.push({ id: uid('b'), role: 'ai', pin: 'star', html, marginNote: '', photos: [], pageBreak: false });
       syncNoteHtmlAndSave(false);
     }
@@ -2052,7 +2330,6 @@
   // Yardımcılar
   function highlight(c) {
     document.execCommand('hiliteColor', false, c);
-    // Aktif bloğu güncelle
     const sel = window.getSelection();
     const cardBody = sel?.anchorNode?.parentElement?.closest?.('.card-body');
     if (cardBody) {
@@ -2080,7 +2357,6 @@
     a.click();
   }
 
-  // Başlat
   renderTree();
   if (activeNoteId) openNote(activeNoteId);
 </script>
