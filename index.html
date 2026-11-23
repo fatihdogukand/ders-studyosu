@@ -343,7 +343,7 @@
         isAudioRec = false;
         const btn = document.getElementById('recBtn');
         btn.classList.remove('recording');
-        btn.textContent = '🔴 Kayıt';
+        btn.textContent = '📼 Offline Kayıt';
         stream.getTracks().forEach(t => t.stop());
         if (audioChunks.length && confirm('Ses kaydı cihazına indirilsin mi?')) {
           const now = new Date();
