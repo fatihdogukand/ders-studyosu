@@ -96,7 +96,7 @@
   <div class="side-actions">
     <button class="btn-accent" onclick="createFolder(null)">+ Ders Klasörü</button>
     <button onclick="document.getElementById('pdfInput').click()" title="PDF, PowerPoint (PPTX), Word (DOCX) veya TXT aç">📂 Dosya Aç</button>
-    <input type="file" id="pdfInput" accept=".pdf,.pptx,.docx,.txt,.md" style="display:none" onchange="loadUniversalFile(event)">
+    <input type="file" id="pdfInput" accept=".pdf,.pptx,.docx,.txt,.md,.html,.htm" style="display:none" onchange="loadUniversalFile(event)">
   </div>
   <div class="tree" id="treeRoot"></div>
   <div style="padding:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:center">
@@ -378,6 +378,16 @@
     const ext = file.name.split('.').pop().toLowerCase();
     const buf = await file.arrayBuffer();
 
+    // 0. Eklentiden inen HTML Notu -> Doğrudan not olarak içeri al
+    if (ext === 'html' || ext === 'htm') {
+      const raw = await file.text();
+      const doc = new DOMParser().parseFromString(raw, 'text/html');
+      const folderId = activeFolderId || db.folders[0]?.id;
+      if (!folderId) return alert('Önce sol menüden bir ders klasörü oluştur!');
+      const n = { id: uid('n'), folderId, title: file.name.replace(/\.(html|htm)$/i, ''), html: doc.body ? doc.body.innerHTML : raw, updatedAt: Date.now() };
+      db.notes.push(n); persist(); openNote(n.id);
+      e.target.value = ''; return;
+    }
     // 1. Word (.docx) -> Doğrudan düzenlenebilir not olarak içeri al
     if (ext === 'docx') {
       try {
