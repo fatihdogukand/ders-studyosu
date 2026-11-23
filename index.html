@@ -114,9 +114,8 @@
         <option value="clean">Klasik Beyaz</option>
         <option value="dark">Gece Modu</option>
       </select>
-      <button id="micBtn" class="btn-mic" onclick="toggleDictation()" title="Hocayı canlı dinle ve yaz">🎙️ Dikte</button>
-      <button id="micBtn" class="btn-mic" onclick="toggleDictation()" title="Hocayı canlı dinle ve yaz (İnternet gerekir)">🎙️ Dikte</button>
-      <button id="recBtn" class="btn-mic" onclick="toggleAudioRecord()" title="İnternetsiz ses kaydı al ve indir">🔴 Kayıt</button>
+      <button id="micBtn" class="btn-mic" onclick="toggleDictation()" title="Hocayı canlı dinle ve yazıya dök (İnternet gerekir)">🌐 Canlı Dikte</button>
+      <button id="recBtn" class="btn-mic" onclick="toggleAudioRecord()" title="İnternetsiz ses kaydı al ve tarih-saat adıyla indir">📼 Offline Kayıt</button>
       <button onclick="document.getElementById('pdfInput').click()" title="Derste anlık PDF slayt aç ve yanına not al">📄 PDF Slayt</button>
       <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="loadPdfSlide(event)">
       <button id="backToNoteBtn" style="display:none" onclick="closePdfMode()">← Nota Dön</button>
