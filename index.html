@@ -11,6 +11,8 @@
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <style>
     :root[data-theme="warm"] { --bg:#eceae4; --paper:#fcfbf7; --side:#f5f3ed; --text:#1e293b; --muted:#64748b; --accent:#0f766e; --accent-soft:#f0fdfa; --heading:#134e4a; --border:#dcd8ce; --code-bg:#f4f3ee; }
     :root[data-theme="clean"] { --bg:#f3f4f6; --paper:#ffffff; --side:#f8fafc; --text:#1f2937; --muted:#6b7280; --accent:#1d4ed8; --accent-soft:#eff6ff; --heading:#111827; --border:#e5e7eb; --code-bg:#f8fafc; }
@@ -93,8 +95,8 @@
   </div>
   <div class="side-actions">
     <button class="btn-accent" onclick="createFolder(null)">+ Ders Klasörü</button>
-    <button onclick="document.getElementById('htmlImport').click()" title="Eklentiden inen HTML notu içeri al">📥 HTML Al</button>
-    <input type="file" id="htmlImport" accept=".html,.htm" style="display:none" onchange="importHtmlFile(event)">
+    <button onclick="document.getElementById('pdfInput').click()" title="PDF, PowerPoint (PPTX), Word (DOCX) veya TXT aç">📂 Dosya Aç</button>
+    <input type="file" id="pdfInput" accept=".pdf,.pptx,.docx,.txt,.md" style="display:none" onchange="loadUniversalFile(event)">
   </div>
   <div class="tree" id="treeRoot"></div>
   <div style="padding:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:center">
@@ -147,6 +149,7 @@
           <button onclick="changePdfPage(1)">Sonraki ▶</button>
         </div>
         <canvas id="pdfCanvas"></canvas>
+        <div id="pptxView" style="display:none;width:100%;padding:16px;line-height:1.7;font-size:15px"></div>
       </div>
       <div class="pdf-notes">
         <h3 style="margin:0;color:var(--heading)">📌 Bu Sayfa İçin Hoca Uyarısı / Not</h3>
@@ -367,21 +370,87 @@
     }
   }
 
-  // Anlık PDF Slayt Okuyucu + Sayfa Bazlı Not Alma
-  let pdfDoc = null, pdfPage = 1, slideNotes = {};
+// Evrensel Dosya Okuyucu (PDF + PPTX + DOCX + TXT/MD)
+  let pdfDoc = null, pptxSlides = [], viewMode = 'pdf', pdfPage = 1, slideNotes = {};
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  async function loadPdfSlide(e) {
+  async function loadUniversalFile(e) {
     const file = e.target.files[0]; if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
     const buf = await file.arrayBuffer();
-    pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
-    pdfPage = 1; slideNotes = {};
-    document.getElementById('notePaper').style.display = 'none';
-    document.getElementById('pdfPanel').classList.add('active');
-    document.getElementById('backToNoteBtn').style.display = 'inline-block';
-    renderPdfPage();
+
+    // 1. Word (.docx) -> Doğrudan düzenlenebilir not olarak içeri al
+    if (ext === 'docx') {
+      try {
+        const res = await mammoth.convertToHtml({ arrayBuffer: buf });
+        const folderId = activeFolderId || db.folders[0]?.id;
+        if (!folderId) return alert('Önce sol menüden bir ders klasörü oluştur!');
+        const n = { id: uid('n'), folderId, title: file.name.replace(/\.docx$/i, ''), html: res.value, updatedAt: Date.now() };
+        db.notes.push(n); persist(); openNote(n.id);
+      } catch (err) { alert('Word dosyası okunamadı: ' + err.message); }
+      e.target.value = ''; return;
+    }
+
+    // 2. Düz Metin (.txt / .md) -> Doğrudan not olarak içeri al
+    if (ext === 'txt' || ext === 'md') {
+      const txt = await file.text();
+      const folderId = activeFolderId || db.folders[0]?.id;
+      if (!folderId) return alert('Önce sol menüden bir ders klasörü oluştur!');
+      const html = txt.split(/\n\n+/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+      const n = { id: uid('n'), folderId, title: file.name.replace(/\.(txt|md)$/i, ''), html, updatedAt: Date.now() };
+      db.notes.push(n); persist(); openNote(n.id);
+      e.target.value = ''; return;
+    }
+
+    // 3. PowerPoint (.pptx) -> Slayt slayt aç ve yanına hoca uyarısı al
+    if (ext === 'pptx') {
+      try {
+        const zip = await JSZip.loadAsync(buf);
+        const slideFiles = Object.keys(zip.files)
+          .filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k))
+          .sort((a, b) => parseInt(a.match(/\d+/)[0]) - parseInt(b.match(/\d+/)[0]));
+        pptxSlides = [];
+        const parser = new DOMParser();
+        for (const sf of slideFiles) {
+          const xml = await zip.files[sf].async('text');
+          const doc = parser.parseFromString(xml, 'text/xml');
+          const texts = [...doc.getElementsByTagName('a:t')].map(t => t.textContent).filter(Boolean);
+          pptxSlides.push(texts.length ? texts.map(t => `<p>${t}</p>`).join('') : '<p><i>(Bu slaytta metin yok, görsel olabilir)</i></p>');
+        }
+        if (!pptxSlides.length) return alert('Slayt içeriği bulunamadı.');
+        viewMode = 'pptx'; pdfPage = 1; slideNotes = {};
+        document.getElementById('pdfCanvas').style.display = 'none';
+        document.getElementById('pptxView').style.display = 'block';
+        document.getElementById('notePaper').style.display = 'none';
+        document.getElementById('pdfPanel').classList.add('active');
+        document.getElementById('backToNoteBtn').style.display = 'inline-block';
+        renderPdfPage();
+      } catch (err) { alert('PPTX okunamadı (eski .ppt ise .pptx veya PDF yapmalısın): ' + err.message); }
+      e.target.value = ''; return;
+    }
+
+    // 4. PDF Slayt
+    if (ext === 'pdf') {
+      viewMode = 'pdf';
+      pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+      pdfPage = 1; slideNotes = {};
+      document.getElementById('pdfCanvas').style.display = 'block';
+      document.getElementById('pptxView').style.display = 'none';
+      document.getElementById('notePaper').style.display = 'none';
+      document.getElementById('pdfPanel').classList.add('active');
+      document.getElementById('backToNoteBtn').style.display = 'inline-block';
+      renderPdfPage();
+    }
+    e.target.value = '';
   }
+
   async function renderPdfPage() {
+    if (viewMode === 'pptx') {
+      document.getElementById('pptxView').innerHTML = `<h3 style="margin-top:0;color:var(--accent)">Slayt ${pdfPage}</h3>` + pptxSlides[pdfPage - 1];
+      document.getElementById('pdfPageInfo').textContent = `Slayt ${pdfPage} / ${pptxSlides.length}`;
+      document.getElementById('slideNoteBox').value = slideNotes[pdfPage] || '';
+      return;
+    }
     const page = await pdfDoc.getPage(pdfPage);
     const vp = page.getViewport({ scale: 1.4 });
     const canvas = document.getElementById('pdfCanvas');
@@ -390,10 +459,11 @@
     document.getElementById('pdfPageInfo').textContent = `Sayfa ${pdfPage} / ${pdfDoc.numPages}`;
     document.getElementById('slideNoteBox').value = slideNotes[pdfPage] || '';
   }
+
   function changePdfPage(d) {
-    if (!pdfDoc) return;
+    const max = viewMode === 'pptx' ? pptxSlides.length : (pdfDoc ? pdfDoc.numPages : 0);
     const next = pdfPage + d;
-    if (next >= 1 && next <= pdfDoc.numPages) { pdfPage = next; renderPdfPage(); }
+    if (next >= 1 && next <= max) { pdfPage = next; renderPdfPage(); }
   }
   function saveSlideNote() { slideNotes[pdfPage] = document.getElementById('slideNoteBox').value; }
   function closePdfMode() {
