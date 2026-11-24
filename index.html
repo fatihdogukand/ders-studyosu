@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.2.0</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.3.0</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -934,6 +934,185 @@
       .sticky-note-nav { padding: 7px 9px; gap: 6px; }
     }
 
+    
+    /* ==========================================================================
+       v4.3.0 MOBİL ARAYÜZ & ÇİFT GÖRÜNÜM MODU (PC ARAYÜZÜNÜ ETKİLEMEZ)
+       ========================================================================== */
+    .sb-collapse-arrow {
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: var(--sidebar-text);
+      width: 24px; height: 24px; border-radius: 6px;
+      display: inline-grid; place-items: center;
+      cursor: pointer; font-size: 11px; margin-right: 4px;
+    }
+    .sb-nav-list.collapsed { display: none !important; }
+
+    /* Sol Panel Klasör & Not Ek ••• Açılır Menüsü */
+    .sb-item-menu-wrap { position: relative; flex-shrink: 0; }
+    .sb-dropdown-menu {
+      position: absolute; right: 0; top: calc(100% + 4px);
+      width: 196px; background: var(--bg-elevated); color: var(--text-main);
+      border: 1px solid var(--border-soft); border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+      padding: 5px; display: none; flex-direction: column; gap: 2px;
+      z-index: 90;
+    }
+    .sb-dropdown-menu.open { display: flex; }
+    .sb-dropdown-menu .dropdown-menu-item {
+      min-height: 34px; padding: 6px 9px; font-size: 12.5px;
+    }
+
+    /* Mobil Üst Bar HTML Paylaş Butonu (PC'de gizli, mobilde görünür) */
+    .mobile-only-btn { display: none; }
+
+    /* Sağ Ayarlar Paneli İçi Mobil Durum Kartı */
+    .drawer-status-card { display: none; }
+
+    /* Gezinti Barı Mobil Aç/Kapa Başlığı (PC'de gizli) */
+    .sticky-nav-mobile-toggle { display: none; }
+
+    /* Mobilde Yukarı Çık Hapı */
+    .scroll-top-fab {
+      display: none; position: fixed; left: 14px;
+      bottom: calc(68px + env(safe-area-inset-bottom));
+      height: 36px; padding: 0 12px; border-radius: 99px;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-paper); color: var(--text-main);
+      font-family: inherit; font-size: 12px; font-weight: 700;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+      z-index: 54; cursor: pointer; align-items: center; gap: 4px;
+    }
+    body.is-mobile-ui .scroll-top-fab.visible { display: inline-flex; }
+    body.kb-open .scroll-top-fab { display: none !important; }
+
+    /* Mobil Görünüm Kuralları (Otomatik <=640px veya Kullanıcı Manuel Mobil Modu Seçtiğinde) */
+    body.is-mobile-ui .sidebar {
+      position: fixed; left: 0; top: 0;
+      bottom: calc(58px + env(safe-area-inset-bottom));
+      width: min(310px, 86vw); z-index: 50;
+    }
+    body.is-mobile-ui .app-shell.sidebar-collapsed .sidebar {
+      width: 0; overflow: hidden; opacity: 0;
+    }
+    body.is-mobile-ui .right-drawer {
+      position: fixed; right: 0; top: var(--topbar-h);
+      bottom: calc(58px + env(safe-area-inset-bottom));
+      width: min(325px, 90vw); z-index: 48;
+      box-shadow: -8px 0 24px rgba(0,0,0,0.22);
+    }
+    body.is-mobile-ui .workspace-wrap.right-collapsed .right-drawer {
+      width: 0; padding: 0; overflow: hidden; opacity: 0;
+    }
+
+    /* 1. Mobil Üst Bar Sadeleştirmesi: Pil & Çevrimiçi Ayarlar'a taşınır */
+    body.is-mobile-ui #netStatusPill,
+    body.is-mobile-ui #globalBatteryPill,
+    body.is-mobile-ui #btnTopbarPins,
+    body.is-mobile-ui #btnRightDrawer,
+    body.is-mobile-ui .topbar-note-crumb {
+      display: none !important;
+    }
+    body.is-mobile-ui .mobile-only-btn { display: inline-flex !important; }
+    body.is-mobile-ui .drawer-status-card { display: block !important; }
+    body.is-mobile-ui .topbar {
+      padding: 6px 10px; gap: 6px;
+    }
+    body.is-mobile-ui .topbar-left { gap: 6px; }
+    body.is-mobile-ui .topbar-right { gap: 6px; }
+
+    /* 2. Mobil Sol Panel Sadeleştirmesi: Not & Klasör İsimleri Öncelikli */
+    body.is-mobile-ui .sidebar-top-actions {
+      padding: 4px 10px 8px;
+      flex-direction: row; align-items: center; gap: 6px;
+    }
+    body.is-mobile-ui .cta-new-note-btn {
+      width: auto; height: 36px; padding: 0 11px;
+      font-size: 12px; flex-shrink: 0; order: 2;
+    }
+    body.is-mobile-ui .cta-full-lbl { display: none; }
+    body.is-mobile-ui .cta-new-note-btn::after { content: 'Sohbet Çek'; }
+    body.is-mobile-ui .sidebar-search-box {
+      flex: 1; min-width: 0; height: 36px; order: 1;
+    }
+    body.is-mobile-ui .sidebar-search-box .kbd-tag { display: none; }
+    body.is-mobile-ui .note-item {
+      min-height: 40px; padding: 6px 8px; align-items: center;
+    }
+    body.is-mobile-ui .note-item-title {
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.32;
+      font-size: 13px;
+    }
+    body.is-mobile-ui .folder-header {
+      min-height: 40px; padding: 6px 8px; font-size: 13.5px;
+    }
+
+    /* 3. Mobil Gezinti / Odak Çubuğu: Sadece Sayfa Başında + Aç/Kapa */
+    body.is-mobile-ui .sticky-note-nav {
+      position: static !important;
+      padding: 7px 10px;
+      margin-bottom: 12px;
+    }
+    body.is-mobile-ui .sticky-nav-mobile-toggle {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      border: none; background: transparent; color: var(--text-main);
+      font-family: inherit; font-size: 12.5px; font-weight: 700;
+      padding: 2px 0; cursor: pointer;
+    }
+    body.is-mobile-ui .sticky-note-nav.mob-collapsed .sticky-nav-filters,
+    body.is-mobile-ui .sticky-note-nav.mob-collapsed .sticky-nav-jump {
+      display: none !important;
+    }
+    body.is-mobile-ui .sticky-note-nav:not(.mob-collapsed) .sticky-nav-filters {
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-soft); width: 100%;
+    }
+    body.is-mobile-ui .sticky-note-nav:not(.mob-collapsed) .sticky-nav-jump {
+      margin-top: 6px; width: 100%; justify-content: space-between;
+    }
+
+    /* 4. Mobil Vurgu & Biçimlendirme Çubuğu (OS Kopyala Balonuyla Çakışmaz) */
+    body.is-mobile-ui .selection-popover {
+      left: 50% !important;
+      transform: translateX(-50%);
+      top: auto !important;
+      bottom: calc(66px + env(safe-area-inset-bottom)) !important;
+      padding: 8px 12px;
+      gap: 8px;
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.42);
+    }
+    body.is-mobile-ui .hl-swatch { width: 28px; height: 28px; }
+    body.is-mobile-ui .fmt-btn { width: 34px; height: 32px; font-size: 13.5px; }
+
+    /* 5. Mobil Alt Gezinme Çubuğu & Yüzen Araçlar */
+    body.is-mobile-ui .editor-scroll { padding: 10px 10px 130px; }
+    body.is-mobile-ui .lesson-card { padding: 14px 14px; }
+    body.is-mobile-ui .side-right-column { flex: 1 1 100%; min-width: 0; }
+    body.is-mobile-ui .side-note-box { margin-top: 0 !important; width: 100% !important; }
+    body.is-mobile-ui .independent-premise-box.align-left,
+    body.is-mobile-ui .independent-premise-box.align-right { width: 100% !important; }
+    body.is-mobile-ui .mobile-bottom-nav {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      position: fixed; left: 0; right: 0; bottom: 0;
+      height: calc(58px + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
+      background: var(--bg-paper); border-top: 1px solid var(--border-soft); z-index: 60;
+    }
+    body.is-mobile-ui .mob-nav-btn {
+      border: none; background: transparent; color: var(--text-main);
+      font-family: inherit; font-size: 11px; font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      cursor: pointer;
+    }
+    body.is-mobile-ui .mob-nav-btn:active { background: var(--accent-soft); color: var(--accent); }
+    body.is-mobile-ui .quick-dock-wrap {
+      display: none !important;
+    }
+
     @media print {
       .sidebar, .topbar, .right-drawer, .quick-dock-wrap, .mobile-bottom-nav, .card-toolbar, .card-bottom-bar, .insert-strip, .dictation-banner, .bulk-move-bar, .note-header-actions, .touch-resize-grip { display: none !important; }
       body, .app-shell, .workspace-wrap, .editor-scroll { height: auto !important; overflow: visible !important; background: #fff !important; color: #000 !important; }
@@ -958,29 +1137,29 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.2.0</div>
+            <div class="brand-sub">Ders stüdyosu · v4.3.0</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
       </div>
 
       <div class="sidebar-top-actions">
-        <button class="cta-new-note-btn" onclick="openTransferModal()">📥 Dışardan Sohbet Çek</button>
+        <button class="cta-new-note-btn" onclick="openTransferModal()" title="Dışarıdan Sohbet veya Dosya Çek">📥 <span class="cta-full-lbl">Dışardan Sohbet Çek</span></button>
         <div class="sidebar-search-box" onclick="openSearchModal()">
           <span>🔍 Notlarda ara</span>
           <span class="kbd-tag">Ctrl K</span>
         </div>
       </div>
 
-      <div class="sb-section-label">
-        <span>KÜTÜPHANE</span>
-        <select id="sortSelect" onchange="renderSidebar()" style="background:transparent;border:none;color:var(--sidebar-muted);font-size:10.5px;outline:none;cursor:pointer;">
+      <div class="sb-section-label" onclick="toggleLibrarySectionCollapse()" style="cursor:pointer;" title="Kütüphane bölümünü daralt / genişlet">
+        <span style="display:inline-flex;align-items:center;"><span class="sb-collapse-arrow" id="libCollapseArrow">▾</span>KÜTÜPHANE</span>
+        <select id="sortSelect" onclick="event.stopPropagation()" onchange="renderSidebar()" style="background:transparent;border:none;color:var(--sidebar-muted);font-size:10.5px;outline:none;cursor:pointer;">
           <option value="updated" style="color:#000;">Son</option>
           <option value="created" style="color:#000;">Tarih</option>
           <option value="alpha" style="color:#000;">A-Z</option>
         </select>
       </div>
-      <div class="sb-nav-list">
+      <div class="sb-nav-list" id="sbLibraryNavList">
         <button class="sb-nav-item active" id="navAllNotes" onclick="setLibraryView('all')">
           <span>📚 Tüm notlar</span>
           <span class="sb-nav-count" id="countAllNotes">0</span>
@@ -1027,6 +1206,7 @@
           <span class="topbar-note-crumb" id="topbarCrumb">Kütüphanem / Sohbet Okulu</span>
         </div>
         <div class="topbar-right">
+          <button class="tool-btn mobile-only-btn" onclick="exportActiveNoteHtml()" title="Aktif notu HTML olarak indir veya paylaş">📄 HTML</button>
           <span class="net-status-pill" id="netStatusPill" title="Çevrimiçi / Çevrimdışı çalışma durumu">🌐 Çevrimiçi</span>
 
           <div class="battery-pill" id="globalBatteryPill" onclick="triggerManualCloudSync()" title="Toplam depolama kapasitesi kullanımı">
@@ -1097,12 +1277,37 @@
 
         <!-- SAĞ PANEL: NOT DÜZENİ & GÖRÜNÜM / TEMA AYARLARI -->
         <aside class="right-drawer" id="rightDrawer">
+          <!-- MOBİL DURUM KARTI (Ağ & Depolama Kapasitesi) -->
+          <div class="right-panel-section drawer-status-card">
+            <div class="right-sec-title">
+              <span>☁️ Bağlantı ve depolama</span>
+              <button class="card-mini-btn" onclick="toggleRightDrawer()" title="Paneli Gizle">✕</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+              <span id="drawerNetStatusText" style="font-size:12.5px;font-weight:700;">🌐 Çevrimiçi</span>
+              <button class="card-mini-btn" style="border:1px solid var(--border-soft);" onclick="triggerManualCloudSync()">🔄 Eşitle</button>
+            </div>
+            <div style="margin-top:8px;">
+              <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-muted);margin-bottom:4px;">
+                <span>Depolama Kullanımı</span>
+                <strong id="drawerBatteryText" style="color:var(--text-main);">%1 · 2 KB / 50 MB</strong>
+              </div>
+              <div style="width:100%;height:8px;border-radius:99px;background:var(--bg-subtle);overflow:hidden;">
+                <div id="drawerBatteryFill" style="height:100%;width:2%;background:#16a34a;border-radius:99px;transition:width 0.3s ease;"></div>
+              </div>
+            </div>
+          </div>
+
           <!-- 1. ÜST BÖLÜM: NOT DÜZENİ & ÇALIŞMA ARAÇLARI -->
           <div class="right-panel-section">
             <div class="right-sec-title">
               <span>🎛️ Not düzeni ve araçlar</span>
               <button class="card-mini-btn" onclick="toggleRightDrawer()" title="Paneli Gizle">✕</button>
             </div>
+
+            <button class="reading-tool-row" onclick="exportActiveNoteHtml()">
+              <span>📄 Notu HTML indir / paylaş</span>
+            </button>
 
             <button class="reading-tool-row" onclick="toggleGlobalPremises()">
               <span id="lblGlobalPremises">🙈 Tüm öncülleri kapa</span>
@@ -1167,7 +1372,7 @@
               <option value="midnight">🌙 Gece Çalışması (Koyu)</option>
             </select>
 
-            <div style="display:flex;gap:5px;">
+            <div style="display:flex;gap:5px;margin-bottom:7px;">
               <select id="dynamicThemeSelect" class="right-select" style="margin-bottom:0;" onchange="setDynamicThemeInterval(this.value)">
                 <option value="0">⏱️ Dinamik Tema: Kapalı</option>
                 <option value="1">⏱️ 1 dk'da bir değiştir</option>
@@ -1176,25 +1381,34 @@
               </select>
               <button class="tool-btn" style="padding:0 10px;" onclick="cycleThemeNow()" title="Sonraki Temaya Geç">✨</button>
             </div>
+
+            <select id="viewportModeSelect" class="right-select" style="margin-bottom:0;" onchange="setViewportMode(this.value)">
+              <option value="auto">📱 Görünüm: Otomatik (Cihaza Göre)</option>
+              <option value="mobile">📱 Görünüm: Mobil Arayüz</option>
+              <option value="desktop">🖥️ Görünüm: Masaüstü (PC)</option>
+            </select>
           </div>
         </aside>
       </div>
     </main>
   </div>
 
-  <!-- METİN SEÇİM ÇUBUĞU: KALIN, İTALİK, ALTI ÇİZİLİ + FOSFORLU VURGU -->
-  <div class="selection-popover" id="selectionPopover" onmousedown="event.preventDefault()">
-    <button class="fmt-btn" onclick="applyTextStyle('bold')" title="Kalın (Ctrl+B)"><strong>B</strong></button>
-    <button class="fmt-btn" onclick="applyTextStyle('italic')" title="İtalik (Ctrl+I)"><em>I</em></button>
-    <button class="fmt-btn" onclick="applyTextStyle('underline')" title="Altı Çizili (Ctrl+U)"><u>U</u></button>
-    <span style="width:1px;height:16px;background:rgba(255,255,255,0.25);margin:0 2px;"></span>
-    <button class="hl-swatch" style="background:#fde047;" onclick="applyHighlight('hl-yellow')" title="Sarı Vurgu"></button>
-    <button class="hl-swatch" style="background:#86efac;" onclick="applyHighlight('hl-green')" title="Yeşil Vurgu"></button>
-    <button class="hl-swatch" style="background:#f9a8d4;" onclick="applyHighlight('hl-pink')" title="Pembe Vurgu"></button>
-    <button class="mini-icon-btn" style="color:#fff;font-size:12px;" onclick="removeHighlight()" title="Vurguyu Temizle">✕</button>
+  <!-- METİN SEÇİM ÇUBUĞU: KALIN, İTALİK, ALTI ÇİZİLİ + FOSFORLU VURGU (MOBİL DOKUNMA KORUMALI) -->
+  <div class="selection-popover" id="selectionPopover" onmousedown="event.preventDefault()" ontouchstart="event.stopPropagation()">
+    <button class="hl-swatch" style="background:#fde047;" onpointerdown="event.preventDefault();applyHighlight('hl-yellow')" title="Sarı Vurgu"></button>
+    <button class="hl-swatch" style="background:#86efac;" onpointerdown="event.preventDefault();applyHighlight('hl-green')" title="Yeşil Vurgu"></button>
+    <button class="hl-swatch" style="background:#f9a8d4;" onpointerdown="event.preventDefault();applyHighlight('hl-pink')" title="Pembe Vurgu"></button>
+    <button class="mini-icon-btn" style="color:#fff;font-size:13px;padding:4px 7px;" onpointerdown="event.preventDefault();removeHighlight()" title="Vurguyu Temizle">✕</button>
+    <span style="width:1px;height:18px;background:rgba(255,255,255,0.25);margin:0 2px;"></span>
+    <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('bold')" title="Kalın (Ctrl+B)"><strong>B</strong></button>
+    <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('italic')" title="İtalik (Ctrl+I)"><em>I</em></button>
+    <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('underline')" title="Altı Çizili (Ctrl+U)"><u>U</u></button>
   </div>
 
-  <!-- Hızlı Erişim Paneli & Acil Hızlı Not -->
+  <!-- Yukarı Çık Butonu (Mobilde Aşağı Kaydırınca Görünür) -->
+  <button class="scroll-top-fab" id="scrollTopFab" onclick="document.getElementById('editorScroll').scrollTo({top:0,behavior:'smooth'})">↑ Başa Dön</button>
+
+  <!-- Hızlı Erişim Paneli & Acil Hızlı Not (PC) -->
   <div class="quick-dock-wrap">
     <div class="quick-panel" id="quickPanel">
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -1216,12 +1430,13 @@
     <button class="quick-fab" onclick="toggleQuickPanel()">⚡ Hızlı Araçlar</button>
   </div>
 
+  <!-- Mobil Alt Gezinme Çubuğu (Notlar, Kart, Vurgu, Dikte, Sağ Köşe Ayarlar) -->
   <nav class="mobile-bottom-nav">
-    <button class="mob-nav-btn" onclick="toggleSidebar()"><span>📚</span><span>Kütüphane</span></button>
+    <button class="mob-nav-btn" onclick="toggleSidebar()"><span>📚</span><span>Notlar</span></button>
     <button class="mob-nav-btn" onclick="addCardAtEnd()"><span>➕</span><span>Kart</span></button>
+    <button class="mob-nav-btn" onpointerdown="event.preventDefault();triggerMobileHighlightAction()"><span>🖍️</span><span>Vurgu</span></button>
     <button class="mob-nav-btn" onclick="startSmartDictation(true)"><span>🎙️</span><span>Dikte</span></button>
-    <button class="mob-nav-btn" onclick="toggleRightDrawer()"><span>☰</span><span>Ayarlar</span></button>
-    <button class="mob-nav-btn" onclick="toggleQuickPanel()"><span>⚡</span><span>Hızlı</span></button>
+    <button class="mob-nav-btn" onclick="toggleRightDrawer()"><span>⚙️</span><span>Ayarlar</span></button>
   </nav>
 
   <!-- MODALLAR -->
@@ -1235,6 +1450,7 @@
         <button class="tool-btn active" id="tabBtnPaste" onclick="showTransferTab('paste')">📋 Akıllı Yapıştır</button>
         <button class="tool-btn" id="tabBtnFiles" onclick="showTransferTab('files')">📂 Çoklu Dosya Aç</button>
         <button class="tool-btn" id="tabBtnBookmarklet" onclick="showTransferTab('bookmarklet')">📱 Mobil Aktarım Kodu</button>
+        <button class="tool-btn" onclick="exportActiveNoteHtml()">📄 HTML Dışa Aktar</button>
         <button class="tool-btn" id="tabBtnGuide" onclick="showTransferTab('guide')">📖 Kullanım Rehberi</button>
       </div>
       <div id="transferTabContent"></div>
@@ -1275,12 +1491,13 @@
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.2.0)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.3.0)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-        <button class="tool-btn active" onclick="exportZipBackup()">📦 Tarihli ZIP Yedek İndir</button>
-        <button class="tool-btn" onclick="exportJsonBackup()">📄 JSON Yedek İndir</button>
+        <button class="tool-btn active" onclick="exportActiveNoteHtml()">📄 Aktif Notu HTML İndir</button>
+        <button class="tool-btn" onclick="exportZipBackup()">📦 Tarihli ZIP Yedek İndir</button>
+        <button class="tool-btn" onclick="exportJsonBackup()">🗂️ JSON Yedek İndir</button>
         <label class="tool-btn" style="cursor:pointer;">📂 Yedek Yükle (.zip/.json)<input type="file" accept=".zip,.json" hidden onchange="importBackupFile(event)" /></label>
         <button class="tool-btn" onclick="window.print()">🖨️ Akıllı A4 PDF / Yazdır</button>
       </div>
@@ -1288,7 +1505,12 @@
       <div style="border-top:1px solid var(--border-soft);padding-top:12px;">
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
 
-                <div class="changelog-item">
+                        <div class="changelog-item">
+          <span class="changelog-ver">v4.3.0 — Özel Mobil Arayüz Modu, Sol Panel ••• Menüleri, Mobil Vurgu & Açılır Gezinti (Güncel)</span>
+          PC arayüzüne dokunmadan telefon ekranları için optimize edilmiş <strong>Mobil / Masaüstü Görünüm Geçişi</strong> eklendi; sol panelde <strong>Kütüphane</strong> bölümü daraltılabilir hale getirildi, klasör ve not işlemleri satır kalabalığını önlemek için ek <strong>•••</strong> menülerinde toplandı ve uzun not başlıkları 2 satır okunabilir yapıldı; mobilde <strong>Fosforlu Kalem Vurgusu</strong> dokunma korumalı alt palete ve alt gezinti çubuğuna eklendi; üst bardaki ağ/pil göstergeleri mobilde <strong>Ayarlar</strong> paneline taşınarak yerlerine tek tıkla <strong>📄 HTML Paylaş/İndir</strong> eklendi; üst gezinti/odak çubuğu mobilde sayfa başında açılıp kapanabilir hale getirildi.
+        </div>
+
+        <div class="changelog-item">
           <span class="changelog-ver">v4.2.0 — Sabit Üst Gezinti Çubuğu, Güvenlik Kalkanı, Genişletilmiş Dosya Desteği & Mobil İyileştirmeler (Güncel)</span>
           Kritik sözdizimi hatası düzeltildi; <strong>Hızlı Gezinti & Çoklu Süzgeç</strong> doğrudan not kartlarının tepesine sabitlendi; sağ panelde <strong>Tema ve Yazı Tipi</strong> ayarları alt bölüme alındı; XSS korumalı HTML temizleyici ve <code>postMessage</code> kaynak doğrulaması eklendi; <strong>.csv/.tsv, .ipynb, .py/.m/.sql, .epub ve görsel dosyaları</strong> ile <strong>Slayt-Slayt PDF/PPTX okuyucu</strong>, <strong>Fotoğraf Tam Ekran Büyütme (Lightbox)</strong>, <strong>Klasör Bazlı ZIP İndirme</strong> ve <strong>Offline Ses Kaydı Kurtarma</strong> eklendi.
         </div>
@@ -1379,7 +1601,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.2.0',
+      version: '4.3.0',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -1395,34 +1617,75 @@
 
     let currentUserState = { isLoggedIn: false, name: 'Misafir Kullanıcı', email: '' };
     let libraryView = 'all';
-    let activeFolderId = null; // 'all' | 'pinned' | 'quick'
+    let activeFolderId = null;
     let activeMultiFilters = new Set(); // Çoklu seçim: 'red' | 'yellow' | 'purple' | 'highlight'
     let currentJumpCursor = -1;
     let selectedQuickIds = new Set();
     let selectedBlockIds = new Set();
     let openDropdownCardId = null;
+    let openSidebarMenuId = null;
+    let mobileNavBarExpanded = false;
+    let librarySectionCollapsed = window.innerWidth <= 640;
     let undoStack = [];
     let dynamicTimer = null;
     let activeFocusTarget = { type: 'card', blockId: null, sideNoteId: null, premiseBoxId: null };
 
-    /* Açık ••• menüsünü dışarı tıklayınca kapat */
+    function isMobileUI() {
+      const mode = db.settings?.viewportMode || 'auto';
+      if (mode === 'mobile') return true;
+      if (mode === 'desktop') return false;
+      return window.innerWidth <= 640;
+    }
+
+    function applyViewportModeClass() {
+      const mob = isMobileUI();
+      document.body.classList.toggle('is-mobile-ui', mob);
+      const sel = document.getElementById('viewportModeSelect');
+      if (sel) sel.value = db.settings?.viewportMode || 'auto';
+    }
+
+    function setViewportMode(mode) {
+      db.settings.viewportMode = mode;
+      applyViewportModeClass();
+      if (isMobileUI()) {
+        librarySectionCollapsed = true;
+        document.getElementById('workspaceWrap')?.classList.add('right-collapsed');
+      } else {
+        librarySectionCollapsed = false;
+        document.getElementById('appShell')?.classList.remove('sidebar-collapsed');
+      }
+      updateDrawerBackdrop();
+      saveDatabase();
+      renderAll();
+    }
+
+    window.addEventListener('resize', () => {
+      applyViewportModeClass();
+      updateDrawerBackdrop();
+    });
+
+    /* Açık ••• menülerini dışarı tıklayınca kapat */
     document.addEventListener('click', (e) => {
       if (openDropdownCardId && !e.target.closest('.card-actions')) {
         openDropdownCardId = null;
         document.querySelectorAll('.card-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+      }
+      if (openSidebarMenuId && !e.target.closest('.sb-item-menu-wrap')) {
+        openSidebarMenuId = null;
+        document.querySelectorAll('.sb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
       }
     });
 
     /* Çevrimiçi / Çevrimdışı Durum Takibi */
     function updateNetworkBadge() {
       const pill = document.getElementById('netStatusPill');
-      if (!pill) return;
+      const drawerNet = document.getElementById('drawerNetStatusText');
       if (navigator.onLine) {
-        pill.classList.remove('offline');
-        pill.textContent = '🌐 Çevrimiçi';
+        if (pill) { pill.classList.remove('offline'); pill.textContent = '🌐 Çevrimiçi'; }
+        if (drawerNet) drawerNet.textContent = '🌐 Çevrimiçi (Bulut Hazır)';
       } else {
-        pill.classList.add('offline');
-        pill.textContent = '📴 Çevrimdışı Hazır';
+        if (pill) { pill.classList.add('offline'); pill.textContent = '📴 Çevrimdışı Hazır'; }
+        if (drawerNet) drawerNet.textContent = '📴 Çevrimdışı (Yerel Kayıt)';
       }
     }
     window.addEventListener('online', updateNetworkBadge);
@@ -1508,7 +1771,7 @@
 
       if (parsed) {
         db = {
-          version: '4.2.0',
+          version: '4.3.0',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -1518,6 +1781,7 @@
             fontSizePx: Number(parsed.settings?.fontSizePx || 16),
             dynamicMinutes: Number(parsed.settings?.dynamicMinutes || 0),
             spotlightOn: Boolean(parsed.settings?.spotlightOn),
+            viewportMode: parsed.settings?.viewportMode || 'auto',
             quickTools: Array.isArray(parsed.settings?.quickTools) && parsed.settings.quickTools.length
               ? parsed.settings.quickTools : DEFAULT_QUICK_TOOLS
           }
@@ -1549,7 +1813,7 @@
                 { id: 'pr_1', align: 'full', customW: '', customH: '', html: 'Sıcaklık artarsa endotermik tepkimede denge ürünler yönüne kayar.', mediaHtml: '' },
                 { id: 'pr_2', align: 'full', customW: '', customH: '', html: 'Katalizör yalnızca aktivasyon enerjisini düşürür; $K_c$ değerini değiştirmez.', mediaHtml: '' }
               ],
-              html: '<p><strong>Sohbet Okulu v4.2.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
+              html: '<p><strong>Sohbet Okulu v4.3.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
               sideNotes: [
                 { id: 'sn_1', pos: 'right', offsetTop: 0, customW: '', customH: '', html: 'Sağ alt köşedeki ↘ tutamacını sürükleyerek bu kutuyu hem PC hem tablet/telefonda büyütebilirsiniz.' }
               ]
@@ -1595,7 +1859,7 @@
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.2.0';
+      db.version = '4.3.0';
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -1638,6 +1902,14 @@
       if (rawPct >= 88) pill.classList.add('danger');
       else if (rawPct >= 70) pill.classList.add('warn');
       pill.title = `Kullanılan: ${formatBytesHuman(usedBytes)} / Kapasite: ${maxLabel} (IndexedDB hibrit kayıt aktif)`;
+
+      const dText = document.getElementById('drawerBatteryText');
+      const dFill = document.getElementById('drawerBatteryFill');
+      if (dText) dText.textContent = `%${displayPct} · ${formatBytesHuman(usedBytes)} / ${maxLabel}`;
+      if (dFill) {
+        dFill.style.width = barWidth + '%';
+        dFill.style.background = rawPct >= 88 ? '#ef4444' : rawPct >= 70 ? '#f59e0b' : '#16a34a';
+      }
     }
 
     /* ==========================================================================
@@ -1822,6 +2094,36 @@
       return false;
     }
 
+    function toggleLibrarySectionCollapse() {
+      librarySectionCollapsed = !librarySectionCollapsed;
+      renderSidebar();
+    }
+
+    function toggleSidebarItemMenu(e, menuKey) {
+      e.stopPropagation();
+      const wasOpen = openSidebarMenuId === menuKey;
+      document.querySelectorAll('.sb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+      openSidebarMenuId = wasOpen ? null : menuKey;
+      if (!wasOpen) {
+        const el = document.getElementById('sbMenu_' + menuKey);
+        if (el) el.classList.add('open');
+      }
+    }
+
+    function closeAllSidebarMenus() {
+      openSidebarMenuId = null;
+      document.querySelectorAll('.sb-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    }
+
+    function exportSpecificNoteHtml(noteId) {
+      const note = db.notes.find(n => n.id === noteId);
+      if (!note) return;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const safeFile = (note.title || 'Ders_Notu').replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim().replace(/\s+/g, '_') || 'Ders_Notu';
+      const htmlContent = buildStandaloneNoteHtml(note);
+      shareOrDownloadHtmlFile(htmlContent, `${safeFile}_${dateStr}.html`, note.title || 'Ders Notu');
+    }
+
     function renderFolderBranch(parentId = null) {
       const folders = [...db.folders]
         .filter(f => (f.parentId || null) === parentId)
@@ -1846,12 +2148,26 @@
               <span>${folder.collapsed ? '▸' : '▾'}</span>
               <span>${folder.pinned ? '📌' : '📁'}</span>
               <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="Çift tıkla: yeniden adlandır">${escapeHtml(folder.name)}</span>
-              <div class="item-actions" onclick="event.stopPropagation()">
-                <button class="mini-icon-btn" onclick="createNewFolder('${folder.id}')" title="Alt Klasör Aç">📁+</button>
-                <button class="mini-icon-btn" onclick="toggleFolderPin('${folder.id}')" title="Klasörü Sabitle">📌</button>
-                <button class="mini-icon-btn" onclick="exportSingleFolderZip('${folder.id}')" title="Bu Klasörü Tarihli ZIP İndir">📦</button>
-                <button class="mini-icon-btn" onclick="renameFolder('${folder.id}')" title="Yeniden Adlandır">✎</button>
-                <button class="mini-icon-btn" onclick="deleteFolder('${folder.id}')" title="Sil">🗑</button>
+              <div class="sb-item-menu-wrap" onclick="event.stopPropagation()">
+                <button class="mini-icon-btn" onclick="toggleSidebarItemMenu(event, 'f_${folder.id}')" title="Klasör İşlemleri">•••</button>
+                <div class="sb-dropdown-menu" id="sbMenu_f_${folder.id}">
+                  <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();createNewFolder('${folder.id}')">
+                    <span>📁+</span><span>Alt Klasör Aç</span>
+                  </button>
+                  <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();toggleFolderPin('${folder.id}')">
+                    <span>📌</span><span>${folder.pinned ? 'Sabitlemeyi Kaldır' : 'Klasörü Sabitle'}</span>
+                  </button>
+                  <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();exportSingleFolderZip('${folder.id}')">
+                    <span>📦</span><span>ZIP Olarak İndir</span>
+                  </button>
+                  <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();renameFolder('${folder.id}')">
+                    <span>✎</span><span>Yeniden Adlandır</span>
+                  </button>
+                  <div class="dropdown-sep"></div>
+                  <button class="dropdown-menu-item danger" onclick="closeAllSidebarMenus();deleteFolder('${folder.id}')">
+                    <span>🗑</span><span>Klasörü Sil</span>
+                  </button>
+                </div>
               </div>
             </div>
             <div class="folder-children">
@@ -1864,10 +2180,23 @@
                      ondrop="onDrop(event, 'note', '${n.id}')"
                      onclick="selectNote('${n.id}')">
                   <span class="note-item-title">${n.pinned ? '☆ ' : '📄 '}${escapeHtml(n.title || 'Adsız Not')}</span>
-                  <div class="item-actions" onclick="event.stopPropagation()">
-                    <button class="mini-icon-btn" onclick="toggleNotePin('${n.id}')" title="Sabitle">☆</button>
-                    <button class="mini-icon-btn" onclick="touchMoveNote('${n.id}')" title="Klasör Değiştir">⇄</button>
-                    <button class="mini-icon-btn" onclick="deleteNote('${n.id}')" title="Sil">🗑</button>
+                  <div class="sb-item-menu-wrap" onclick="event.stopPropagation()">
+                    <button class="mini-icon-btn" onclick="toggleSidebarItemMenu(event, 'n_${n.id}')" title="Not İşlemleri">•••</button>
+                    <div class="sb-dropdown-menu" id="sbMenu_n_${n.id}">
+                      <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();toggleNotePin('${n.id}')">
+                        <span>☆</span><span>${n.pinned ? 'Sabitlemeyi Kaldır' : 'Notu Sabitle'}</span>
+                      </button>
+                      <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();touchMoveNote('${n.id}')">
+                        <span>⇄</span><span>Klasöre Taşı</span>
+                      </button>
+                      <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();exportSpecificNoteHtml('${n.id}')">
+                        <span>📄</span><span>HTML İndir / Paylaş</span>
+                      </button>
+                      <div class="dropdown-sep"></div>
+                      <button class="dropdown-menu-item danger" onclick="closeAllSidebarMenus();deleteNote('${n.id}')">
+                        <span>🗑</span><span>Notu Sil</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               `).join('')}
@@ -1887,6 +2216,11 @@
       document.getElementById('countAllNotes').textContent = allPermanent.length;
       document.getElementById('countPinnedNotes').textContent = pinnedNotes.length;
       document.getElementById('quickCountBadge').textContent = quickNotes.length;
+
+      const navList = document.getElementById('sbLibraryNavList');
+      const arrow = document.getElementById('libCollapseArrow');
+      if (navList) navList.classList.toggle('collapsed', librarySectionCollapsed);
+      if (arrow) arrow.textContent = librarySectionCollapsed ? '▸' : '▾';
 
       if (libraryView === 'pinned') {
         tree.innerHTML = sortItems(pinnedNotes).map(n => `
@@ -1914,9 +2248,20 @@
             <div class="note-item ${n.id === db.activeNoteId ? 'active' : ''}" onclick="selectNote('${n.id}')">
               <input type="checkbox" ${checked} onclick="event.stopPropagation();toggleQuickSelect('${n.id}')" />
               <span class="note-item-title">${escapeHtml(n.title || 'Adsız Hızlı Not')}</span>
-              <div class="item-actions" onclick="event.stopPropagation()">
-                <button class="mini-icon-btn" onclick="touchMoveNote('${n.id}')" title="Klasöre Taşı">📁</button>
-                <button class="mini-icon-btn" onclick="deleteNote('${n.id}')" title="Sil">🗑</button>
+              <div class="sb-item-menu-wrap" onclick="event.stopPropagation()">
+                <button class="mini-icon-btn" onclick="toggleSidebarItemMenu(event, 'q_${n.id}')">•••</button>
+                <div class="sb-dropdown-menu" id="sbMenu_q_${n.id}">
+                  <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();touchMoveNote('${n.id}')">
+                    <span>📁</span><span>Klasöre Taşı</span>
+                  </button>
+                  <button class="dropdown-menu-item" onclick="closeAllSidebarMenus();exportSpecificNoteHtml('${n.id}')">
+                    <span>📄</span><span>HTML İndir / Paylaş</span>
+                  </button>
+                  <div class="dropdown-sep"></div>
+                  <button class="dropdown-menu-item danger" onclick="closeAllSidebarMenus();deleteNote('${n.id}')">
+                    <span>🗑</span><span>Sil</span>
+                  </button>
+                </div>
               </div>
             </div>
           `;
@@ -2200,6 +2545,13 @@
       if (activeMultiFilters.has('purple') && blk.pin === 'purple') return true;
       if (activeMultiFilters.has('highlight') && /<mark\b/i.test(blk.html || '')) return true;
       return false;
+    }
+
+    function toggleMobileNavBar() {
+      mobileNavBarExpanded = !mobileNavBarExpanded;
+      const nav = document.getElementById('stickyNoteNav');
+      if (nav) nav.classList.toggle('mob-collapsed', !mobileNavBarExpanded);
+      renderEditor();
     }
 
     function toggleMultiFilterChip(key) {
@@ -2500,8 +2852,12 @@
           </div>
         </header>
 
-        <!-- NOT TEPESİNE SABİT (STICKY) HIZLI GEZİNTİ & ÇOKLU SÜZGEÇ ÇUBUĞU -->
-        <div class="sticky-note-nav">
+        <!-- NOT TEPESİNE HIZLI GEZİNTİ & ÇOKLU SÜZGEÇ ÇUBUĞU (MOBİLDE AÇ/KAPA) -->
+        <div class="sticky-note-nav ${mobileNavBarExpanded ? '' : 'mob-collapsed'}" id="stickyNoteNav">
+          <button class="sticky-nav-mobile-toggle" onclick="toggleMobileNavBar()">
+            <span>🧭 Gezinti, Pin & Odak ${activeMultiFilters.size > 0 ? `(${activeMultiFilters.size} süzgeç)` : ''} ${db.settings.spotlightOn ? '· ⛶ Odak Açık' : ''}</span>
+            <span>${mobileNavBarExpanded ? '▴ Kapat' : '▾ Aç'}</span>
+          </button>
           <div class="sticky-nav-filters">
             <button class="multi-chip ${activeMultiFilters.size === 0 ? 'active' : ''}" onclick="toggleMultiFilterChip('all')">Tümü (${note.blocks.length})</button>
             <button class="multi-chip ${activeMultiFilters.has('red') ? 'active' : ''}" onclick="toggleMultiFilterChip('red')" title="Anlamadım">🔴 ${redCount}</button>
@@ -3162,22 +3518,43 @@
     }
 
     /* ==========================================================================
-       KALIN, İTALİK, ALTI ÇİZİLİ + ÇOKLU DÜĞÜM FOSFORLU KALEM MOTORU
+       KALIN, İTALİK, ALTI ÇİZİLİ + MOBİL UYUMLU FOSFORLU KALEM MOTORU
        ========================================================================== */
+    let selDebounceTimer = null;
     document.addEventListener('mouseup', showSelectionBarIfNeeded);
     document.addEventListener('keyup', showSelectionBarIfNeeded);
-    document.addEventListener('touchend', () => setTimeout(showSelectionBarIfNeeded, 80));
+    document.addEventListener('touchend', () => setTimeout(showSelectionBarIfNeeded, 110));
+    document.addEventListener('selectionchange', () => {
+      if (selDebounceTimer) clearTimeout(selDebounceTimer);
+      selDebounceTimer = setTimeout(showSelectionBarIfNeeded, 120);
+    });
 
     function showSelectionBarIfNeeded() {
       const sel = window.getSelection();
       const pop = document.getElementById('selectionPopover');
-      if (!sel || sel.isCollapsed || !sel.toString().trim()) { pop.style.display = 'none'; return; }
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+        pop.style.display = 'none';
+        return;
+      }
+      if (isMobileUI()) {
+        pop.style.display = 'flex';
+        return;
+      }
       const rect = sel.getRangeAt(0).getBoundingClientRect();
-      const left = Math.min(window.innerWidth - 235, Math.max(10, rect.left + rect.width / 2 - 110));
-      const top = Math.max(10, rect.top - 48);
+      const left = Math.min(window.innerWidth - 260, Math.max(10, rect.left + rect.width / 2 - 125));
+      const top = Math.max(10, rect.top - 50);
       pop.style.left = `${left}px`;
       pop.style.top = `${top}px`;
       pop.style.display = 'flex';
+    }
+
+    function triggerMobileHighlightAction() {
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.toString().trim()) {
+        applyHighlight('hl-yellow');
+        return;
+      }
+      alert('Vurgulamak istediğiniz metnin üzerine parmağınızla basılı tutup seçin; seçim yapıldığı anda altta Sarı / Yeşil / Pembe vurgu paleti açılacaktır.');
     }
 
     function applyTextStyle(cmd) {
@@ -3903,6 +4280,99 @@
       downloadBlob(await zip.generateAsync({ type: 'blob' }), `SohbetOkulu_Yedek_${dateStr}.zip`);
     }
 
+    function buildStandaloneNoteHtml(note) {
+      const dateStr = new Date(note.updatedAt || Date.now()).toISOString().slice(0, 10);
+      const safeTitle = escapeHtml(note.title || 'Ders Notu');
+      const cardsHtml = (note.blocks || []).map((b, idx) => {
+        const prems = Array.isArray(b.premises) ? b.premises : [];
+        const premHtml = prems.length
+          ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;">` +
+            prems.map((p, pi) => `<div style="padding:9px 12px;border-radius:10px;background:#f1f5f9;border-left:3.5px solid #1e563f;"><strong>Öncül ${ROMANS[pi] || (pi + 1) + '.'}:</strong> ${p.html || ''}${p.mediaHtml || ''}</div>`).join('') +
+            `</div>`
+          : '';
+        const sides = Array.isArray(b.sideNotes) ? b.sideNotes : [];
+        const sideHtml = sides.length
+          ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">` +
+            sides.map(s => `<div style="padding:8px 12px;border-radius:10px;background:#f2f5ee;border:1px dashed rgba(27,77,58,0.35);font-size:0.92em;"><strong>📝 Yan Not:</strong> ${s.html ?? escapeHtml(s.text || '')}</div>`).join('') +
+            `</div>`
+          : '';
+        const pinBorder = b.pin === 'red' ? '#ef4444' : b.pin === 'yellow' ? '#f59e0b' : b.pin === 'purple' ? '#8b5cf6' : '#e2e8f0';
+        return `<section class="export-card" style="border:1px solid #e2e8f0;border-left:4.5px solid ${pinBorder};border-radius:14px;padding:16px 18px;margin-bottom:14px;background:#ffffff;">
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px;font-weight:600;">#${String(idx + 1).padStart(2, '0')}${b.role ? ' · ' + escapeHtml(b.role) : ''}</div>
+          <div class="export-body">${b.html || ''}</div>
+          ${premHtml}
+          ${sideHtml}
+        </section>`;
+      }).join('');
+
+      return `<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${safeTitle} · Sohbet Okulu</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"><\/script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"><\/script>
+  <style>
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f6f6f0; color: #18241e; max-width: 880px; margin: 28px auto; padding: 0 18px 60px; line-height: 1.72; }
+    h1 { font-family: Georgia, serif; font-size: 28px; margin-bottom: 6px; }
+    .meta { color: #5a6b62; font-size: 13px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #d6dcd5; }
+    .export-card img { max-width: 100%; height: auto; border-radius: 8px; }
+    mark.hl-yellow { background: rgba(253, 224, 71, 0.55); padding: 1px 3px; border-radius: 4px; }
+    mark.hl-green { background: rgba(134, 239, 172, 0.52); padding: 1px 3px; border-radius: 4px; }
+    mark.hl-pink { background: rgba(249, 168, 212, 0.55); padding: 1px 3px; border-radius: 4px; }
+    pre { background: #eef1ea; padding: 10px 12px; border-radius: 8px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>${safeTitle}</h1>
+  <div class="meta">Sohbet Okulu · Tarih: ${dateStr} · Toplam ${(note.blocks || []).length} kart</div>
+  ${cardsHtml}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true }
+          ],
+          throwOnError: false
+        });
+      }
+    });
+  <\/script>
+</body>
+</html>`;
+    }
+
+    async function shareOrDownloadHtmlFile(htmlContent, filename, shareTitle) {
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      if (isMobileUI() && navigator.share && navigator.canShare) {
+        try {
+          const file = new File([blob], filename, { type: 'text/html' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ title: shareTitle, files: [file] });
+            return;
+          }
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+      downloadBlob(blob, filename);
+    }
+
+    function exportActiveNoteHtml() {
+      const note = getActiveNote();
+      if (!note) return alert('Dışa aktarılacak aktif not bulunamadı.');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const safeFile = (note.title || 'Ders_Notu').replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim().replace(/\s+/g, '_') || 'Ders_Notu';
+      const htmlContent = buildStandaloneNoteHtml(note);
+      shareOrDownloadHtmlFile(htmlContent, `${safeFile}_${dateStr}.html`, note.title || 'Ders Notu');
+    }
+
     function exportJsonBackup() {
       const dateStr = new Date().toISOString().slice(0, 10);
       downloadBlob(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }), `SohbetOkulu_Yedek_${dateStr}.json`);
@@ -4016,22 +4486,22 @@
     function updateDrawerBackdrop() {
       const bd = document.getElementById('drawerBackdrop');
       if (!bd) return;
-      const isMobile = window.innerWidth <= 640;
+      const isMobile = isMobileUI();
       const isTablet = window.innerWidth <= 1080;
       const sbOpen = !document.getElementById('appShell').classList.contains('sidebar-collapsed');
       const rdOpen = !document.getElementById('workspaceWrap').classList.contains('right-collapsed');
-      bd.classList.toggle('visible', (isMobile && sbOpen) || (isTablet && rdOpen));
+      bd.classList.toggle('visible', (isMobile && sbOpen) || ((isMobile || isTablet) && rdOpen));
     }
 
     function closeMobileDrawers() {
-      if (window.innerWidth <= 640) document.getElementById('appShell').classList.add('sidebar-collapsed');
-      if (window.innerWidth <= 1080) document.getElementById('workspaceWrap').classList.add('right-collapsed');
+      if (isMobileUI()) document.getElementById('appShell').classList.add('sidebar-collapsed');
+      if (isMobileUI() || window.innerWidth <= 1080) document.getElementById('workspaceWrap').classList.add('right-collapsed');
       updateDrawerBackdrop();
     }
 
     function toggleSidebar() {
       document.getElementById('appShell').classList.toggle('sidebar-collapsed');
-      if (window.innerWidth <= 640 && !document.getElementById('appShell').classList.contains('sidebar-collapsed')) {
+      if (isMobileUI() && !document.getElementById('appShell').classList.contains('sidebar-collapsed')) {
         document.getElementById('workspaceWrap').classList.add('right-collapsed');
       }
       updateDrawerBackdrop();
@@ -4039,7 +4509,7 @@
 
     function toggleRightDrawer() {
       document.getElementById('workspaceWrap').classList.toggle('right-collapsed');
-      if (window.innerWidth <= 640 && !document.getElementById('workspaceWrap').classList.contains('right-collapsed')) {
+      if (isMobileUI() && !document.getElementById('workspaceWrap').classList.contains('right-collapsed')) {
         document.getElementById('appShell').classList.add('sidebar-collapsed');
       }
       renderRightDrawer();
@@ -4064,14 +4534,23 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
+      await loadDatabase();
+      applyViewportModeClass();
       updateNetworkBadge();
-      if (window.innerWidth <= 1080) {
+      if (isMobileUI() || window.innerWidth <= 1080) {
         document.getElementById('workspaceWrap').classList.add('right-collapsed');
       }
-      if (window.innerWidth <= 640) {
+      if (isMobileUI()) {
+        librarySectionCollapsed = true;
         document.getElementById('appShell').classList.add('sidebar-collapsed');
       }
-      await loadDatabase();
+      const edScroll = document.getElementById('editorScroll');
+      const topFab = document.getElementById('scrollTopFab');
+      if (edScroll && topFab) {
+        edScroll.addEventListener('scroll', () => {
+          topFab.classList.toggle('visible', edScroll.scrollTop > 380);
+        }, { passive: true });
+      }
       initIncomingBridge();
       checkInterruptedAudioRecovery();
       renderAll();
