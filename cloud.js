@@ -25,19 +25,7 @@ let driveToken = sessionStorage.getItem('drive_token') || null;
 let unsubSnap = null;
 let isApplyingRemote = false;
 
-const statusEl = document.getElementById('syncStatus');
-const bar = statusEl.parentElement;
-const authBtn = document.createElement('button');
-authBtn.className = 'mini-btn';
-authBtn.style.fontWeight = '700';
-authBtn.textContent = '🔑 Giriş';
-bar.appendChild(authBtn);
-
-authBtn.onclick = async () => {
-  if (currentUser) {
-    if (confirm('Çıkış yapılsın mı?')) { await signOut(auth); sessionStorage.removeItem('drive_token'); }
-    return;
-  }
+async function loginWithGoogle() {
   try {
     const res = await signInWithPopup(auth, provider);
     const cred = GoogleAuthProvider.credentialFromResult(res);
@@ -48,32 +36,60 @@ authBtn.onclick = async () => {
   } catch (e) {
     alert('Giriş hatası: ' + e.message);
   }
-};
+}
+
+async function logoutGoogle() {
+  if (!confirm('Çıkış yapılsın mı?')) return;
+  await signOut(auth);
+  sessionStorage.removeItem('drive_token');
+}
+
+window.loginWithGoogle = loginWithGoogle;
+window.signInWithGoogle = loginWithGoogle;
+window.logoutGoogle = logoutGoogle;
+window.signOutGoogle = logoutGoogle;
+
+const statusEl = document.getElementById('syncStatus');
+const bar = statusEl?.parentElement;
+let authBtn = null;
+if (statusEl && bar) {
+  authBtn = document.createElement('button');
+  authBtn.className = 'mini-btn';
+  authBtn.style.fontWeight = '700';
+  authBtn.textContent = '🔑 Giriş';
+  authBtn.onclick = async () => {
+    if (currentUser) await logoutGoogle();
+    else await loginWithGoogle();
+  };
+  bar.appendChild(authBtn);
+}
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
   if (unsubSnap) { unsubSnap(); unsubSnap = null; }
 
+  window.setAuthUserUI?.(user);
+
   if (!user) {
-    statusEl.textContent = '💾 Yerel Mod (Offline)';
-    authBtn.textContent = '🔑 Giriş';
+    if (statusEl) statusEl.textContent = '💾 Yerel Mod (Offline)';
+    if (authBtn) authBtn.textContent = '🔑 Giriş';
     return;
   }
 
-  statusEl.textContent = '☁️ ' + (user.displayName?.split(' ')[0] || 'Bağlı');
-  authBtn.textContent = '🚪 Çıkış';
+  if (statusEl) statusEl.textContent = '☁️ ' + (user.displayName?.split(' ')[0] || 'Bağlı');
+  if (authBtn) authBtn.textContent = '🚪 Çıkış';
 
   const userDoc = doc(dbCloud, 'users', user.uid, 'data', 'main');
   unsubSnap = onSnapshot(userDoc, (snap) => {
     if (!snap.exists()) {
-      window.syncToCloud?.(window.getAppDb());
+      window.syncToCloud?.(window.getAppDb?.());
       return;
     }
     const remote = snap.data();
-    const local = window.getAppDb();
+    const local = window.getAppDb?.() || {};
     if (remote.updatedAt && remote.updatedAt > (local.updatedAt || 0)) {
       isApplyingRemote = true;
-      window.setAppDb(remote);
+      window.setAppDb?.(remote);
       isApplyingRemote = false;
     }
     checkDailyDriveBackup(remote);
@@ -81,7 +97,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 window.syncToCloud = async (localDb) => {
-  if (!currentUser || isApplyingRemote) return;
+  if (!currentUser || isApplyingRemote || !localDb) return;
   try {
     localDb.updatedAt = Date.now();
     await setDoc(doc(dbCloud, 'users', currentUser.uid, 'data', 'main'), localDb);
