@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.3.0</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.4.0</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1113,6 +1113,180 @@
       display: none !important;
     }
 
+    
+    /* ==========================================================================
+       v4.4.0 EKRANA SIĞDIRMA, ZOOM İNCELEYİCİ, NOT İÇİ ARAMA & AÇILIR FOOTER
+       ========================================================================== */
+    .card-content, .premise-text-area, .side-note-body {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    /* Akıllı Ekrana Sığdırma Sarmalayıcısı (Tablo, Formül, Kod) */
+    .fit-scale-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .fit-scale-inner {
+      transform-origin: top left;
+      display: inline-block;
+      min-width: 100%;
+    }
+    .fit-scale-inner table {
+      display: table !important;
+      width: max-content !important;
+      max-width: none !important;
+      margin: 0 !important;
+    }
+    .fit-scale-inner .katex-display {
+      overflow: visible !important;
+      width: max-content !important;
+      max-width: none !important;
+      margin: 0 !important;
+    }
+    .fit-scale-inner pre {
+      overflow: visible !important;
+      width: max-content !important;
+      max-width: none !important;
+      margin: 0 !important;
+    }
+    .fit-zoom-btn {
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      z-index: 6;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-paper);
+      color: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      opacity: 0.92;
+    }
+    .fit-zoom-btn:hover { opacity: 1; background: var(--accent); color: #fff; }
+
+    /* Tam Ekran Zoom & Kaydırma İnceleme Modalı */
+    .zoom-inspect-viewport {
+      width: 100%;
+      max-height: 68vh;
+      overflow: auto;
+      background: var(--bg-paper);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 14px;
+      touch-action: pan-x pan-y pinch-zoom;
+      -webkit-overflow-scrolling: touch;
+    }
+    .zoom-inspect-stage {
+      transform-origin: top left;
+      transition: transform 140ms ease;
+      font-size: var(--reader-font-px);
+      line-height: 1.7;
+    }
+    .zoom-inspect-stage table {
+      border-collapse: collapse;
+      width: max-content;
+    }
+    .zoom-inspect-stage th, .zoom-inspect-stage td {
+      border: 1px solid var(--border-soft);
+      padding: 8px 11px;
+      text-align: left;
+    }
+
+    /* Not İçi Canlı Arama Çubuğu & Geçici Eşleşme Vurgusu */
+    .in-note-search-bar {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      background: var(--bg-paper);
+      border: 1.5px solid var(--accent);
+      box-shadow: var(--shadow-card);
+      flex-wrap: wrap;
+    }
+    .in-note-search-bar.open { display: flex; }
+    .in-note-search-input {
+      flex: 1 1 160px;
+      min-width: 0;
+      height: 32px;
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 0 10px;
+      outline: none;
+    }
+    .in-note-search-input:focus { border-color: var(--accent); background: var(--bg-paper); }
+    mark.search-hit {
+      background: #fde047;
+      color: #111;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+    mark.search-hit.search-hit-current {
+      background: #f97316;
+      color: #fff;
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.35);
+    }
+
+    /* Sol Panel Açılır-Kapanır Alt Bölüm (Aktarım & Hesap) */
+    .sb-footer-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 4px 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sidebar-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .sb-footer-body { display: flex; flex-direction: column; gap: 4px; }
+    .sb-footer-body.collapsed { display: none !important; }
+
+    /* Mobil Okuma Kilidi & Tam Genişlik Kart Garantisi */
+    body.is-mobile-ui .lesson-card {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+      padding: 13px 13px !important;
+    }
+    body.is-mobile-ui .block-row {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+    }
+    body.is-mobile-ui .card-toolbar {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    body.is-mobile-ui .card-mini-btn {
+      padding: 3px 6px;
+      font-size: 12px;
+    }
+    .read-lock-badge {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+    }
+
     @media print {
       .sidebar, .topbar, .right-drawer, .quick-dock-wrap, .mobile-bottom-nav, .card-toolbar, .card-bottom-bar, .insert-strip, .dictation-banner, .bulk-move-bar, .note-header-actions, .touch-resize-grip { display: none !important; }
       body, .app-shell, .workspace-wrap, .editor-scroll { height: auto !important; overflow: visible !important; background: #fff !important; color: #000 !important; }
@@ -1137,7 +1311,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.3.0</div>
+            <div class="brand-sub">Ders stüdyosu · v4.4.0</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1181,18 +1355,24 @@
       <div class="sidebar-tree" id="sidebarTree"></div>
 
       <div class="sidebar-footer">
-        <button class="sb-footer-link" onclick="openTransferModal()">⇄ Aktarım araçları (.html / .pdf / .docx)</button>
-        <button class="sb-footer-link" onclick="openBackupModal()">⚙ Yedek ve sürüm notları</button>
+        <div class="sb-footer-toggle" onclick="toggleFooterSectionCollapse()" title="Aktarım araçları ve hesap bölümünü aç / kapat">
+          <span style="display:inline-flex;align-items:center;"><span class="sb-collapse-arrow" id="footerCollapseArrow">▾</span>AKTARIM & HESAP</span>
+          <span id="footerMiniStatus" style="font-size:10px;color:var(--sidebar-muted);">●</span>
+        </div>
+        <div class="sb-footer-body" id="sbFooterBody">
+          <button class="sb-footer-link" onclick="openTransferModal()">⇄ Aktarım araçları (.html / .pdf / .docx)</button>
+          <button class="sb-footer-link" onclick="openBackupModal()">⚙ Yedek ve sürüm notları</button>
 
-        <div class="account-bottom-card">
-          <div class="user-status-info">
-            <span class="user-dot" id="userStatusDot"></span>
-            <div style="min-width:0;flex:1;">
-              <div class="user-name-text" id="userNameText">Misafir Kullanıcı</div>
-              <span class="user-role-sub" id="userRoleSub">Yerel IndexedDB · 50 MB</span>
+          <div class="account-bottom-card">
+            <div class="user-status-info">
+              <span class="user-dot" id="userStatusDot"></span>
+              <div style="min-width:0;flex:1;">
+                <div class="user-name-text" id="userNameText">Misafir Kullanıcı</div>
+                <span class="user-role-sub" id="userRoleSub">Yerel Mod · 5 MB Limit</span>
+              </div>
             </div>
+            <button class="auth-mini-btn" id="googleAuthBtn" onclick="handleGoogleAuthClick()">Google Giriş</button>
           </div>
-          <button class="auth-mini-btn" id="googleAuthBtn" onclick="handleGoogleAuthClick()">Google Giriş</button>
         </div>
       </div>
     </aside>
@@ -1206,6 +1386,8 @@
           <span class="topbar-note-crumb" id="topbarCrumb">Kütüphanem / Sohbet Okulu</span>
         </div>
         <div class="topbar-right">
+          <button class="tool-btn mobile-only-btn" id="btnMobileReadLock" onclick="toggleMobileReadLock()" title="Okuma / Düzenleme kilidini değiştir">📖 Okuma</button>
+          <button class="tool-btn mobile-only-btn" id="btnMobileInNoteSearch" onclick="toggleInNoteSearchBar()" title="Bu not içinde ara">🔍 Ara</button>
           <button class="tool-btn mobile-only-btn" onclick="exportActiveNoteHtml()" title="Aktif notu HTML olarak indir veya paylaş">📄 HTML</button>
           <span class="net-status-pill" id="netStatusPill" title="Çevrimiçi / Çevrimdışı çalışma durumu">🌐 Çevrimiçi</span>
 
@@ -1350,6 +1532,17 @@
               <button class="stepper-btn" onclick="stepFontSize(1)" title="Yazıyı Büyüt">A+</button>
             </div>
 
+            <div class="font-stepper-box" title="Kart ve tablo görünüm yakınlaştırma ölçeği">
+              <button class="stepper-btn" onclick="stepZoomPct(-10)" title="Uzaklaştır">🔍-</button>
+              <span id="zoomPctValueLabel" style="font-size:12.5px;font-weight:700;">%100</span>
+              <button class="stepper-btn" onclick="stepZoomPct(10)" title="Yakınlaştır">🔍+</button>
+            </div>
+
+            <button class="reading-tool-row" id="btnFitScreenRow" onclick="toggleFitToScreen()">
+              <span>📐 Tablo & formülleri sığdır</span>
+              <span id="fitScreenStateTag" style="font-size:11px;font-weight:700;">Açık ✓</span>
+            </button>
+
             <select id="fontSelect" class="right-select" onchange="setFont(this.value)">
               <option value="jakarta">Aa Plus Jakarta Sans</option>
               <option value="inter">Aa Inter (Net)</option>
@@ -1491,7 +1684,7 @@
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.3.0)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.4.0)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -1505,7 +1698,12 @@
       <div style="border-top:1px solid var(--border-soft);padding-top:12px;">
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
 
-                        <div class="changelog-item">
+                                <div class="changelog-item">
+          <span class="changelog-ver">v4.4.0 — Gerçek 1 MB/5 MB Limit Göstergesi, Not İçi Arama, Akıllı Ekrana Sığdırma & Zoom İnceleyici (Güncel)</span>
+          Depolama göstergesi gerçek sınırları (<strong>Google Bulut için 1 MB Firestore belge limiti</strong>, <strong>Yerel Mod için 5 MB</strong>) gösterecek şekilde düzeltildi; hem masaüstünde hem mobilde çalışan <strong>Not İçi Canlı Arama (1/N eşleşme atlama)</strong> ve bağlam önizlemeli genel arama eklendi; geniş tablolar, formüller ve kod blokları için <strong>Akıllı Ekrana Sığdırma</strong> ile <strong>Tam Ekran Zoom & Kaydırma İnceleyicisi (%100–%250 + iki parmak zoom)</strong> eklendi; sol panelde <strong>Aktarım & Hesap</strong> bölümü açılır-kapanır hale getirildi; mobilde yanlışlıkla klavye açılmasını önleyen <strong>📖 Okuma / ✏️ Düzenle</strong> kilidi ve sıfır titremeli dikte motoru eklendi.
+        </div>
+
+        <div class="changelog-item">
           <span class="changelog-ver">v4.3.0 — Özel Mobil Arayüz Modu, Sol Panel ••• Menüleri, Mobil Vurgu & Açılır Gezinti (Güncel)</span>
           PC arayüzüne dokunmadan telefon ekranları için optimize edilmiş <strong>Mobil / Masaüstü Görünüm Geçişi</strong> eklendi; sol panelde <strong>Kütüphane</strong> bölümü daraltılabilir hale getirildi, klasör ve not işlemleri satır kalabalığını önlemek için ek <strong>•••</strong> menülerinde toplandı ve uzun not başlıkları 2 satır okunabilir yapıldı; mobilde <strong>Fosforlu Kalem Vurgusu</strong> dokunma korumalı alt palete ve alt gezinti çubuğuna eklendi; üst bardaki ağ/pil göstergeleri mobilde <strong>Ayarlar</strong> paneline taşınarak yerlerine tek tıkla <strong>📄 HTML Paylaş/İndir</strong> eklendi; üst gezinti/odak çubuğu mobilde sayfa başında açılıp kapanabilir hale getirildi.
         </div>
@@ -1564,6 +1762,27 @@
   </div>
 
 
+
+  <!-- Tam Ekran Zoom & Kaydırma İnceleme Penceresi (Tablo, Formül & Kart) -->
+  <div class="modal-backdrop" id="zoomInspectModal" onclick="closeModal('zoomInspectModal')">
+    <div class="modal-box" style="max-width:94vw;width:94vw;" onclick="event.stopPropagation()">
+      <div class="modal-head" style="flex-wrap:wrap;gap:8px;">
+        <strong id="zoomInspectTitle">🔍 Yakınlaştır & İncele</strong>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+          <button class="tool-btn" style="height:30px;padding:0 9px;" onclick="setInspectZoom(inspectZoomScale - 0.25)">➖</button>
+          <span id="inspectZoomLabel" style="font-size:12px;font-weight:700;min-width:44px;text-align:center;">%100</span>
+          <button class="tool-btn" style="height:30px;padding:0 9px;" onclick="setInspectZoom(inspectZoomScale + 0.25)">➕</button>
+          <button class="tool-btn" style="height:30px;padding:0 9px;" onclick="setInspectZoom(1.5)">%150</button>
+          <button class="tool-btn" style="height:30px;padding:0 9px;" onclick="fitInspectStageToModal()">📐 Sığdır</button>
+          <button class="card-mini-btn" onclick="closeModal('zoomInspectModal')">✕ Kapat</button>
+        </div>
+      </div>
+      <div class="zoom-inspect-viewport" id="zoomInspectViewport">
+        <div class="zoom-inspect-stage" id="zoomInspectStage"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Dokunmatik Klasör / Not Seçici Modalı (prompt() yerine) -->
   <div class="modal-backdrop" id="pickerModal">
     <div class="modal-box" style="max-width:460px;">
@@ -1601,7 +1820,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.3.0',
+      version: '4.4.0',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -1626,6 +1845,12 @@
     let openSidebarMenuId = null;
     let mobileNavBarExpanded = false;
     let librarySectionCollapsed = window.innerWidth <= 640;
+    let footerSectionCollapsed = window.innerWidth <= 640;
+    let mobileReadOnly = window.innerWidth <= 640;
+    let inNoteSearchOpen = false;
+    let inNoteSearchQuery = '';
+    let inNoteMatchElements = [];
+    let inNoteMatchIndex = -1;
     let undoStack = [];
     let dynamicTimer = null;
     let activeFocusTarget = { type: 'card', blockId: null, sideNoteId: null, premiseBoxId: null };
@@ -1649,9 +1874,13 @@
       applyViewportModeClass();
       if (isMobileUI()) {
         librarySectionCollapsed = true;
+        footerSectionCollapsed = true;
+        mobileReadOnly = true;
         document.getElementById('workspaceWrap')?.classList.add('right-collapsed');
       } else {
         librarySectionCollapsed = false;
+        footerSectionCollapsed = false;
+        mobileReadOnly = false;
         document.getElementById('appShell')?.classList.remove('sidebar-collapsed');
       }
       updateDrawerBackdrop();
@@ -1733,13 +1962,13 @@
         currentUserState = { isLoggedIn: true, name: user.displayName || user.email, email: user.email || '' };
         dot.classList.add('online');
         nameEl.textContent = currentUserState.name;
-        subEl.textContent = 'Google Bulut · 1 GB Limit';
+        subEl.textContent = 'Google Bulut · 1 MB Limit';
         btn.textContent = 'Çıkış';
       } else {
         currentUserState = { isLoggedIn: false, name: 'Misafir Kullanıcı', email: '' };
         dot.classList.remove('online');
         nameEl.textContent = 'Misafir Kullanıcı';
-        subEl.textContent = 'Yerel IndexedDB · 50 MB';
+        subEl.textContent = 'Yerel Mod · 5 MB Limit';
         btn.textContent = 'Google Giriş';
       }
       updateGlobalBatteryGauge();
@@ -1771,7 +2000,7 @@
 
       if (parsed) {
         db = {
-          version: '4.3.0',
+          version: '4.4.0',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -1782,6 +2011,8 @@
             dynamicMinutes: Number(parsed.settings?.dynamicMinutes || 0),
             spotlightOn: Boolean(parsed.settings?.spotlightOn),
             viewportMode: parsed.settings?.viewportMode || 'auto',
+            zoomPct: Number(parsed.settings?.zoomPct || 100),
+            fitToScreen: parsed.settings?.fitToScreen !== false,
             quickTools: Array.isArray(parsed.settings?.quickTools) && parsed.settings.quickTools.length
               ? parsed.settings.quickTools : DEFAULT_QUICK_TOOLS
           }
@@ -1813,7 +2044,7 @@
                 { id: 'pr_1', align: 'full', customW: '', customH: '', html: 'Sıcaklık artarsa endotermik tepkimede denge ürünler yönüne kayar.', mediaHtml: '' },
                 { id: 'pr_2', align: 'full', customW: '', customH: '', html: 'Katalizör yalnızca aktivasyon enerjisini düşürür; $K_c$ değerini değiştirmez.', mediaHtml: '' }
               ],
-              html: '<p><strong>Sohbet Okulu v4.3.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
+              html: '<p><strong>Sohbet Okulu v4.4.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
               sideNotes: [
                 { id: 'sn_1', pos: 'right', offsetTop: 0, customW: '', customH: '', html: 'Sağ alt köşedeki ↘ tutamacını sürükleyerek bu kutuyu hem PC hem tablet/telefonda büyütebilirsiniz.' }
               ]
@@ -1859,7 +2090,7 @@
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.3.0';
+      db.version = '4.4.0';
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -1888,8 +2119,8 @@
       if (!pill || !fill || !pctEl) return;
 
       const usedBytes = new Blob([JSON.stringify(db)]).size;
-      const maxBytes = currentUserState.isLoggedIn ? (1024 * 1024 * 1024) : (50 * 1024 * 1024);
-      const maxLabel = currentUserState.isLoggedIn ? '1 GB' : '50 MB';
+      const maxBytes = currentUserState.isLoggedIn ? (1024 * 1024) : (5 * 1024 * 1024);
+      const maxLabel = currentUserState.isLoggedIn ? '1 MB' : '5 MB';
       const rawPct = (usedBytes / maxBytes) * 100;
       const displayPct = rawPct < 1 ? Number(rawPct.toFixed(1)) : Math.min(100, Math.round(rawPct));
       const barWidth = Math.min(100, Math.max(4, Math.round(rawPct)));
@@ -1900,15 +2131,17 @@
 
       pill.classList.remove('warn', 'danger');
       if (rawPct >= 88) pill.classList.add('danger');
-      else if (rawPct >= 70) pill.classList.add('warn');
-      pill.title = `Kullanılan: ${formatBytesHuman(usedBytes)} / Kapasite: ${maxLabel} (IndexedDB hibrit kayıt aktif)`;
+      else if (rawPct >= 72) pill.classList.add('warn');
+      pill.title = currentUserState.isLoggedIn
+        ? `Bulut Senkronizasyon Limiti: ${formatBytesHuman(usedBytes)} / 1 MB (Firestore belge sınırı)`
+        : `Yerel Depolama Limiti: ${formatBytesHuman(usedBytes)} / 5 MB (IndexedDB 50 MB yedekli)`;
 
       const dText = document.getElementById('drawerBatteryText');
       const dFill = document.getElementById('drawerBatteryFill');
       if (dText) dText.textContent = `%${displayPct} · ${formatBytesHuman(usedBytes)} / ${maxLabel}`;
       if (dFill) {
         dFill.style.width = barWidth + '%';
-        dFill.style.background = rawPct >= 88 ? '#ef4444' : rawPct >= 70 ? '#f59e0b' : '#16a34a';
+        dFill.style.background = rawPct >= 88 ? '#ef4444' : rawPct >= 72 ? '#f59e0b' : '#16a34a';
       }
     }
 
@@ -1916,11 +2149,15 @@
        GERÇEK YAZI BOYUTU, ODAK MODU, 8 TEMA & 8 YAZI TİPİ
        ========================================================================== */
     function applySettingsToDOM() {
-      const px = Math.min(24, Math.max(13, Number(db.settings.fontSizePx || 16)));
-      db.settings.fontSizePx = px;
+      const basePx = Math.min(24, Math.max(13, Number(db.settings.fontSizePx || 16)));
+      const zoomPct = Math.min(130, Math.max(80, Number(db.settings.zoomPct || 100)));
+      db.settings.fontSizePx = basePx;
+      db.settings.zoomPct = zoomPct;
+      const effectivePx = Math.round(basePx * (zoomPct / 100) * 10) / 10;
+
       document.documentElement.setAttribute('data-theme', db.settings.theme);
       document.documentElement.setAttribute('data-font', db.settings.font);
-      document.documentElement.style.setProperty('--reader-font-px', px + 'px');
+      document.documentElement.style.setProperty('--reader-font-px', effectivePx + 'px');
 
       const editorEl = document.getElementById('editorContainer');
       const spotOn = Boolean(db.settings.spotlightOn);
@@ -1931,11 +2168,45 @@
         spotBtn.textContent = spotOn ? '⛶ Odak: Açık' : '⛶ Odak';
       }
 
+      const fitOn = db.settings.fitToScreen !== false;
+      const fitTag = document.getElementById('fitScreenStateTag');
+      const fitRow = document.getElementById('btnFitScreenRow');
+      if (fitTag) fitTag.textContent = fitOn ? 'Açık ✓' : 'Kapalı';
+      if (fitRow) fitRow.classList.toggle('active-tool', fitOn);
+
+      const lockBtn = document.getElementById('btnMobileReadLock');
+      if (lockBtn) {
+        lockBtn.classList.toggle('active', !mobileReadOnly);
+        lockBtn.textContent = mobileReadOnly ? '📖 Okuma' : '✏️ Düzenle';
+      }
+
       document.getElementById('themeSelect').value = db.settings.theme;
       document.getElementById('fontSelect').value = db.settings.font;
-      document.getElementById('fontSizeValueLabel').textContent = px + ' px';
+      document.getElementById('fontSizeValueLabel').textContent = basePx + ' px';
+      const zoomLbl = document.getElementById('zoomPctValueLabel');
+      if (zoomLbl) zoomLbl.textContent = '%' + zoomPct;
       document.getElementById('dynamicThemeSelect').value = String(db.settings.dynamicMinutes || 0);
       setupDynamicThemeTimer();
+    }
+
+    function stepZoomPct(delta) {
+      db.settings.zoomPct = Math.min(130, Math.max(80, Number(db.settings.zoomPct || 100) + delta));
+      applySettingsToDOM();
+      saveDatabase();
+      renderEditor();
+    }
+
+    function toggleFitToScreen() {
+      db.settings.fitToScreen = !(db.settings.fitToScreen !== false);
+      applySettingsToDOM();
+      saveDatabase();
+      renderEditor();
+    }
+
+    function toggleMobileReadLock() {
+      mobileReadOnly = !mobileReadOnly;
+      applySettingsToDOM();
+      renderEditor();
     }
 
     function toggleSpotlight() {
@@ -2099,6 +2370,11 @@
       renderSidebar();
     }
 
+    function toggleFooterSectionCollapse() {
+      footerSectionCollapsed = !footerSectionCollapsed;
+      renderSidebar();
+    }
+
     function toggleSidebarItemMenu(e, menuKey) {
       e.stopPropagation();
       const wasOpen = openSidebarMenuId === menuKey;
@@ -2221,6 +2497,13 @@
       const arrow = document.getElementById('libCollapseArrow');
       if (navList) navList.classList.toggle('collapsed', librarySectionCollapsed);
       if (arrow) arrow.textContent = librarySectionCollapsed ? '▸' : '▾';
+
+      const footerBody = document.getElementById('sbFooterBody');
+      const fArrow = document.getElementById('footerCollapseArrow');
+      const fStatus = document.getElementById('footerMiniStatus');
+      if (footerBody) footerBody.classList.toggle('collapsed', footerSectionCollapsed);
+      if (fArrow) fArrow.textContent = footerSectionCollapsed ? '▸' : '▾';
+      if (fStatus) fStatus.textContent = currentUserState.isLoggedIn ? '☁️ Bağlı' : '💾 Yerel';
 
       if (libraryView === 'pinned') {
         tree.innerHTML = sortItems(pinnedNotes).map(n => `
@@ -2847,10 +3130,21 @@
             </div>
           </div>
           <div class="note-header-actions">
+            <button class="tool-btn ${inNoteSearchOpen ? 'active' : ''}" onclick="toggleInNoteSearchBar()" title="Bu notun içinde kelime veya formül ara">🔍 Not İçi Ara</button>
             <button class="tool-btn" onclick="undoLastAction()" title="Son Değişikliği Geri Al (Ctrl+Z)">↩ Geri Al (${undoStack.length})</button>
             <button class="tool-btn active" onclick="addCardAtEnd()">+ Kart ekle</button>
           </div>
         </header>
+
+        <!-- NOT İÇİ CANLI ARAMA ÇUBUĞU -->
+        <div class="in-note-search-bar ${inNoteSearchOpen ? 'open' : ''}" id="inNoteSearchBar">
+          <input type="text" id="inNoteSearchInput" class="in-note-search-input" value="${escapeAttr(inNoteSearchQuery)}" placeholder="Bu not içinde kelime, formül ara..." oninput="runInNoteSearch(this.value)" />
+          <span id="inNoteSearchCount" style="font-size:11.5px;font-weight:700;color:var(--text-muted);white-space:nowrap;">0 / 0</span>
+          <button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="stepInNoteMatch(-1)" title="Önceki Eşleşme">▲</button>
+          <button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="stepInNoteMatch(1)" title="Sonraki Eşleşme">▼</button>
+          <button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="switchInNoteToGlobalSearch()" title="Tüm notlarda ara">📚 Tümü</button>
+          <button class="card-mini-btn" onclick="closeInNoteSearchBar()" title="Aramayı Kapat">✕</button>
+        </div>
 
         <!-- NOT TEPESİNE HIZLI GEZİNTİ & ÇOKLU SÜZGEÇ ÇUBUĞU (MOBİLDE AÇ/KAPA) -->
         <div class="sticky-note-nav ${mobileNavBarExpanded ? '' : 'mob-collapsed'}" id="stickyNoteNav">
@@ -2929,6 +3223,9 @@
 
                   <!-- AÇILIR METİN AÇIKLAMALI KART SEÇENEKLERİ MENÜSÜ -->
                   <div class="card-dropdown-menu" id="cardMenu_${blk.id}" onclick="event.stopPropagation()">
+                    <button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); openZoomInspectForBlock('${blk.id}')">
+                      <span>🔍</span><span>Tam Ekran / Zoom İncele</span>
+                    </button>
                     <button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); startDictationForTarget('card', '${blk.id}')">
                       <span>🎙️</span><span>Bu Karta Dikte Et</span>
                     </button>
@@ -2936,6 +3233,15 @@
                       <span>📷</span><span>Fotoğraf / Görsel Ekle</span>
                       <input type="file" accept="image/*" hidden onchange="closeAllCardDropdowns(); attachImageToTarget(event, 'card', '${blk.id}')" />
                     </label>
+                    <button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); moveSingleBlock(${idx}, -1)">
+                      <span>⬆</span><span>Kartı Yukarı Taşı</span>
+                    </button>
+                    <button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); moveSingleBlock(${idx}, 1)">
+                      <span>⬇</span><span>Kartı Aşağı Taşı</span>
+                    </button>
+                    <button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); duplicateBlock('${blk.id}')">
+                      <span>📑</span><span>Kartı Çoğalt</span>
+                    </button>
                     <button class="dropdown-menu-item" onclick="sendSingleCardToQuickPool('${blk.id}')">
                       <span>⚡</span><span>Hızlı Notlara Kopyala</span>
                     </button>
@@ -2960,7 +3266,8 @@
                 </div>
               ` : ''}
 
-              <div class="card-content" contenteditable="true"
+              <div class="card-content" contenteditable="${isMobileUI() && mobileReadOnly ? 'false' : 'true'}"
+                   ondblclick="if(isMobileUI() && mobileReadOnly){toggleMobileReadLock();}"
                    onfocus="pushUndo(); setFocusTarget('card', '${blk.id}')"
                    onpaste="handleSmartPaste(event, '${blk.id}')"
                    onblur="saveBlockHtml('${blk.id}', extractCleanEditorHtml(this))">${blk.html}</div>
@@ -3067,6 +3374,10 @@
         im.onclick = () => openPhotoLightbox(im.src);
       });
       renderMathInContainer(container);
+      autoFitWideBlocksInContainer(container);
+      if (inNoteSearchOpen && inNoteSearchQuery.trim()) {
+        applyInNoteSearchHighlights(false);
+      }
       renderRightDrawer();
     }
 
@@ -3193,6 +3504,246 @@
       } catch (e) {}
     }
 
+    /* ==========================================================================
+       AKILLI EKRANA SIĞDIRMA, TAM EKRAN ZOOM İNCELEYİCİ & NOT İÇİ ARAMA
+       ========================================================================== */
+    let inspectZoomScale = 1;
+
+    function autoFitWideBlocksInContainer(rootEl) {
+      if (!rootEl) return;
+      const fitEnabled = db.settings.fitToScreen !== false;
+      const targets = rootEl.querySelectorAll('.card-content table, .card-content .katex-display, .card-content pre, .premise-text-area table, .premise-text-area .katex-display');
+      targets.forEach(el => {
+        if (el.closest('.fit-scale-wrapper')) return;
+        const parentBox = el.parentElement;
+        if (!parentBox) return;
+        const availW = parentBox.clientWidth || (window.innerWidth - 48);
+        const naturalW = el.scrollWidth;
+        const naturalH = el.offsetHeight;
+        if (naturalW > availW + 4 && availW > 120) {
+          const wrap = document.createElement('div');
+          wrap.className = 'fit-scale-wrapper';
+          const inner = document.createElement('div');
+          inner.className = 'fit-scale-inner';
+
+          const zoomBtn = document.createElement('button');
+          zoomBtn.type = 'button';
+          zoomBtn.className = 'fit-zoom-btn';
+          zoomBtn.textContent = '🔍 Büyüt';
+          zoomBtn.title = 'Tam ekran yakınlaştır ve kaydır';
+          zoomBtn.onclick = (ev) => {
+            ev.stopPropagation();
+            openZoomInspectHtml(el.outerHTML, el.tagName === 'TABLE' ? 'Tablo İnceleyici' : 'Formül / Blok İnceleyici');
+          };
+
+          el.parentNode.insertBefore(wrap, el);
+          inner.appendChild(el);
+          wrap.appendChild(inner);
+          wrap.appendChild(zoomBtn);
+
+          if (fitEnabled) {
+            const ratio = Math.max(0.42, Math.min(1, (availW - 4) / naturalW));
+            inner.style.transform = `scale(${ratio})`;
+            wrap.style.height = Math.ceil((naturalH || 60) * ratio + 6) + 'px';
+          } else {
+            wrap.style.overflowX = 'auto';
+          }
+        }
+      });
+    }
+
+    function openZoomInspectHtml(rawInnerHtml, title = '🔍 Yakınlaştır & İncele') {
+      const stage = document.getElementById('zoomInspectStage');
+      const titleEl = document.getElementById('zoomInspectTitle');
+      if (!stage) return;
+      if (titleEl) titleEl.textContent = title;
+      stage.innerHTML = rawInnerHtml;
+      stage.querySelectorAll('.fit-zoom-btn').forEach(b => b.remove());
+      renderMathInContainer(stage);
+      document.getElementById('zoomInspectModal').classList.add('open');
+      setTimeout(() => fitInspectStageToModal(), 30);
+    }
+
+    function openZoomInspectForBlock(blockId) {
+      const blk = getActiveNote()?.blocks.find(b => b.id === blockId);
+      if (!blk) return;
+      openZoomInspectHtml(blk.html || '', '🔍 Kart Tam Ekran İnceleme');
+    }
+
+    function setInspectZoom(nextScale) {
+      inspectZoomScale = Math.min(2.6, Math.max(0.45, Math.round(nextScale * 100) / 100));
+      const stage = document.getElementById('zoomInspectStage');
+      const lbl = document.getElementById('inspectZoomLabel');
+      if (stage) stage.style.transform = `scale(${inspectZoomScale})`;
+      if (lbl) lbl.textContent = '%' + Math.round(inspectZoomScale * 100);
+    }
+
+    function fitInspectStageToModal() {
+      const vp = document.getElementById('zoomInspectViewport');
+      const stage = document.getElementById('zoomInspectStage');
+      if (!vp || !stage) return;
+      stage.style.transform = 'scale(1)';
+      const availW = Math.max(200, vp.clientWidth - 28);
+      const contentW = stage.scrollWidth || availW;
+      const ratio = contentW > availW ? Math.max(0.45, availW / contentW) : 1;
+      setInspectZoom(ratio);
+    }
+
+    /* NOT İÇİ CANLI ARAMA (DOM ÜZERİNDE GÜVENLİ EŞLEŞME VURGUSU) */
+    function toggleInNoteSearchBar() {
+      inNoteSearchOpen = !inNoteSearchOpen;
+      if (!inNoteSearchOpen) {
+        clearInNoteSearchHighlights();
+        inNoteSearchQuery = '';
+      }
+      renderEditor();
+      if (inNoteSearchOpen) {
+        setTimeout(() => {
+          const inp = document.getElementById('inNoteSearchInput');
+          if (inp) { inp.focus(); inp.select(); }
+        }, 40);
+      }
+    }
+
+    function closeInNoteSearchBar() {
+      inNoteSearchOpen = false;
+      inNoteSearchQuery = '';
+      clearInNoteSearchHighlights();
+      renderEditor();
+    }
+
+    function clearInNoteSearchHighlights() {
+      document.querySelectorAll('#editorContainer mark.search-hit').forEach(m => {
+        const parent = m.parentNode;
+        if (parent) {
+          parent.replaceChild(document.createTextNode(m.textContent), m);
+          parent.normalize();
+        }
+      });
+      inNoteMatchElements = [];
+      inNoteMatchIndex = -1;
+    }
+
+    function runInNoteSearch(val) {
+      inNoteSearchQuery = val;
+      applyInNoteSearchHighlights(true);
+    }
+
+    function applyInNoteSearchHighlights(autoJumpFirst = true) {
+      clearInNoteSearchHighlights();
+      const countEl = document.getElementById('inNoteSearchCount');
+      const q = (inNoteSearchQuery || '').trim();
+      if (!q) {
+        if (countEl) countEl.textContent = '0 / 0';
+        return;
+      }
+      const lowerQ = q.toLowerCase();
+      const container = document.getElementById('editorContainer');
+      if (!container) return;
+
+      const textAreas = container.querySelectorAll('.card-content, .premise-text-area, .side-note-body');
+      textAreas.forEach(area => {
+        const walker = document.createTreeWalker(area, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+            if (node.parentElement?.closest('.katex, script, style, .fit-zoom-btn')) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        });
+        const nodes = [];
+        let cur;
+        while ((cur = walker.nextNode())) nodes.push(cur);
+
+        nodes.forEach(textNode => {
+          const text = textNode.nodeValue;
+          const lowerText = text.toLowerCase();
+          let startIdx = 0;
+          let foundIdx = lowerText.indexOf(lowerQ, startIdx);
+          if (foundIdx === -1) return;
+
+          const frag = document.createDocumentFragment();
+          while (foundIdx !== -1) {
+            if (foundIdx > startIdx) {
+              frag.appendChild(document.createTextNode(text.slice(startIdx, foundIdx)));
+            }
+            const mark = document.createElement('mark');
+            mark.className = 'search-hit';
+            mark.textContent = text.slice(foundIdx, foundIdx + q.length);
+            frag.appendChild(mark);
+            inNoteMatchElements.push(mark);
+
+            startIdx = foundIdx + q.length;
+            foundIdx = lowerText.indexOf(lowerQ, startIdx);
+          }
+          if (startIdx < text.length) {
+            frag.appendChild(document.createTextNode(text.slice(startIdx)));
+          }
+          textNode.parentNode.replaceChild(frag, textNode);
+        });
+      });
+
+      if (inNoteMatchElements.length > 0) {
+        inNoteMatchIndex = 0;
+        if (countEl) countEl.textContent = `1 / ${inNoteMatchElements.length}`;
+        if (autoJumpFirst) focusInNoteMatch(0);
+      } else {
+        if (countEl) countEl.textContent = '0 / 0';
+      }
+    }
+
+    function stepInNoteMatch(step) {
+      if (!inNoteMatchElements.length) return;
+      inNoteMatchIndex = (inNoteMatchIndex + step + inNoteMatchElements.length) % inNoteMatchElements.length;
+      focusInNoteMatch(inNoteMatchIndex);
+    }
+
+    function focusInNoteMatch(idx) {
+      inNoteMatchElements.forEach((el, i) => el.classList.toggle('search-hit-current', i === idx));
+      const target = inNoteMatchElements[idx];
+      if (!target) return;
+      const countEl = document.getElementById('inNoteSearchCount');
+      if (countEl) countEl.textContent = `${idx + 1} / ${inNoteMatchElements.length}`;
+      const row = target.closest('.block-row');
+      if (row && row.classList.contains('filtered-out')) {
+        row.classList.remove('filtered-out');
+      }
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function switchInNoteToGlobalSearch() {
+      const q = inNoteSearchQuery;
+      openSearchModal();
+      const gInp = document.getElementById('globalSearchInput');
+      if (gInp && q) {
+        gInp.value = q;
+        runGlobalSearch(q);
+      }
+    }
+
+    function moveSingleBlock(index, dir) {
+      const note = getActiveNote();
+      if (!note) return;
+      const next = index + dir;
+      if (next < 0 || next >= note.blocks.length) return;
+      pushUndo();
+      [note.blocks[index], note.blocks[next]] = [note.blocks[next], note.blocks[index]];
+      note.updatedAt = Date.now();
+      saveDatabase(); renderEditor();
+    }
+
+    function duplicateBlock(blockId) {
+      const note = getActiveNote();
+      if (!note) return;
+      const idx = note.blocks.findIndex(b => b.id === blockId);
+      if (idx === -1) return;
+      pushUndo();
+      const copy = JSON.parse(JSON.stringify(note.blocks[idx]));
+      copy.id = 'blk_' + Date.now();
+      note.blocks.splice(idx + 1, 0, copy);
+      note.updatedAt = Date.now();
+      saveDatabase(); renderEditor();
+    }
+
     function sanitizeImportedHtml(rawHtml) {
       const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
       doc.querySelectorAll('script, style, iframe, object, embed, applet, form, input, textarea, select, button, meta, link, base, mat-icon, svg, nav, header, footer, .toolbar, .card-top, .no-print, .copy-btn, .message-actions, .response-footer, .citation-marker, .citations-container, sup.citation, [data-testid*="copy"]').forEach(el => el.remove());
@@ -3221,6 +3772,10 @@
           }
         });
         if (keepClasses.length) el.className = keepClasses.join(' ');
+        if (el.tagName === 'A' && el.getAttribute('href')) {
+          el.setAttribute('target', '_blank');
+          el.setAttribute('rel', 'noopener noreferrer');
+        }
       });
       return doc.body.innerHTML;
     }
@@ -3804,17 +4359,39 @@
       if (!note) return;
       const blk = note.blocks.find(b => b.id === activeFocusTarget.blockId) || note.blocks[note.blocks.length - 1];
       if (!blk) return;
+      const cleanSpan = ` <span>${escapeHtml(text.trim())}</span>`;
+      const row = document.getElementById('row_' + blk.id);
 
       if (activeFocusTarget.type === 'side' && activeFocusTarget.sideNoteId) {
         const sn = blk.sideNotes?.find(s => s.id === activeFocusTarget.sideNoteId);
-        if (sn) sn.html = (sn.html ?? escapeHtml(sn.text || '')) + ` <span>${escapeHtml(text.trim())}</span>`;
+        if (sn) {
+          sn.html = (sn.html ?? escapeHtml(sn.text || '')) + cleanSpan;
+          const idx = (blk.sideNotes || []).indexOf(sn);
+          const bodyEl = row?.querySelectorAll('.side-note-body')?.[idx];
+          if (bodyEl) bodyEl.insertAdjacentHTML('beforeend', cleanSpan);
+          else renderEditor();
+        }
       } else if (activeFocusTarget.type === 'premise' && activeFocusTarget.premiseBoxId) {
         const pr = blk.premises?.find(p => p.id === activeFocusTarget.premiseBoxId);
-        if (pr) pr.html = (pr.html || '') + ` <span>${escapeHtml(text.trim())}</span>`;
+        if (pr) {
+          pr.html = (pr.html || '') + cleanSpan;
+          const idx = (blk.premises || []).indexOf(pr);
+          const premEl = row?.querySelectorAll('.premise-text-area')?.[idx];
+          if (premEl) premEl.insertAdjacentHTML('beforeend', cleanSpan);
+          else renderEditor();
+        }
       } else {
-        blk.html = (blk.html || '') + ` <span>${escapeHtml(text.trim())}</span>`;
+        blk.html = (blk.html || '') + cleanSpan;
+        const contentEl = row?.querySelector('.card-content');
+        if (contentEl) {
+          contentEl.insertAdjacentHTML('beforeend', cleanSpan);
+          renderMathInContainer(contentEl);
+        } else {
+          renderEditor();
+        }
       }
-      saveDatabase(); renderAll();
+      note.updatedAt = Date.now();
+      saveDatabase();
     }
 
     function moveSingleDictationBlockToQuickPool(blockId) {
@@ -4471,15 +5048,46 @@
 
     function openSearchModal() { document.getElementById('searchModal').classList.add('open'); const inp = document.getElementById('globalSearchInput'); inp.value = ''; inp.focus(); runGlobalSearch(''); }
 
+    function jumpToNoteAndQuery(noteId, query) {
+      selectNote(noteId);
+      closeModal('searchModal');
+      if (query && query.trim()) {
+        inNoteSearchOpen = true;
+        inNoteSearchQuery = query.trim();
+        renderEditor();
+      }
+    }
+
     function runGlobalSearch(q) {
       const resBox = document.getElementById('globalSearchResults');
-      const query = q.trim().toLowerCase();
+      const rawQ = q.trim();
+      const query = rawQ.toLowerCase();
       if (!query) { resBox.innerHTML = `<div style="color:var(--text-muted);font-size:12.5px;">Aramak istediğiniz kelimeyi yazın...</div>`; return; }
-      const matches = db.notes.filter(n => {
-        const hay = [n.title, ...n.blocks.map(b => stripHtml(b.html)), ...n.blocks.flatMap(b => (b.premises || []).map(p => stripHtml(p.html))), ...n.blocks.flatMap(b => (b.sideNotes || []).map(s => stripHtml(s.html || s.text || '')))].join(' ').toLowerCase();
-        return hay.includes(query);
+      const results = [];
+      db.notes.forEach(n => {
+        const fullHay = [
+          n.title,
+          ...n.blocks.map(b => stripHtml(b.html)),
+          ...n.blocks.flatMap(b => (b.premises || []).map(p => stripHtml(p.html))),
+          ...n.blocks.flatMap(b => (b.sideNotes || []).map(s => stripHtml(s.html || s.text || '')))
+        ].join(' · ');
+        const idx = fullHay.toLowerCase().indexOf(query);
+        if (idx !== -1) {
+          const start = Math.max(0, idx - 36);
+          const end = Math.min(fullHay.length, idx + rawQ.length + 54);
+          const snippet = (start > 0 ? '...' : '') + fullHay.slice(start, end) + (end < fullHay.length ? '...' : '');
+          results.push({ note: n, snippet });
+        }
       });
-      resBox.innerHTML = matches.length ? matches.map(n => `<div style="padding:10px 12px;border-radius:10px;border:1px solid var(--border-soft);background:var(--bg-paper);margin-bottom:7px;cursor:pointer;" onclick="selectNote('${n.id}');closeModal('searchModal')"><strong>${escapeHtml(n.title)}</strong></div>`).join('') : `<div style="color:var(--text-muted);">Eşleşen sonuç bulunamadı.</div>`;
+      resBox.innerHTML = results.length ? results.map(({ note: n, snippet }) => `
+        <div style="padding:10px 12px;border-radius:10px;border:1px solid var(--border-soft);background:var(--bg-paper);margin-bottom:7px;cursor:pointer;" onclick="jumpToNoteAndQuery('${n.id}', '${escapeAttr(rawQ)}')">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+            <strong>${escapeHtml(n.title)}</strong>
+            <small style="color:var(--text-muted);">${escapeHtml(getFolderBreadcrumb(n.folderId))}</small>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;line-height:1.4;">${escapeHtml(snippet)}</div>
+        </div>
+      `).join('') : `<div style="color:var(--text-muted);">Eşleşen sonuç bulunamadı.</div>`;
     }
 
     /* Mobil & Tablet Çekmece Kontrolü */
@@ -4542,6 +5150,8 @@
       }
       if (isMobileUI()) {
         librarySectionCollapsed = true;
+        footerSectionCollapsed = true;
+        mobileReadOnly = true;
         document.getElementById('appShell').classList.add('sidebar-collapsed');
       }
       const edScroll = document.getElementById('editorScroll');
