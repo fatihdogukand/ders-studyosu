@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.4.0</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.5.0</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1311,7 +1311,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.4.0</div>
+            <div class="brand-sub">Ders stüdyosu · v4.5.0</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1684,7 +1684,7 @@
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.4.0)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.5.0)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -1698,7 +1698,12 @@
       <div style="border-top:1px solid var(--border-soft);padding-top:12px;">
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
 
-                                <div class="changelog-item">
+                                        <div class="changelog-item">
+          <span class="changelog-ver">v4.5.0 — Not Bazlı Bulut Senkronizasyonu (Delta Sync · 1 GB Kapasite) (Güncel)</span>
+          Tüm kütüphaneyi tek bir 1 MB Firestore belgesine sıkıştıran eski yapı yerine, <strong>her notu bulutta ayrı belge</strong> (<code>note_{id}</code>) olarak saklayan hızlı <strong>Delta Sync</strong> motoruna geçildi; toplam bulut kapasitesi <strong>1 GB</strong>'a çıkarılırken <strong>1 MB sınırı yalnızca tek bir not</strong> için geçerli hale getirildi; yalnızca düzenlediğiniz not buluta gönderildiği için hem telefon hem PC'de senkronizasyon çok daha hızlı ve hafif hale geldi; eski tek parça bulut yedeğiniz ilk girişte veri kaybı olmadan otomatik aktarılır.
+        </div>
+
+        <div class="changelog-item">
           <span class="changelog-ver">v4.4.0 — Gerçek 1 MB/5 MB Limit Göstergesi, Not İçi Arama, Akıllı Ekrana Sığdırma & Zoom İnceleyici (Güncel)</span>
           Depolama göstergesi gerçek sınırları (<strong>Google Bulut için 1 MB Firestore belge limiti</strong>, <strong>Yerel Mod için 5 MB</strong>) gösterecek şekilde düzeltildi; hem masaüstünde hem mobilde çalışan <strong>Not İçi Canlı Arama (1/N eşleşme atlama)</strong> ve bağlam önizlemeli genel arama eklendi; geniş tablolar, formüller ve kod blokları için <strong>Akıllı Ekrana Sığdırma</strong> ile <strong>Tam Ekran Zoom & Kaydırma İnceleyicisi (%100–%250 + iki parmak zoom)</strong> eklendi; sol panelde <strong>Aktarım & Hesap</strong> bölümü açılır-kapanır hale getirildi; mobilde yanlışlıkla klavye açılmasını önleyen <strong>📖 Okuma / ✏️ Düzenle</strong> kilidi ve sıfır titremeli dikte motoru eklendi.
         </div>
@@ -1820,7 +1825,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.4.0',
+      version: '4.5.0',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -1962,13 +1967,13 @@
         currentUserState = { isLoggedIn: true, name: user.displayName || user.email, email: user.email || '' };
         dot.classList.add('online');
         nameEl.textContent = currentUserState.name;
-        subEl.textContent = 'Google Bulut · 1 MB Limit';
+        subEl.textContent = 'Google Bulut · 1 GB Kapasite';
         btn.textContent = 'Çıkış';
       } else {
         currentUserState = { isLoggedIn: false, name: 'Misafir Kullanıcı', email: '' };
         dot.classList.remove('online');
         nameEl.textContent = 'Misafir Kullanıcı';
-        subEl.textContent = 'Yerel Mod · 5 MB Limit';
+        subEl.textContent = 'Yerel IndexedDB · 50 MB';
         btn.textContent = 'Google Giriş';
       }
       updateGlobalBatteryGauge();
@@ -2000,7 +2005,7 @@
 
       if (parsed) {
         db = {
-          version: '4.4.0',
+          version: '4.5.0',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2044,7 +2049,7 @@
                 { id: 'pr_1', align: 'full', customW: '', customH: '', html: 'Sıcaklık artarsa endotermik tepkimede denge ürünler yönüne kayar.', mediaHtml: '' },
                 { id: 'pr_2', align: 'full', customW: '', customH: '', html: 'Katalizör yalnızca aktivasyon enerjisini düşürür; $K_c$ değerini değiştirmez.', mediaHtml: '' }
               ],
-              html: '<p><strong>Sohbet Okulu v4.4.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
+              html: '<p><strong>Sohbet Okulu v4.5.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
               sideNotes: [
                 { id: 'sn_1', pos: 'right', offsetTop: 0, customW: '', customH: '', html: 'Sağ alt köşedeki ↘ tutamacını sürükleyerek bu kutuyu hem PC hem tablet/telefonda büyütebilirsiniz.' }
               ]
@@ -2069,8 +2074,8 @@
 
     function triggerManualCloudSync() {
       if (typeof window.syncToCloud === 'function') {
-        window.syncToCloud(db);
-        alert('Bulut eşitleme tetiklendi.');
+        window.syncToCloud(db, { immediate: true });
+        alert('Bulut eşitleme tamamlandı.');
       }
       updateGlobalBatteryGauge();
     }
@@ -2090,7 +2095,7 @@
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.4.0';
+      db.version = '4.5.0';
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -2119,8 +2124,8 @@
       if (!pill || !fill || !pctEl) return;
 
       const usedBytes = new Blob([JSON.stringify(db)]).size;
-      const maxBytes = currentUserState.isLoggedIn ? (1024 * 1024) : (5 * 1024 * 1024);
-      const maxLabel = currentUserState.isLoggedIn ? '1 MB' : '5 MB';
+      const maxBytes = currentUserState.isLoggedIn ? (1024 * 1024 * 1024) : (50 * 1024 * 1024);
+      const maxLabel = currentUserState.isLoggedIn ? '1 GB' : '50 MB';
       const rawPct = (usedBytes / maxBytes) * 100;
       const displayPct = rawPct < 1 ? Number(rawPct.toFixed(1)) : Math.min(100, Math.round(rawPct));
       const barWidth = Math.min(100, Math.max(4, Math.round(rawPct)));
@@ -2133,8 +2138,8 @@
       if (rawPct >= 88) pill.classList.add('danger');
       else if (rawPct >= 72) pill.classList.add('warn');
       pill.title = currentUserState.isLoggedIn
-        ? `Bulut Senkronizasyon Limiti: ${formatBytesHuman(usedBytes)} / 1 MB (Firestore belge sınırı)`
-        : `Yerel Depolama Limiti: ${formatBytesHuman(usedBytes)} / 5 MB (IndexedDB 50 MB yedekli)`;
+        ? `Not Bazlı Bulut Depolama: ${formatBytesHuman(usedBytes)} / 1 GB (Her not ayrı belge, tekil not sınırı 1 MB)`
+        : `Yerel IndexedDB Depolama: ${formatBytesHuman(usedBytes)} / 50 MB`;
 
       const dText = document.getElementById('drawerBatteryText');
       const dFill = document.getElementById('drawerBatteryFill');
@@ -3126,7 +3131,7 @@
               <span>${new Date(note.updatedAt).toLocaleDateString('tr-TR', { day:'numeric', month:'short', year:'numeric' })}</span>
               <span>·</span>
               <span class="tiny-stat-pill">🗂️ ${note.blocks.length} kart</span>
-              <span class="note-size-pill ${noteSizeCls}" title="Firebase Firestore 1 MB tekil belge sınırı">${noteKb} KB</span>
+              <span class="note-size-pill ${noteSizeCls}" title="Tekil not bulut belge boyutu (Not başı maksimum sınır: 1 MB)">${noteKb} KB / 1 MB</span>
             </div>
           </div>
           <div class="note-header-actions">

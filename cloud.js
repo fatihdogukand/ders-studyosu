@@ -1,6 +1,15 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getFirestore,
+  doc,
+  collection,
+  setDoc,
+  deleteDoc,
+  writeBatch,
+  onSnapshot,
+  enableIndexedDbPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCNEL-GtoKv_0QX-6l7JWyE9WH0KjCE0tY",
@@ -22,8 +31,22 @@ provider.addScope('https://www.googleapis.com/auth/drive.file');
 
 let currentUser = null;
 let driveToken = sessionStorage.getItem('drive_token') || null;
-let unsubSnap = null;
+let unsubDataCol = null;
 let isApplyingRemote = false;
+let syncDebounceTimer = null;
+let isMigratingLegacy = false;
+
+const lastSyncedNoteHashes = new Map();
+let lastSyncedMetaHash = '';
+
+function fastHash(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36) + '_' + str.length;
+}
 
 async function loginWithGoogle() {
   try {
@@ -49,65 +72,213 @@ window.signInWithGoogle = loginWithGoogle;
 window.logoutGoogle = logoutGoogle;
 window.signOutGoogle = logoutGoogle;
 
-const statusEl = document.getElementById('syncStatus');
-const bar = statusEl?.parentElement;
-let authBtn = null;
-if (statusEl && bar) {
-  authBtn = document.createElement('button');
-  authBtn.className = 'mini-btn';
-  authBtn.style.fontWeight = '700';
-  authBtn.textContent = '🔑 Giriş';
-  authBtn.onclick = async () => {
-    if (currentUser) await logoutGoogle();
-    else await loginWithGoogle();
+function buildMetaPayload(localDb) {
+  return {
+    version: localDb.version || '4.5.0',
+    folders: Array.isArray(localDb.folders) ? localDb.folders : [],
+    activeNoteId: localDb.activeNoteId || null,
+    settings: localDb.settings || {},
+    noteIds: (localDb.notes || []).map(n => n.id),
+    updatedAt: localDb.updatedAt || Date.now()
   };
-  bar.appendChild(authBtn);
+}
+
+async function migrateLegacyMainToPerNote(uid, legacyData) {
+  if (isMigratingLegacy || !legacyData || !Array.isArray(legacyData.notes)) return;
+  isMigratingLegacy = true;
+  try {
+    const dataCol = collection(dbCloud, 'users', uid, 'data');
+    const batch = writeBatch(dbCloud);
+    const metaPayload = buildMetaPayload(legacyData);
+    batch.set(doc(dataCol, 'meta'), metaPayload);
+
+    for (const note of legacyData.notes) {
+      if (!note || !note.id) continue;
+      const cleanNote = JSON.parse(JSON.stringify(note));
+      batch.set(doc(dataCol, 'note_' + cleanNote.id), cleanNote);
+      lastSyncedNoteHashes.set(cleanNote.id, fastHash(JSON.stringify(cleanNote)));
+    }
+    await batch.commit();
+    lastSyncedMetaHash = fastHash(JSON.stringify(metaPayload));
+    console.info(`Sohbet Okulu: ${legacyData.notes.length} not tekil bulut belgelerine aktarıldı (1 GB kapasite aktif).`);
+  } catch (err) {
+    console.warn('Bulut geçişi sırasında hata:', err);
+  } finally {
+    isMigratingLegacy = false;
+  }
 }
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
-  if (unsubSnap) { unsubSnap(); unsubSnap = null; }
+  if (unsubDataCol) { unsubDataCol(); unsubDataCol = null; }
+  lastSyncedNoteHashes.clear();
+  lastSyncedMetaHash = '';
 
   window.setAuthUserUI?.(user);
 
-  if (!user) {
-    if (statusEl) statusEl.textContent = '💾 Yerel Mod (Offline)';
-    if (authBtn) authBtn.textContent = '🔑 Giriş';
-    return;
-  }
+  if (!user) return;
 
-  if (statusEl) statusEl.textContent = '☁️ ' + (user.displayName?.split(' ')[0] || 'Bağlı');
-  if (authBtn) authBtn.textContent = '🚪 Çıkış';
+  const dataCol = collection(dbCloud, 'users', user.uid, 'data');
 
-  const userDoc = doc(dbCloud, 'users', user.uid, 'data', 'main');
-  unsubSnap = onSnapshot(userDoc, (snap) => {
-    if (!snap.exists()) {
-      window.syncToCloud?.(window.getAppDb?.());
+  unsubDataCol = onSnapshot(dataCol, async (querySnap) => {
+    if (querySnap.empty) {
+      const local = window.getAppDb?.();
+      if (local) await window.syncToCloud?.(local, { immediate: true });
       return;
     }
-    const remote = snap.data();
-    const local = window.getAppDb?.() || {};
-    if (remote.updatedAt && remote.updatedAt > (local.updatedAt || 0)) {
+
+    let metaDoc = null;
+    let legacyMainDoc = null;
+    const remoteNotesMap = new Map();
+
+    querySnap.forEach((docSnap) => {
+      const id = docSnap.id;
+      const data = docSnap.data();
+      if (id === 'meta') {
+        metaDoc = data;
+      } else if (id === 'main') {
+        legacyMainDoc = data;
+      } else if (id.startsWith('note_') && data && data.id) {
+        remoteNotesMap.set(data.id, data);
+        lastSyncedNoteHashes.set(data.id, fastHash(JSON.stringify(data)));
+      }
+    });
+
+    // İlk kez v4.5.0'a geçiliyorsa eski tek parça 'main' belgesini otomatik olarak not bazlı belgelere böl
+    if (!metaDoc && legacyMainDoc && Array.isArray(legacyMainDoc.notes)) {
+      const local = window.getAppDb?.() || {};
+      const sourceDb = (legacyMainDoc.updatedAt || 0) >= (local.updatedAt || 0) ? legacyMainDoc : local;
       isApplyingRemote = true;
-      window.setAppDb?.(remote);
+      window.setAppDb?.(sourceDb);
+      isApplyingRemote = false;
+      await migrateLegacyMainToPerNote(user.uid, sourceDb);
+      checkDailyDriveBackup(sourceDb);
+      return;
+    }
+
+    if (metaDoc) {
+      lastSyncedMetaHash = fastHash(JSON.stringify(metaDoc));
+    }
+
+    const local = window.getAppDb?.() || { folders: [], notes: [], settings: {} };
+    const localNotesMap = new Map((local.notes || []).map(n => [n.id, n]));
+    let changed = false;
+
+    // 1. Uzaktan gelen yeni veya güncellenmiş notları birleştir
+    for (const [noteId, rNote] of remoteNotesMap.entries()) {
+      const lNote = localNotesMap.get(noteId);
+      if (!lNote || (rNote.updatedAt || 0) > (lNote.updatedAt || 0)) {
+        localNotesMap.set(noteId, rNote);
+        changed = true;
+      }
+    }
+
+    // 2. Uzakta silinmiş notları yerelden de temizle (metaDoc.noteIds listesine göre)
+    if (metaDoc && Array.isArray(metaDoc.noteIds)) {
+      const validIds = new Set(metaDoc.noteIds);
+      for (const localId of [...localNotesMap.keys()]) {
+        if (!validIds.has(localId) && remoteNotesMap.size > 0) {
+          localNotesMap.delete(localId);
+          changed = true;
+        }
+      }
+    }
+
+    // 3. Klasör ve ayar güncellemelerini uygula
+    const mergedDb = { ...local };
+    if (metaDoc && (metaDoc.updatedAt || 0) > (local.updatedAt || 0)) {
+      if (Array.isArray(metaDoc.folders) && metaDoc.folders.length) mergedDb.folders = metaDoc.folders;
+      if (metaDoc.settings) mergedDb.settings = { ...local.settings, ...metaDoc.settings };
+      if (metaDoc.activeNoteId) mergedDb.activeNoteId = metaDoc.activeNoteId;
+      mergedDb.updatedAt = metaDoc.updatedAt;
+      changed = true;
+    }
+
+    if (changed) {
+      // Sıralamayı metaDoc.noteIds sırasına göre koru
+      const orderedNotes = [];
+      const seen = new Set();
+      if (metaDoc && Array.isArray(metaDoc.noteIds)) {
+        for (const id of metaDoc.noteIds) {
+          if (localNotesMap.has(id)) {
+            orderedNotes.push(localNotesMap.get(id));
+            seen.add(id);
+          }
+        }
+      }
+      for (const [id, n] of localNotesMap.entries()) {
+        if (!seen.has(id)) orderedNotes.push(n);
+      }
+      mergedDb.notes = orderedNotes;
+
+      isApplyingRemote = true;
+      window.setAppDb?.(mergedDb);
       isApplyingRemote = false;
     }
-    checkDailyDriveBackup(remote);
+
+    checkDailyDriveBackup(window.getAppDb?.() || mergedDb);
   });
 });
 
-window.syncToCloud = async (localDb) => {
+async function flushCloudSync(localDb) {
   if (!currentUser || isApplyingRemote || !localDb) return;
   try {
+    const dataCol = collection(dbCloud, 'users', currentUser.uid, 'data');
+    const currentNoteIds = new Set();
+
+    // Yalnızca değişen veya yeni eklenen notları buluta gönder (Delta Sync)
+    for (const note of (localDb.notes || [])) {
+      if (!note || !note.id) continue;
+      currentNoteIds.add(note.id);
+      const cleanNote = JSON.parse(JSON.stringify(note));
+      const serializedNote = JSON.stringify(cleanNote);
+      const noteBytes = new Blob([serializedNote]).size;
+
+      if (noteBytes > 980 * 1024) {
+        console.warn(`"${note.title}" notu 1 MB Firestore belge sınırına ulaştı (${Math.round(noteBytes / 1024)} KB).`);
+        continue;
+      }
+
+      const h = fastHash(serializedNote);
+      if (lastSyncedNoteHashes.get(note.id) !== h) {
+        await setDoc(doc(dataCol, 'note_' + note.id), cleanNote);
+        lastSyncedNoteHashes.set(note.id, h);
+      }
+    }
+
+    // Silinen notları buluttan kaldır
+    for (const prevId of [...lastSyncedNoteHashes.keys()]) {
+      if (!currentNoteIds.has(prevId)) {
+        await deleteDoc(doc(dataCol, 'note_' + prevId));
+        lastSyncedNoteHashes.delete(prevId);
+      }
+    }
+
+    // Hafif üst veriyi (klasörler, ayarlar, not sırası) güncelle
     localDb.updatedAt = Date.now();
-    await setDoc(doc(dbCloud, 'users', currentUser.uid, 'data', 'main'), localDb);
+    const metaPayload = buildMetaPayload(localDb);
+    const metaHash = fastHash(JSON.stringify(metaPayload));
+    if (lastSyncedMetaHash !== metaHash) {
+      await setDoc(doc(dataCol, 'meta'), metaPayload);
+      lastSyncedMetaHash = metaHash;
+    }
   } catch (e) {
     console.warn('Offline kuyruğunda bekliyor:', e);
   }
+}
+
+window.syncToCloud = (localDb, opts = {}) => {
+  if (!currentUser || isApplyingRemote || !localDb) return;
+  if (opts && opts.immediate) {
+    if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+    return flushCloudSync(localDb);
+  }
+  if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+  syncDebounceTimer = setTimeout(() => flushCloudSync(localDb), 650);
 };
 
 async function checkDailyDriveBackup(data) {
-  if (!driveToken) return;
+  if (!driveToken || !data) return;
   const today = new Date().toISOString().slice(0, 10);
   if (localStorage.getItem('last_drive_backup') === today) return;
 
