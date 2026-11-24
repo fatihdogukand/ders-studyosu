@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.1.0</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.2.0</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -846,6 +846,94 @@
       .mob-nav-btn { border: none; background: transparent; color: var(--text-main); font-family: inherit; font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
       .quick-dock-wrap { bottom: calc(68px + env(safe-area-inset-bottom)); right: 12px; }
     }
+    
+    /* Yapışkan Not Üstü Hızlı Gezinti & Çoklu Süzgeç Çubuğu */
+    .sticky-note-nav {
+      position: sticky; top: 0; z-index: 18;
+      background: var(--bg-paper);
+      border: 1px solid var(--border-soft);
+      border-radius: 13px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-card);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; flex-wrap: wrap;
+    }
+    .sticky-nav-filters {
+      display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    }
+    .sticky-nav-jump {
+      display: flex; align-items: center; gap: 5px; flex: 1 1 220px; justify-content: flex-end; min-width: 0;
+    }
+    .nav-jump-select {
+      max-width: 240px; min-width: 120px; flex: 1;
+      height: 30px; border-radius: 8px;
+      border: 1px solid var(--border-soft); background: var(--bg-subtle);
+      color: var(--text-main); font-family: inherit; font-size: 12px; font-weight: 600;
+      padding: 0 8px; outline: none; cursor: pointer;
+    }
+    .note-size-pill {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 1px 7px; border-radius: 6px;
+      background: var(--bg-subtle); font-family: var(--font-mono); font-size: 10.5px;
+    }
+    .note-size-pill.warn { background: rgba(245, 158, 11, 0.18); color: #b45309; font-weight: 700; }
+    .note-size-pill.danger { background: rgba(239, 68, 68, 0.18); color: #b91c1c; font-weight: 700; }
+
+    /* Slayt-Slayt PDF / PPTX Okuyucu Paneli */
+    .slide-viewer-panel {
+      display: none; gap: 16px; margin-bottom: 18px;
+      background: var(--bg-paper); border: 1px solid var(--border-soft);
+      border-radius: 16px; padding: 14px; box-shadow: var(--shadow-card);
+      flex-wrap: wrap;
+    }
+    .slide-viewer-panel.active { display: flex; }
+    .slide-stage { flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+    .slide-stage canvas { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border-soft); }
+    .slide-pptx-box { width: 100%; padding: 16px; border-radius: 12px; background: var(--bg-subtle); line-height: 1.7; font-size: var(--reader-font-px); }
+    .slide-notes-col { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+    .slide-notes-col textarea { flex: 1; min-height: 140px; resize: vertical; }
+
+    /* Zengin Akıllı Yapıştır Kutusu */
+    .rich-paste-box {
+      min-height: 150px; max-height: 300px; overflow-y: auto;
+      border: 2px dashed var(--accent); border-radius: 12px;
+      padding: 12px; background: var(--bg-paper); color: var(--text-main);
+      outline: none; line-height: 1.6; font-size: 13.5px;
+    }
+    .rich-paste-box:empty::before {
+      content: "Buraya dokunup Yapıştır deyin (Gemini, NotebookLM veya GPT çıktısını biçimi ve formülleriyle korur)...";
+      color: var(--text-muted);
+    }
+
+    /* Sanal Klavye Açıkken Alt Barı Gizle */
+    body.kb-open .mobile-bottom-nav,
+    body.kb-open .quick-dock-wrap {
+      display: none !important;
+    }
+
+    /* Touch Picker Liste Satırları */
+    .picker-option-btn {
+      width: 100%; min-height: 42px; padding: 9px 12px;
+      border: 1px solid var(--border-soft); border-radius: 11px;
+      background: var(--bg-paper); color: var(--text-main);
+      font-family: inherit; font-size: 13.5px; font-weight: 600;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      cursor: pointer; margin-bottom: 6px; text-align: left;
+    }
+    .picker-option-btn:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+    @media (max-width: 1080px) {
+      .touch-resize-grip { width: 32px; height: 32px; font-size: 16px; opacity: 0.92; background: var(--bg-subtle); }
+      .mini-icon-btn { min-width: 32px; min-height: 32px; display: inline-grid; place-items: center; }
+    }
+    @media (max-width: 640px) {
+      #btnTopbarPins { display: none !important; }
+      .topbar { padding: 6px 10px; gap: 5px; }
+      .tool-btn { padding: 0 9px; font-size: 12px; }
+      .sticky-note-nav { padding: 7px 9px; gap: 6px; }
+    }
+
     @media print {
       .sidebar, .topbar, .right-drawer, .quick-dock-wrap, .mobile-bottom-nav, .card-toolbar, .card-bottom-bar, .insert-strip, .dictation-banner, .bulk-move-bar, .note-header-actions, .touch-resize-grip { display: none !important; }
       body, .app-shell, .workspace-wrap, .editor-scroll { height: auto !important; overflow: visible !important; background: #fff !important; color: #000 !important; }
@@ -870,7 +958,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.1.0</div>
+            <div class="brand-sub">Ders stüdyosu · v4.2.0</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -951,7 +1039,7 @@
             📌 Pinler <span class="pill-mini-badge" id="topbarPinBadge">0</span>
           </button>
 
-          <button class="tool-btn" id="btnRightDrawer" onclick="toggleRightDrawer()">☰ Gezinti</button>
+          <button class="tool-btn" id="btnRightDrawer" onclick="toggleRightDrawer()">☰ Ayarlar</button>
         </div>
       </header>
 
@@ -983,38 +1071,38 @@
 
       <div class="workspace-wrap" id="workspaceWrap">
         <div class="editor-scroll" id="editorScroll">
+          <!-- Slayt-Slayt PDF / PPTX Okuyucu + Hoca Uyarısı Paneli -->
+          <div class="editor-container">
+            <div class="slide-viewer-panel" id="slideViewerPanel">
+              <div class="slide-stage">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;">
+                  <button class="tool-btn" onclick="changeSlidePage(-1)">◀ Önceki</button>
+                  <span id="slidePageBadge" style="font-weight:700;font-size:13px;">Sayfa 1 / 1</span>
+                  <button class="tool-btn" onclick="changeSlidePage(1)">Sonraki ▶</button>
+                  <button class="tool-btn" onclick="closeSlideViewer()">✕ Slaytı Kapat</button>
+                </div>
+                <canvas id="slidePdfCanvas"></canvas>
+                <div id="slidePptxBox" class="slide-pptx-box" style="display:none;"></div>
+              </div>
+              <div class="slide-notes-col">
+                <strong style="font-size:13.5px;color:var(--accent);">📌 Bu Sayfa İçin Hoca Uyarısı / Not</strong>
+                <textarea id="slideNoteInput" class="code-box" style="font-family:inherit;font-size:13.5px;" placeholder="Örn: Hoca bu grafikten sınavda kesin yorum soracağım dedi..." oninput="saveCurrentSlideNote()"></textarea>
+                <button class="tool-btn active" onclick="appendSlideNotesToActiveNote()">+ Aktif Nota Kart Olarak Ekle</button>
+                <button class="tool-btn" onclick="copyAllSlideNotesForAi()">📋 Tüm Slayt Notlarını Kopyala</button>
+              </div>
+            </div>
+          </div>
           <div class="editor-container" id="editorContainer"></div>
         </div>
 
-        <!-- SAĞ STICKY PANEL: ÇOKLU FİLTRELİ HIZLI GEZİNTİ & OKUMA ARAÇLARI -->
+        <!-- SAĞ PANEL: NOT DÜZENİ & GÖRÜNÜM / TEMA AYARLARI -->
         <aside class="right-drawer" id="rightDrawer">
-          <!-- 1. BU NOTTA: ÇOKLU SEÇİMLİ HIZLI GEZİNTİ -->
+          <!-- 1. ÜST BÖLÜM: NOT DÜZENİ & ÇALIŞMA ARAÇLARI -->
           <div class="right-panel-section">
             <div class="right-sec-title">
-              <span>☰ Bu notta · Hızlı Gezinti</span>
-              <div style="display:flex;gap:3px;">
-                <button class="card-mini-btn" onclick="jumpFilteredCard(-1)" title="Önceki Eşleşen Kart">◀</button>
-                <button class="card-mini-btn" onclick="jumpFilteredCard(1)" title="Sonraki Eşleşen Kart">▶</button>
-              </div>
-            </div>
-
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:5px;">Çoklu süzgeç (birden fazla seçilebilir):</div>
-            <div class="multi-filter-grid" id="rightMultiFilterChips"></div>
-
-            <div class="nav-outline-list" id="rightNavOutlineList"></div>
-          </div>
-
-          <!-- 2. OKUMA & GÖRÜNÜM ARAÇLARI -->
-          <div class="right-panel-section">
-            <div class="right-sec-title">
-              <span>🎛️ Okuma ve görünüm</span>
+              <span>🎛️ Not düzeni ve araçlar</span>
               <button class="card-mini-btn" onclick="toggleRightDrawer()" title="Paneli Gizle">✕</button>
             </div>
-
-            <button class="reading-tool-row" id="btnSpotlightRow" onclick="toggleSpotlight()">
-              <span>⛶ İşaretlere odaklan</span>
-              <span id="spotlightStateTag" style="font-size:11px;font-weight:700;">Kapalı</span>
-            </button>
 
             <button class="reading-tool-row" onclick="toggleGlobalPremises()">
               <span id="lblGlobalPremises">🙈 Tüm öncülleri kapa</span>
@@ -1024,46 +1112,13 @@
               <span id="lblGlobalSideNotes">🙈 Tüm yan notları kapa</span>
             </button>
 
-            <div style="border-top:1px solid var(--border-soft);margin:8px 0;padding-top:8px;">
-              <div style="font-size:11.5px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">Aa Yazı boyutu ve tipografi</div>
-              <div class="font-stepper-box">
-                <button class="stepper-btn" onclick="stepFontSize(-1)" title="Yazıyı Küçült">A-</button>
-                <span id="fontSizeValueLabel" style="font-size:12.5px;font-weight:700;">16 px</span>
-                <button class="stepper-btn" onclick="stepFontSize(1)" title="Yazıyı Büyüt">A+</button>
-              </div>
+            <button class="reading-tool-row" onclick="createSummaryFromHighlights()">
+              <span>✨ Vurgulardan özet not yap</span>
+            </button>
 
-              <select id="fontSelect" class="right-select" onchange="setFont(this.value)">
-                <option value="jakarta">Aa Plus Jakarta Sans</option>
-                <option value="inter">Aa Inter (Net)</option>
-                <option value="newsreader">Aa Newsreader (Akademik)</option>
-                <option value="lora">Aa Lora (Kitap Serif)</option>
-                <option value="merriweather">Aa Merriweather (Klasik)</option>
-                <option value="atkinson">Aa Atkinson Hyperlegible</option>
-                <option value="comic">Aa Comic Neue (El Yazısı)</option>
-                <option value="mono">Aa JetBrains Mono (Teknik)</option>
-              </select>
-
-              <select id="themeSelect" class="right-select" onchange="setTheme(this.value)">
-                <option value="kenar">🌲 Orman Stüdyo (Kenar)</option>
-                <option value="warm">📜 Sıcak Kağıt (Warm)</option>
-                <option value="sage">🌿 Adaçayı Odak (Sage)</option>
-                <option value="nordic">❄️ İskandinav Günü (Nordic)</option>
-                <option value="sand">🏜️ Kum & Kehribar (Sand)</option>
-                <option value="lavender">🪻 Lavanta Sakinliği</option>
-                <option value="sepia">☕ Klasik Kitap (Sepia)</option>
-                <option value="midnight">🌙 Gece Çalışması (Koyu)</option>
-              </select>
-
-              <div style="display:flex;gap:5px;">
-                <select id="dynamicThemeSelect" class="right-select" style="margin-bottom:0;" onchange="setDynamicThemeInterval(this.value)">
-                  <option value="0">⏱️ Dinamik Tema: Kapalı</option>
-                  <option value="1">⏱️ 1 dk'da bir değiştir</option>
-                  <option value="30">⏱️ 30 dk'da bir değiştir</option>
-                  <option value="60">⏱️ 60 dk'da bir değiştir</option>
-                </select>
-                <button class="tool-btn" style="padding:0 10px;" onclick="cycleThemeNow()" title="Sonraki Temaya Geç">✨</button>
-              </div>
-            </div>
+            <button class="reading-tool-row" onclick="window.print()">
+              <span>🖨️ Akıllı A4 PDF / Yazdır</span>
+            </button>
 
             <!-- ÇALIŞMA OTURUMU ODAK SAYACI -->
             <div style="border-top:1px solid var(--border-soft);margin-top:8px;padding-top:8px;">
@@ -1076,10 +1131,50 @@
                 <button class="card-mini-btn" style="border:1px solid var(--border-soft);" onclick="resetStudyTimer()">↺ Sıfırla</button>
               </div>
             </div>
+          </div>
 
-            <div style="border-top:1px solid var(--border-soft);margin-top:8px;padding-top:8px;display:flex;flex-direction:column;gap:3px;">
-              <button class="reading-tool-row" onclick="createSummaryFromHighlights()"><span>✨ Vurgulardan özet not yap</span></button>
-              <button class="reading-tool-row" onclick="window.print()"><span>🖨️ Akıllı A4 PDF / Yazdır</span></button>
+          <!-- 2. ALT BÖLÜM: GÖRÜNÜM, YAZI TİPİ VE TEMA AYARLARI -->
+          <div class="right-panel-section">
+            <div class="right-sec-title">
+              <span>🎨 Tema ve yazı tipi</span>
+            </div>
+
+            <div class="font-stepper-box">
+              <button class="stepper-btn" onclick="stepFontSize(-1)" title="Yazıyı Küçült">A-</button>
+              <span id="fontSizeValueLabel" style="font-size:12.5px;font-weight:700;">16 px</span>
+              <button class="stepper-btn" onclick="stepFontSize(1)" title="Yazıyı Büyüt">A+</button>
+            </div>
+
+            <select id="fontSelect" class="right-select" onchange="setFont(this.value)">
+              <option value="jakarta">Aa Plus Jakarta Sans</option>
+              <option value="inter">Aa Inter (Net)</option>
+              <option value="newsreader">Aa Newsreader (Akademik)</option>
+              <option value="lora">Aa Lora (Kitap Serif)</option>
+              <option value="merriweather">Aa Merriweather (Klasik)</option>
+              <option value="atkinson">Aa Atkinson Hyperlegible</option>
+              <option value="comic">Aa Comic Neue (El Yazısı)</option>
+              <option value="mono">Aa JetBrains Mono (Teknik)</option>
+            </select>
+
+            <select id="themeSelect" class="right-select" onchange="setTheme(this.value)">
+              <option value="kenar">🌲 Orman Stüdyo (Kenar)</option>
+              <option value="warm">📜 Sıcak Kağıt (Warm)</option>
+              <option value="sage">🌿 Adaçayı Odak (Sage)</option>
+              <option value="nordic">❄️ İskandinav Günü (Nordic)</option>
+              <option value="sand">🏜️ Kum & Kehribar (Sand)</option>
+              <option value="lavender">🪻 Lavanta Sakinliği</option>
+              <option value="sepia">☕ Klasik Kitap (Sepia)</option>
+              <option value="midnight">🌙 Gece Çalışması (Koyu)</option>
+            </select>
+
+            <div style="display:flex;gap:5px;">
+              <select id="dynamicThemeSelect" class="right-select" style="margin-bottom:0;" onchange="setDynamicThemeInterval(this.value)">
+                <option value="0">⏱️ Dinamik Tema: Kapalı</option>
+                <option value="1">⏱️ 1 dk'da bir değiştir</option>
+                <option value="30">⏱️ 30 dk'da bir değiştir</option>
+                <option value="60">⏱️ 60 dk'da bir değiştir</option>
+              </select>
+              <button class="tool-btn" style="padding:0 10px;" onclick="cycleThemeNow()" title="Sonraki Temaya Geç">✨</button>
             </div>
           </div>
         </aside>
@@ -1125,7 +1220,7 @@
     <button class="mob-nav-btn" onclick="toggleSidebar()"><span>📚</span><span>Kütüphane</span></button>
     <button class="mob-nav-btn" onclick="addCardAtEnd()"><span>➕</span><span>Kart</span></button>
     <button class="mob-nav-btn" onclick="startSmartDictation(true)"><span>🎙️</span><span>Dikte</span></button>
-    <button class="mob-nav-btn" onclick="toggleRightDrawer()"><span>☰</span><span>Gezinti</span></button>
+    <button class="mob-nav-btn" onclick="toggleRightDrawer()"><span>☰</span><span>Ayarlar</span></button>
     <button class="mob-nav-btn" onclick="toggleQuickPanel()"><span>⚡</span><span>Hızlı</span></button>
   </nav>
 
@@ -1138,8 +1233,9 @@
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
         <button class="tool-btn active" id="tabBtnPaste" onclick="showTransferTab('paste')">📋 Akıllı Yapıştır</button>
-        <button class="tool-btn" id="tabBtnFiles" onclick="showTransferTab('files')">📂 Dosya Aç (.html/.pdf/.pptx/.docx)</button>
-        <button class="tool-btn" id="tabBtnBookmarklet" onclick="showTransferTab('bookmarklet')">📱 Mobil / Tarayıcı Aktarım Kodu</button>
+        <button class="tool-btn" id="tabBtnFiles" onclick="showTransferTab('files')">📂 Çoklu Dosya Aç</button>
+        <button class="tool-btn" id="tabBtnBookmarklet" onclick="showTransferTab('bookmarklet')">📱 Mobil Aktarım Kodu</button>
+        <button class="tool-btn" id="tabBtnGuide" onclick="showTransferTab('guide')">📖 Kullanım Rehberi</button>
       </div>
       <div id="transferTabContent"></div>
     </div>
@@ -1179,7 +1275,7 @@
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.1.0)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.2.0)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -1191,6 +1287,11 @@
 
       <div style="border-top:1px solid var(--border-soft);padding-top:12px;">
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
+
+                <div class="changelog-item">
+          <span class="changelog-ver">v4.2.0 — Sabit Üst Gezinti Çubuğu, Güvenlik Kalkanı, Genişletilmiş Dosya Desteği & Mobil İyileştirmeler (Güncel)</span>
+          Kritik sözdizimi hatası düzeltildi; <strong>Hızlı Gezinti & Çoklu Süzgeç</strong> doğrudan not kartlarının tepesine sabitlendi; sağ panelde <strong>Tema ve Yazı Tipi</strong> ayarları alt bölüme alındı; XSS korumalı HTML temizleyici ve <code>postMessage</code> kaynak doğrulaması eklendi; <strong>.csv/.tsv, .ipynb, .py/.m/.sql, .epub ve görsel dosyaları</strong> ile <strong>Slayt-Slayt PDF/PPTX okuyucu</strong>, <strong>Fotoğraf Tam Ekran Büyütme (Lightbox)</strong>, <strong>Klasör Bazlı ZIP İndirme</strong> ve <strong>Offline Ses Kaydı Kurtarma</strong> eklendi.
+        </div>
 
         <div class="changelog-item">
           <span class="changelog-ver">v4.1.0 — Kesintisiz Dikte + Ekran Kilidi Koruması, Çoklu Gezinti Filtresi & Açılır Kart Menüsü (Güncel)</span>
@@ -1240,6 +1341,26 @@
     </div>
   </div>
 
+
+  <!-- Dokunmatik Klasör / Not Seçici Modalı (prompt() yerine) -->
+  <div class="modal-backdrop" id="pickerModal">
+    <div class="modal-box" style="max-width:460px;">
+      <div class="modal-head">
+        <strong id="pickerModalTitle">Hedef Seçin</strong>
+        <button class="card-mini-btn" onclick="closeModal('pickerModal')">✕ Kapat</button>
+      </div>
+      <div id="pickerModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Tam Ekran Tahta Fotoğrafı Büyütme (Lightbox) Modalı -->
+  <div class="modal-backdrop" id="photoLightboxModal" onclick="closeModal('photoLightboxModal')">
+    <div style="position:relative;max-width:95vw;max-height:92vh;display:flex;flex-direction:column;align-items:center;gap:8px;" onclick="event.stopPropagation()">
+      <img id="photoLightboxImg" src="" style="max-width:94vw;max-height:84vh;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,0.65);background:#111;" alt="Tam ekran görsel" />
+      <button class="tool-btn active" onclick="closeModal('photoLightboxModal')">✕ Kapat</button>
+    </div>
+  </div>
+
   <script type="module" src="./cloud.js"></script>
 
   <script>
@@ -1258,7 +1379,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.1.0',
+      version: '4.2.0',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -1387,7 +1508,7 @@
 
       if (parsed) {
         db = {
-          version: '4.1.0',
+          version: '4.2.0',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -1428,7 +1549,7 @@
                 { id: 'pr_1', align: 'full', customW: '', customH: '', html: 'Sıcaklık artarsa endotermik tepkimede denge ürünler yönüne kayar.', mediaHtml: '' },
                 { id: 'pr_2', align: 'full', customW: '', customH: '', html: 'Katalizör yalnızca aktivasyon enerjisini düşürür; $K_c$ değerini değiştirmez.', mediaHtml: '' }
               ],
-              html: '<p><strong>Sohbet Okulu v4.1.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
+              html: '<p><strong>Sohbet Okulu v4.2.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
               sideNotes: [
                 { id: 'sn_1', pos: 'right', offsetTop: 0, customW: '', customH: '', html: 'Sağ alt köşedeki ↘ tutamacını sürükleyerek bu kutuyu hem PC hem tablet/telefonda büyütebilirsiniz.' }
               ]
@@ -1474,7 +1595,7 @@
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.1.0';
+      db.version = '4.2.0';
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -1532,10 +1653,11 @@
       const editorEl = document.getElementById('editorContainer');
       const spotOn = Boolean(db.settings.spotlightOn);
       if (editorEl) editorEl.classList.toggle('spotlight-on', spotOn);
-      const spotTag = document.getElementById('spotlightStateTag');
-      const spotRow = document.getElementById('btnSpotlightRow');
-      if (spotTag) spotTag.textContent = spotOn ? 'Açık ✓' : 'Kapalı';
-      if (spotRow) spotRow.classList.toggle('active-tool', spotOn);
+      const spotBtn = document.getElementById('stickySpotlightBtn');
+      if (spotBtn) {
+        spotBtn.classList.toggle('active', spotOn);
+        spotBtn.textContent = spotOn ? '⛶ Odak: Açık' : '⛶ Odak';
+      }
 
       document.getElementById('themeSelect').value = db.settings.theme;
       document.getElementById('fontSelect').value = db.settings.font;
@@ -1727,6 +1849,7 @@
               <div class="item-actions" onclick="event.stopPropagation()">
                 <button class="mini-icon-btn" onclick="createNewFolder('${folder.id}')" title="Alt Klasör Aç">📁+</button>
                 <button class="mini-icon-btn" onclick="toggleFolderPin('${folder.id}')" title="Klasörü Sabitle">📌</button>
+                <button class="mini-icon-btn" onclick="exportSingleFolderZip('${folder.id}')" title="Bu Klasörü Tarihli ZIP İndir">📦</button>
                 <button class="mini-icon-btn" onclick="renameFolder('${folder.id}')" title="Yeniden Adlandır">✎</button>
                 <button class="mini-icon-btn" onclick="deleteFolder('${folder.id}')" title="Sil">🗑</button>
               </div>
@@ -1989,17 +2112,26 @@
     function touchMoveNote(id) {
       const n = db.notes.find(x => x.id === id);
       if (!n) return;
-      const list = db.folders.map((f, i) => `${i + 1}. ${getFolderBreadcrumb(f.id)}`).join('
-');
-      const ans = prompt(`Hedef klasör numarasını girin:
-${list}`);
-      const idx = Number(ans) - 1;
-      if (db.folders[idx]) {
-        n.folderId = db.folders[idx].id;
-        n.isQuickPool = false;
-        activeFolderId = db.folders[idx].id;
-        saveDatabase(); renderAll();
-      }
+      const body = document.getElementById('pickerModalBody');
+      document.getElementById('pickerModalTitle').textContent = `📁 "${n.title}" Notunu Taşı`;
+      body.innerHTML = db.folders.map(f => `
+        <button class="picker-option-btn" onclick="executeMoveNoteToFolder('${n.id}', '${f.id}')">
+          <span>📁 ${escapeHtml(getFolderBreadcrumb(f.id))}</span>
+          ${f.id === n.folderId && !n.isQuickPool ? '<small style="color:var(--text-muted)">(Mevcut)</small>' : '<span>→</span>'}
+        </button>
+      `).join('');
+      document.getElementById('pickerModal').classList.add('open');
+    }
+
+    function executeMoveNoteToFolder(noteId, folderId) {
+      const n = db.notes.find(x => x.id === noteId);
+      if (!n) return;
+      n.folderId = folderId;
+      n.isQuickPool = false;
+      n.updatedAt = Date.now();
+      activeFolderId = folderId;
+      closeModal('pickerModal');
+      saveDatabase(); renderAll();
     }
 
     function moveActiveQuickNoteToFolder(folderId) {
@@ -2028,13 +2160,21 @@ ${list}`);
       if (selectedQuickIds.size < 1) return alert('Birleştirmek için en az 1 hızlı not seçin.');
       const targetNotes = db.notes.filter(n => !n.isQuickPool);
       if (!targetNotes.length) return alert('Önce hedef bir ders notu oluşturun.');
-      const list = targetNotes.map((n, i) => `${i + 1}. ${n.title}`).join('
-');
-      const ans = prompt(`Seçili ${selectedQuickIds.size} hızlı not hangi ders notunun altına birleştirilsin?
-${list}`);
-      const target = targetNotes[Number(ans) - 1];
-      if (!target) return;
+      const body = document.getElementById('pickerModalBody');
+      document.getElementById('pickerModalTitle').textContent = `🔗 ${selectedQuickIds.size} Hızlı Notu Birleştir`;
+      body.innerHTML = `<p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Hızlı notların altına ekleneceği hedef ders notunu seçin:</p>` +
+        targetNotes.map(tn => `
+          <button class="picker-option-btn" onclick="executeMergeQuickNotesInto('${tn.id}')">
+            <span>📄 ${escapeHtml(tn.title)}</span>
+            <small style="color:var(--text-muted)">${escapeHtml(getFolderBreadcrumb(tn.folderId))}</small>
+          </button>
+        `).join('');
+      document.getElementById('pickerModal').classList.add('open');
+    }
 
+    function executeMergeQuickNotesInto(targetNoteId) {
+      const target = db.notes.find(n => n.id === targetNoteId);
+      if (!target) return;
       pushUndo();
       const chosen = db.notes.filter(n => selectedQuickIds.has(n.id));
       chosen.forEach(qn => {
@@ -2046,6 +2186,7 @@ ${list}`);
       selectedQuickIds.clear();
       target.updatedAt = Date.now();
       db.activeNoteId = target.id;
+      closeModal('pickerModal');
       setLibraryView('all'); saveDatabase(); renderAll();
     }
 
@@ -2336,8 +2477,13 @@ ${list}`);
         topPinBtn.classList.toggle('active', isAllPins);
       }
 
+      const noteBytes = new Blob([JSON.stringify(note)]).size;
+      const noteKb = Math.max(1, Math.round(noteBytes / 1024));
+      const noteSizeCls = noteKb >= 920 ? 'danger' : noteKb >= 750 ? 'warn' : '';
+      const filteredList = note.blocks.map((b, i) => ({ b, i })).filter(({ b }) => blockMatchesMultiFilter(b));
+
       let html = `
-        <!-- KOMPAKT NOT BAŞLIĞI + KÜÇÜK İSTATİSTİKLER BİR ARADA -->
+        <!-- KOMPAKT NOT BAŞLIĞI + KÜÇÜK İSTATİSTİKLER & 1MB SINIR GÖSTERGESİ -->
         <header class="note-header-compact">
           <div class="note-header-title-wrap">
             <input class="note-title-input" value="${escapeAttr(note.title)}" onchange="updateNoteTitle(this.value)" placeholder="Ders veya Konu Başlığı..." />
@@ -2345,10 +2491,7 @@ ${list}`);
               <span>${new Date(note.updatedAt).toLocaleDateString('tr-TR', { day:'numeric', month:'short', year:'numeric' })}</span>
               <span>·</span>
               <span class="tiny-stat-pill">🗂️ ${note.blocks.length} kart</span>
-              <span class="tiny-stat-pill">🔴 ${redCount}</span>
-              <span class="tiny-stat-pill">🟡 ${yellowCount}</span>
-              <span class="tiny-stat-pill">🟣 ${purpleCount}</span>
-              <span class="tiny-stat-pill">🖍️ ${hlCount} vurgu</span>
+              <span class="note-size-pill ${noteSizeCls}" title="Firebase Firestore 1 MB tekil belge sınırı">${noteKb} KB</span>
             </div>
           </div>
           <div class="note-header-actions">
@@ -2356,6 +2499,30 @@ ${list}`);
             <button class="tool-btn active" onclick="addCardAtEnd()">+ Kart ekle</button>
           </div>
         </header>
+
+        <!-- NOT TEPESİNE SABİT (STICKY) HIZLI GEZİNTİ & ÇOKLU SÜZGEÇ ÇUBUĞU -->
+        <div class="sticky-note-nav">
+          <div class="sticky-nav-filters">
+            <button class="multi-chip ${activeMultiFilters.size === 0 ? 'active' : ''}" onclick="toggleMultiFilterChip('all')">Tümü (${note.blocks.length})</button>
+            <button class="multi-chip ${activeMultiFilters.has('red') ? 'active' : ''}" onclick="toggleMultiFilterChip('red')" title="Anlamadım">🔴 ${redCount}</button>
+            <button class="multi-chip ${activeMultiFilters.has('yellow') ? 'active' : ''}" onclick="toggleMultiFilterChip('yellow')" title="Tekrar Bak">🟡 ${yellowCount}</button>
+            <button class="multi-chip ${activeMultiFilters.has('purple') ? 'active' : ''}" onclick="toggleMultiFilterChip('purple')" title="Kritik">🟣 ${purpleCount}</button>
+            <button class="multi-chip ${activeMultiFilters.has('highlight') ? 'active' : ''}" onclick="toggleMultiFilterChip('highlight')" title="Vurgulananlar">🖍️ ${hlCount}</button>
+            <button class="multi-chip ${db.settings.spotlightOn ? 'active' : ''}" id="stickySpotlightBtn" onclick="toggleSpotlight()" title="Sadece işaretli kartları parlak bırak, araları karart">⛶ ${db.settings.spotlightOn ? 'Odak: Açık' : 'Odak'}</button>
+          </div>
+          <div class="sticky-nav-jump">
+            <select class="nav-jump-select" onchange="if(this.value) scrollToBlock(this.value)" title="Kart seçerek hızlı atla">
+              <option value="">☰ Karta git (${filteredList.length})...</option>
+              ${filteredList.map(({ b, i }) => {
+                const prev = stripHtml(b.html).trim() || b.role || 'Boş kart';
+                const pIcon = b.pin === 'red' ? '🔴 ' : b.pin === 'yellow' ? '🟡 ' : b.pin === 'purple' ? '🟣 ' : '';
+                return `<option value="${b.id}">#${String(i + 1).padStart(2, '0')} · ${pIcon}${escapeAttr(prev.slice(0, 42))}</option>`;
+              }).join('')}
+            </select>
+            <button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(-1)" title="Önceki Kart">▲</button>
+            <button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(1)" title="Sonraki Kart">▼</button>
+          </div>
+        </div>
       `;
 
       if (activeMultiFilters.size > 0) {
@@ -2539,6 +2706,10 @@ ${list}`);
       }
 
       container.innerHTML = html;
+      container.querySelectorAll('.inline-photo-card img').forEach(im => {
+        im.style.cursor = 'zoom-in';
+        im.onclick = () => openPhotoLightbox(im.src);
+      });
       renderMathInContainer(container);
       renderRightDrawer();
     }
@@ -2668,7 +2839,7 @@ ${list}`);
 
     function sanitizeImportedHtml(rawHtml) {
       const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
-      doc.querySelectorAll('script, style, button, mat-icon, svg, nav, header, footer, .toolbar, .card-top, .no-print, .copy-btn, .message-actions, .response-footer, .citation-marker, .citations-container, sup.citation, [data-testid*="copy"]').forEach(el => el.remove());
+      doc.querySelectorAll('script, style, iframe, object, embed, applet, form, input, textarea, select, button, meta, link, base, mat-icon, svg, nav, header, footer, .toolbar, .card-top, .no-print, .copy-btn, .message-actions, .response-footer, .citation-marker, .citations-container, sup.citation, [data-testid*="copy"]').forEach(el => el.remove());
       doc.querySelectorAll('.katex').forEach(k => {
         const tex = k.querySelector('annotation[encoding="application/x-tex"]');
         if (!tex) return;
@@ -2684,13 +2855,24 @@ ${list}`);
         if (/hl-green/.test(cls)) keepClasses.push('hl-green');
         if (/hl-pink/.test(cls)) keepClasses.push('hl-pink');
         if (/choice-line/.test(cls)) keepClasses.push('choice-line');
-        el.removeAttribute('width');
-        el.removeAttribute('height');
-        el.removeAttribute('style');
+        [...el.attributes].forEach(attr => {
+          const name = attr.name.toLowerCase();
+          const val = attr.value.trim();
+          if (name.startsWith('on') || !['href', 'src', 'alt', 'colspan', 'rowspan'].includes(name)) {
+            el.removeAttribute(attr.name);
+          } else if ((name === 'href' || name === 'src') && /^(javascript|vbscript|data:text\/html)/i.test(val.replace(/\s+/g, ''))) {
+            el.removeAttribute(attr.name);
+          }
+        });
         if (keepClasses.length) el.className = keepClasses.join(' ');
-        else el.removeAttribute('class');
       });
       return doc.body.innerHTML;
+    }
+
+    function openPhotoLightbox(src) {
+      if (!src) return;
+      document.getElementById('photoLightboxImg').src = src;
+      document.getElementById('photoLightboxModal').classList.add('open');
     }
 
     function parseImportedHtmlToBlocks(rawHtml) {
@@ -2811,46 +2993,7 @@ ${list}`);
        SAĞ HIZLI GEZİNTİ PANELİ (ÇOKLU PIN / VURGU SEÇİMİ İLE)
        ========================================================================== */
     function renderRightDrawer() {
-      const listBox = document.getElementById('rightNavOutlineList');
-      const chipsBox = document.getElementById('rightMultiFilterChips');
-      const note = getActiveNote();
-      if (!note || !listBox) return;
-
-      const redCount = note.blocks.filter(b => b.pin === 'red').length;
-      const yellowCount = note.blocks.filter(b => b.pin === 'yellow').length;
-      const purpleCount = note.blocks.filter(b => b.pin === 'purple').length;
-      const hlCount = note.blocks.filter(b => /<mark\b/i.test(b.html || '')).length;
-
-      if (chipsBox) {
-        chipsBox.innerHTML = `
-          <button class="multi-chip ${activeMultiFilters.size === 0 ? 'active' : ''}" onclick="toggleMultiFilterChip('all')">Tümü (${note.blocks.length})</button>
-          <button class="multi-chip ${activeMultiFilters.has('red') ? 'active' : ''}" onclick="toggleMultiFilterChip('red')">🔴 ${redCount}</button>
-          <button class="multi-chip ${activeMultiFilters.has('yellow') ? 'active' : ''}" onclick="toggleMultiFilterChip('yellow')">🟡 ${yellowCount}</button>
-          <button class="multi-chip ${activeMultiFilters.has('purple') ? 'active' : ''}" onclick="toggleMultiFilterChip('purple')">🟣 ${purpleCount}</button>
-          <button class="multi-chip ${activeMultiFilters.has('highlight') ? 'active' : ''}" onclick="toggleMultiFilterChip('highlight')">🖍️ ${hlCount}</button>
-        `;
-      }
-
-      const pinIcons = { red: '🔴', yellow: '🟡', purple: '🟣' };
-      const filtered = note.blocks.map((b, idx) => ({ b, idx })).filter(({ b }) => blockMatchesMultiFilter(b));
-
-      if (!filtered.length) {
-        listBox.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:6px;">Seçili süzgeçlere uyan kart yok.</div>`;
-        return;
-      }
-
-      listBox.innerHTML = filtered.map(({ b, idx }) => {
-        const preview = stripHtml(b.html).trim() || b.role || 'Boş kart';
-        const badgeIcon = pinIcons[b.pin] || (/<mark\b/i.test(b.html || '') ? '🖍️' : '📄');
-        return `
-          <div class="nav-outline-item" data-block-id="${b.id}" onclick="scrollToBlock('${b.id}')">
-            <span class="nav-num-badge">#${String(idx + 1).padStart(2, '0')}</span>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:11.5px;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${badgeIcon} ${escapeHtml(preview.slice(0, 48))}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
+      applySettingsToDOM();
     }
 
     /* ==========================================================================
@@ -2891,7 +3034,7 @@ ${list}`);
                 <button class="card-mini-btn" onclick="openCropModalForInline('${photoId}')">✂️</button>
                 <button class="card-mini-btn" onclick="removeInlineImage('${photoId}')">✕</button>
               </div>
-              <img src="${compressed}" data-rot="0" alt="Ders görseli" />
+              <img src="${compressed}" data-rot="0" alt="Ders görseli" style="cursor:zoom-in;" onclick="openPhotoLightbox(this.src)" title="Tam ekran büyütmek için dokun" />
             </div>
           `;
           const blk = getActiveNote()?.blocks.find(b => b.id === blockId);
@@ -3351,6 +3494,7 @@ ${list}`);
           a.download = `SohbetOkulu_Ses_${d.toISOString().slice(0,10)}_${gunler[d.getDay()]}_${d.getHours()}-${d.getMinutes()}.${ext}`;
           a.click();
           stream.getTracks().forEach(t => t.stop());
+          clearSavedAudioChunks();
         };
         mediaRecorder.start(5000);
       } catch (err) { alert('Mikrofon erişimi alınamadı: ' + err.message); }
@@ -3424,37 +3568,65 @@ ${list}`);
     const MOB_BOOKMARKLET_CODE = "javascript:(()=>{const old=document.getElementById('ds-mob-bar');if(old)old.remove();const isNb=/notebook(lm)?\\.google\\.com/.test(location.hostname);const sels=isNb?['.from-user-message-card-content, .to-user-message-card-content','chat-message .message-text-content','chat-message','.chat-message-pair','labs-tailwind-doc-viewer']:['user-query, model-response','chat-message','[class*=\"message-card\"]','message-content'];let els=[];for(const s of sels){els=[...document.querySelectorAll(s)].filter(e=>e.innerText.trim().length>0);if(els.length)break;}if(!els.length)return alert('Sohbet bulunamad\u0131.');const tSels=isNb?['input.notebook-title','.notebook-title','[data-test-id=\"notebook-title\"]','.project-title','header h1','header [role=\"heading\"]']:['[data-test-id=\"conversation-title\"]','.conversation-title','.chat-title','[aria-current=\"page\"]','nav [aria-selected=\"true\"]','top-bar-actions .title'];let rawT='';for(const s of tSels){const el=document.querySelector(s);const v=el?(el.value||el.innerText||'').trim():'';if(v&&v.length>1&&!/^(google\\s*)?(gemini|notebook(lm)?|yeni sohbet|new chat)$/i.test(v)){rawT=v;break;}}if(!rawT){const dt=document.title.replace(/ - Google Gemini| - Notebook(LM)?/gi,'').trim();if(dt&&!/^(google\\s*)?(gemini|notebook(lm)?|yeni sohbet|new chat)$/i.test(dt))rawT=dt;}const title=(rawT||'Sohbet Notu').slice(0,60).trim();const cards=els.map(el=>{const c=el.cloneNode(true);c.querySelectorAll('.katex').forEach(k=>{const t=k.querySelector('annotation[encoding=\"application/x-tex\"]');if(!t)return;const d=k.closest('.katex-display')!==null;const w=document.createElement(d?'div':'span');w.textContent=d?'$$'+t.textContent.trim()+'$$':'$'+t.textContent.trim()+'$';k.replaceWith(w);});c.querySelectorAll('script,style,button,mat-icon,svg,[role=\"button\"],.message-actions,.response-footer,.citation-marker,.citations-container,sup.citation,mat-chip,img').forEach(b=>b.remove());c.querySelectorAll('*').forEach(n=>{[...n.attributes].forEach(a=>{if(!['href','colspan','rowspan'].includes(a.name))n.removeAttribute(a.name);});});const u=/user|query|human|from-user/i.test(el.tagName+' '+el.className);return{u,html:c.innerHTML.trim(),txt:c.innerText.trim()};}).filter(x=>x.txt.length>0);const cleanHtml=cards.map(x=>'<div class=\"card '+(x.u?'user':'ai')+'\">'+x.html+'</div>').join('');const cleanTxt=cards.map(x=>(x.u?'Soru: ':'Ders Notu: ')+x.txt).join('\\n\\n---\\n\\n');const bar=document.createElement('div');bar.id='ds-mob-bar';bar.style.cssText='position:fixed;bottom:16px;left:12px;right:12px;z-index:2147483647;background:#143528;color:#fff;padding:10px;border-radius:14px;display:flex;gap:8px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45);font-family:system-ui,sans-serif';const b1=document.createElement('button');b1.textContent='\ud83d\udccb Kopyala & Sohbet Okulu';b1.style.cssText='flex:1;background:#d9e89c;color:#143528;border:none;padding:12px 10px;border-radius:10px;font-weight:700;font-size:13.5px;cursor:pointer';b1.onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([cleanHtml],{type:'text/html'}),'text/plain':new Blob([cleanTxt],{type:'text/plain'})})]);}catch(e){await navigator.clipboard.writeText(cleanTxt);}window.open('https://fatihdogukand.github.io/ders-studyosu/','_blank');bar.remove();};const bx=document.createElement('button');bx.textContent='\u2715';bx.style.cssText='background:transparent;color:#9eb9ac;border:none;padding:8px 10px;font-size:16px;cursor:pointer';bx.onclick=()=>bar.remove();bar.append(b1,bx);document.body.appendChild(bar);})();";
 
     function showTransferTab(tab) {
-      ['tabBtnPaste', 'tabBtnFiles', 'tabBtnBookmarklet'].forEach(id => {
+      ['tabBtnPaste', 'tabBtnFiles', 'tabBtnBookmarklet', 'tabBtnGuide'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
       });
-      const activeBtn = document.getElementById(tab === 'paste' ? 'tabBtnPaste' : tab === 'files' ? 'tabBtnFiles' : 'tabBtnBookmarklet');
+      const map = { paste: 'tabBtnPaste', files: 'tabBtnFiles', bookmarklet: 'tabBtnBookmarklet', guide: 'tabBtnGuide' };
+      const activeBtn = document.getElementById(map[tab]);
       if (activeBtn) activeBtn.classList.add('active');
 
       const box = document.getElementById('transferTabContent');
       if (tab === 'paste') {
         box.innerHTML = `
-          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Gemini, NotebookLM veya başka bir sohbetten kopyaladığınız metni aşağıya yapıştırın; otomatik olarak ders kartlarına ayrılır.</p>
-          <textarea id="smartPasteArea" class="code-box" rows="7" style="font-family:inherit;" placeholder="Sohbet metnini buraya yapıştırın..."></textarea>
+          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Gemini, NotebookLM veya GPT cevabını kopyalayıp aşağıdaki alana yapıştırın; başlıklar, tablolar ve formüller korunarak ayrı ders kartlarına dönüştürülür.</p>
+          <div id="smartPasteRichZone" class="rich-paste-box" contenteditable="true"></div>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <button class="tool-btn" onclick="importRawTextAsNote(document.getElementById('smartPasteArea').value, true)">⚡ Hızlı Notlara Aktar</button>
-            <button class="tool-btn active" onclick="importRawTextAsNote(document.getElementById('smartPasteArea').value, false)">📥 Aktif Klasöre Not Oluştur</button>
+            <button class="tool-btn" onclick="processRichPasteZone(true)">⚡ Hızlı Notlara Aktar</button>
+            <button class="tool-btn active" onclick="processRichPasteZone(false)">📥 Aktif Klasöre Not Oluştur</button>
           </div>
         `;
+        setTimeout(() => document.getElementById('smartPasteRichZone')?.focus(), 60);
       } else if (tab === 'files') {
         box.innerHTML = `
-          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Desteklenen biçimler: <strong>.html (Eklenti / Sohbet Çıktıları), .pdf, .pptx, .docx, .txt, .md</strong></p>
-          <input type="file" multiple accept=".html,.htm,.pdf,.pptx,.docx,.txt,.md" onchange="handleMultiFileImport(event)" />
+          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">
+            Desteklenen tüm biçimler: <strong>.html, .pdf, .pptx, .docx, .csv, .tsv, .ipynb, .py, .m, .sql, .epub, .txt, .md, .json</strong> ve <strong>tahta fotoğrafları (.png/.jpg/.webp)</strong>
+          </p>
+          <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;margin-bottom:10px;cursor:pointer;">
+            <input type="checkbox" id="openAsSlidesChk" checked />
+            <span><strong>PDF ve PowerPoint (.pptx)</strong> dosyalarını Slayt-Slayt Okuyucu + Hoca Uyarısı modunda aç</span>
+          </label>
+          <input type="file" multiple accept=".html,.htm,.pdf,.pptx,.docx,.csv,.tsv,.ipynb,.py,.m,.sql,.js,.epub,.txt,.md,.json,.png,.jpg,.jpeg,.webp" onchange="handleMultiFileImport(event)" />
         `;
-      } else {
+      } else if (tab === 'bookmarklet') {
         box.innerHTML = `
-          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Mobil Chrome / iPad Safari'de tarayıcı yer imi olarak <strong>NotGonder</strong> adıyla kaydedin; Gemini veya NotebookLM açıkken adres çubuğuna <code>NotGonder</code> yazıp seçin:</p>
+          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Mobil Chrome veya iPad Safari'de herhangi bir sayfayı yer imlerine <strong>NotGonder</strong> adıyla kaydedip URL kısmına aşağıdaki kodu yapıştırın. Gemini veya NotebookLM açıkken adres çubuğuna <code>NotGonder</code> yazıp yıldızlı öneriye dokunun:</p>
           <textarea id="bmCodeBox" class="code-box" rows="4" readonly>${MOB_BOOKMARKLET_CODE}</textarea>
           <div style="display:flex;justify-content:flex-end;margin-top:8px;">
             <button class="tool-btn active" onclick="navigator.clipboard?.writeText(document.getElementById('bmCodeBox').value);alert('Bookmarklet kodu panoya kopyalandı!')">📋 Kodu Kopyala</button>
           </div>
         `;
+      } else {
+        box.innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.55;">
+            <div class="changelog-item"><strong>1. Sabit Gezinti & Odak Modu:</strong> Not başlığının altındaki yapışkan çubuktan kırmızı/sarı/mor pinleri veya vurguları çoklu seçebilir, <strong>⛶ Odak</strong> ile aradaki normal kartları karartıp sadece işaretli yerlere çalışabilirsiniz.</div>
+            <div class="changelog-item"><strong>2. Çoklu Yan Not, Öncül & Tahta Fotoğrafı:</strong> Kartların sağındaki <strong>📝</strong> ile sağ sütuna sınırsız yan not, altındaki <strong>➕ Öncül Ekle</strong> ile aşamalı öncüller açabilirsiniz. Fotoğraflara tıklayınca tam ekran büyür; ↻ ile döndürüp ✂️ ile kırpabilirsiniz.</div>
+            <div class="changelog-item"><strong>3. Kesintisiz Dikte & Arka Plan Ses Kaydı:</strong> İnternet varken <strong>🎙️ Dikte</strong> hoca duraksasa bile kapanmaz, siz <strong>Durdur</strong> diyene kadar dinler. İnternet yoksa 5 saniyede bir yerel hafızaya yedeklenen <strong>Offline Ses Kaydı</strong> başlar.</div>
+            <div class="changelog-item"><strong>4. Hızlı Notlar & Klasör Yönetimi:</strong> Sol menüdeki <strong>⚡ Hızlı notlar</strong> geçici çalışma havuzudur; işiniz bitince tek tıkla kalıcı ders klasörüne aktarabilir, klasör yanındaki <strong>📦</strong> ile o dersi tarihli ZIP olarak indirebilirsiniz.</div>
+          </div>
+        `;
       }
+    }
+
+    function processRichPasteZone(toQuickPool = false) {
+      const zone = document.getElementById('smartPasteRichZone');
+      if (!zone) return;
+      const rawHtml = zone.innerHTML.trim();
+      const rawText = zone.innerText.trim();
+      if (!rawText && !/<img/i.test(rawHtml)) return alert('Önce yapıştırılacak metni kutuya yapıştırın.');
+      const blocks = parseImportedHtmlToBlocks(rawHtml);
+      createNewNote(toQuickPool, 'Aktarılan Sohbet · ' + new Date().toLocaleDateString('tr-TR'), blocks);
+      closeModal('transferModal');
     }
 
     function importRawTextAsNote(rawText, toQuickPool = false, customTitle = '') {
@@ -3469,52 +3641,250 @@ ${list}`);
       closeModal('transferModal');
     }
 
+    function csvToHtmlTable(rawCsv, sep = ',') {
+      const rows = rawCsv.trim().split(/\r?\n/).filter(Boolean).map(r => r.split(sep));
+      if (!rows.length) return '<p></p>';
+      const head = '<thead><tr>' + rows[0].map(c => `<th>${escapeHtml(c.trim())}</th>`).join('') + '</tr></thead>';
+      const body = '<tbody>' + rows.slice(1).map(r => '<tr>' + r.map(c => `<td>${escapeHtml(c.trim())}</td>`).join('') + '</tr>').join('') + '</tbody>';
+      return `<table>${head}${body}</table>`;
+    }
+
+    /* Slayt-Slayt PDF / PPTX Okuyucu Durumu */
+    let slideState = { mode: 'pdf', pdfDoc: null, pptxSlides: [], page: 1, notes: {}, title: '' };
+
+    async function openFileInSlideViewer(file, ext) {
+      const buf = await file.arrayBuffer();
+      slideState = { mode: ext, pdfDoc: null, pptxSlides: [], page: 1, notes: {}, title: file.name.replace(/\.(pdf|pptx)$/i, '') };
+      const panel = document.getElementById('slideViewerPanel');
+      const canvas = document.getElementById('slidePdfCanvas');
+      const pptxBox = document.getElementById('slidePptxBox');
+
+      if (ext === 'pdf' && window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        slideState.pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+        canvas.style.display = 'block';
+        pptxBox.style.display = 'none';
+        panel.classList.add('active');
+        await renderCurrentSlide();
+      } else if (ext === 'pptx' && window.JSZip) {
+        const zip = await JSZip.loadAsync(buf);
+        const slideFiles = Object.keys(zip.files)
+          .filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k))
+          .sort((a, b) => parseInt(a.match(/\d+/)[0]) - parseInt(b.match(/\d+/)[0]));
+        for (const sf of slideFiles) {
+          const xml = await zip.files[sf].async('text');
+          const texts = [...xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g)].map(m => m[1]).filter(Boolean);
+          slideState.pptxSlides.push(texts.length ? texts.map(t => `<p>${escapeHtml(t)}</p>`).join('') : '<p><i>(Bu slaytta metin bulunmuyor)</i></p>');
+        }
+        if (!slideState.pptxSlides.length) return alert('Slayt içeriği bulunamadı.');
+        canvas.style.display = 'none';
+        pptxBox.style.display = 'block';
+        panel.classList.add('active');
+        await renderCurrentSlide();
+      }
+    }
+
+    async function renderCurrentSlide() {
+      const badge = document.getElementById('slidePageBadge');
+      const inp = document.getElementById('slideNoteInput');
+      if (slideState.mode === 'pptx') {
+        document.getElementById('slidePptxBox').innerHTML = `<h3 style="margin-top:0;color:var(--accent)">Slayt ${slideState.page}</h3>` + slideState.pptxSlides[slideState.page - 1];
+        badge.textContent = `Slayt ${slideState.page} / ${slideState.pptxSlides.length}`;
+      } else if (slideState.pdfDoc) {
+        const page = await slideState.pdfDoc.getPage(slideState.page);
+        const vp = page.getViewport({ scale: 1.35 });
+        const canvas = document.getElementById('slidePdfCanvas');
+        canvas.width = vp.width; canvas.height = vp.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+        badge.textContent = `Sayfa ${slideState.page} / ${slideState.pdfDoc.numPages}`;
+      }
+      inp.value = slideState.notes[slideState.page] || '';
+    }
+
+    function changeSlidePage(delta) {
+      const max = slideState.mode === 'pptx' ? slideState.pptxSlides.length : (slideState.pdfDoc ? slideState.pdfDoc.numPages : 0);
+      const next = slideState.page + delta;
+      if (next >= 1 && next <= max) { slideState.page = next; renderCurrentSlide(); }
+    }
+    function saveCurrentSlideNote() { slideState.notes[slideState.page] = document.getElementById('slideNoteInput').value; }
+    function closeSlideViewer() { document.getElementById('slideViewerPanel').classList.remove('active'); }
+
+    function appendSlideNotesToActiveNote() {
+      const entries = Object.entries(slideState.notes).filter(([, v]) => v.trim());
+      if (!entries.length) return alert('Henüz slayt notu yazmadınız.');
+      const note = getActiveNote();
+      if (!note) return;
+      pushUndo();
+      const listHtml = `<h3>📌 ${escapeHtml(slideState.title)} · Slayt Notları</h3><ul>` +
+        entries.map(([p, t]) => `<li><strong>Sayfa ${p}:</strong> ${escapeHtml(t)}</li>`).join('') + '</ul>';
+      note.blocks.push({
+        id: 'blk_' + Date.now(), role: 'Slayt Notları', pin: 'purple', pageBreak: false,
+        premisesHidden: false, sideNotesHidden: false, premises: [], html: listHtml, sideNotes: []
+      });
+      note.updatedAt = Date.now();
+      closeSlideViewer(); saveDatabase(); renderEditor();
+    }
+
+    function copyAllSlideNotesForAi() {
+      const entries = Object.entries(slideState.notes).filter(([, v]) => v.trim());
+      if (!entries.length) return alert('Henüz slayt notu yazmadınız.');
+      const txt = `"${slideState.title}" sunumunu takip ederken aldığım şu sayfa bazlı hoca uyarılarını ders notuma entegre edebilir misin?\n\n` +
+        entries.map(([p, t]) => `- Sayfa ${p}: ${t}`).join('\n');
+      navigator.clipboard?.writeText(txt);
+      alert('Tüm slayt notları yapay zekaya aktarmak üzere panoya kopyalandı!');
+    }
+
     async function handleMultiFileImport(e) {
       const files = [...(e.target.files || [])];
+      const asSlides = document.getElementById('openAsSlidesChk')?.checked;
       for (const file of files) {
         const ext = file.name.split('.').pop().toLowerCase();
-        if (ext === 'txt' || ext === 'md') importRawTextAsNote(await file.text(), false, file.name);
-        else if (ext === 'html' || ext === 'htm') {
+        if (ext === 'txt' || ext === 'md') {
+          importRawTextAsNote(await file.text(), false, file.name.replace(/\.(txt|md)$/i, ''));
+        } else if (ext === 'html' || ext === 'htm') {
           const blocks = parseImportedHtmlToBlocks(await file.text());
           createNewNote(false, file.name.replace(/\.html?$/i, ''), blocks);
+        } else if (ext === 'csv' || ext === 'tsv') {
+          const tbl = csvToHtmlTable(await file.text(), ext === 'tsv' ? '\t' : ',');
+          createNewNote(false, file.name.replace(/\.(csv|tsv)$/i, ''), [{
+            id: 'blk_' + Date.now(), role: 'Veri Tablosu', pin: '', pageBreak: false,
+            premisesHidden: false, sideNotesHidden: false, premises: [], html: tbl, sideNotes: []
+          }]);
+        } else if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
+          const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(file); });
+          const img = await new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = dataUrl; });
+          const compressed = compressImageToTarget(img, 50);
+          const photoId = 'img_' + Date.now();
+          const photoHtml = `<div class="inline-photo-card" id="${photoId}" contenteditable="false"><div class="inline-photo-bar"><button class="card-mini-btn" onclick="rotateInlineImage('${photoId}')">↻</button><button class="card-mini-btn" onclick="openCropModalForInline('${photoId}')">✂️</button><button class="card-mini-btn" onclick="removeInlineImage('${photoId}')">✕</button></div><img src="${compressed}" data-rot="0" alt="${escapeAttr(file.name)}" style="cursor:zoom-in;" onclick="openPhotoLightbox(this.src)" /></div>`;
+          createNewNote(false, file.name.replace(/\.[^.]+$/, ''), [{
+            id: 'blk_' + Date.now(), role: 'Tahta Görseli', pin: 'purple', pageBreak: false,
+            premisesHidden: false, sideNotesHidden: false, premises: [], html: photoHtml, sideNotes: []
+          }]);
+        } else if (ext === 'ipynb') {
+          const nb = JSON.parse(await file.text());
+          const cells = Array.isArray(nb.cells) ? nb.cells : [];
+          const blocks = cells.map((c, i) => {
+            const srcTxt = Array.isArray(c.source) ? c.source.join('') : String(c.source || '');
+            const cellHtml = c.cell_type === 'code'
+              ? `<pre><code>${escapeHtml(srcTxt)}</code></pre>`
+              : srcTxt.split(/\n{2,}/).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+            return { id: 'blk_' + Date.now() + '_' + i, role: c.cell_type === 'code' ? 'Kod Hücresi' : '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: cellHtml, sideNotes: [] };
+          }).filter(b => stripHtml(b.html).trim().length > 0);
+          if (blocks.length) createNewNote(false, file.name.replace(/\.ipynb$/i, ''), blocks);
+        } else if (['py', 'm', 'sql', 'js'].includes(ext)) {
+          const codeTxt = await file.text();
+          createNewNote(false, file.name, [{
+            id: 'blk_' + Date.now(), role: ext.toUpperCase() + ' Kodu', pin: '', pageBreak: false,
+            premisesHidden: false, sideNotesHidden: false, premises: [], html: `<pre><code>${escapeHtml(codeTxt)}</code></pre>`, sideNotes: []
+          }]);
+        } else if (ext === 'json') {
+          const parsed = JSON.parse(await file.text());
+          if (parsed && Array.isArray(parsed.notes) && Array.isArray(parsed.folders)) {
+            if (confirm(`${parsed.notes.length} not içeren Sohbet Okulu yedeği geri yüklensin mi?`)) {
+              db = parsed; saveDatabase(); renderAll();
+            }
+          } else {
+            createNewNote(false, file.name, [{
+              id: 'blk_' + Date.now(), role: 'JSON Veri', pin: '', pageBreak: false,
+              premisesHidden: false, sideNotesHidden: false, premises: [], html: `<pre><code>${escapeHtml(JSON.stringify(parsed, null, 2))}</code></pre>`, sideNotes: []
+            }]);
+          }
+        } else if (ext === 'epub' && window.JSZip) {
+          const zip = await JSZip.loadAsync(await file.arrayBuffer());
+          const xhtmlFiles = Object.keys(zip.files).filter(k => /\.(xhtml|html|htm)$/i.test(k)).sort();
+          const blocks = [];
+          for (let i = 0; i < xhtmlFiles.length; i++) {
+            const raw = await zip.files[xhtmlFiles[i]].async('text');
+            const clean = sanitizeImportedHtml(raw);
+            if (stripHtml(clean).trim().length > 20) {
+              blocks.push({ id: 'blk_' + Date.now() + '_' + i, role: `Bölüm ${blocks.length + 1}`, pin: '', pageBreak: true, premisesHidden: false, sideNotesHidden: false, premises: [], html: clean, sideNotes: [] });
+            }
+          }
+          if (blocks.length) createNewNote(false, file.name.replace(/\.epub$/i, ''), blocks);
         } else if (ext === 'docx' && window.mammoth) {
           const res = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
           createNewNote(false, file.name.replace(/\.docx$/i, ''), [{ id: 'blk_' + Date.now(), role: '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: sanitizeImportedHtml(res.value), sideNotes: [] }]);
         } else if (ext === 'pdf' && window.pdfjsLib) {
-          const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-          let fullText = '';
-          for (let p = 1; p <= pdf.numPages; p++) {
-            const page = await pdf.getPage(p);
-            const tc = await page.getTextContent();
-            fullText += tc.items.map(it => it.str).join(' ') + '\n\n';
+          if (asSlides) {
+            await openFileInSlideViewer(file, 'pdf');
+          } else {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+            let fullText = '';
+            for (let p = 1; p <= pdf.numPages; p++) {
+              const page = await pdf.getPage(p);
+              const tc = await page.getTextContent();
+              fullText += tc.items.map(it => it.str).join(' ') + '\n\n';
+            }
+            importRawTextAsNote(fullText, false, file.name.replace(/\.pdf$/i, ''));
           }
-          importRawTextAsNote(fullText, false, file.name.replace(/\.pdf$/i, ''));
         } else if (ext === 'pptx' && window.JSZip) {
-          const zip = await JSZip.loadAsync(await file.arrayBuffer());
-          const slideFiles = Object.keys(zip.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort();
-          let slidesText = '';
-          for (const sf of slideFiles) {
-            const xml = await zip.files[sf].async('text');
-            slidesText += [...xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g)].map(m => m[1]).join(' ') + '\n\n';
+          if (asSlides) {
+            await openFileInSlideViewer(file, 'pptx');
+          } else {
+            const zip = await JSZip.loadAsync(await file.arrayBuffer());
+            const slideFiles = Object.keys(zip.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort();
+            let slidesText = '';
+            for (const sf of slideFiles) {
+              const xml = await zip.files[sf].async('text');
+              slidesText += [...xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g)].map(m => m[1]).join(' ') + '\n\n';
+            }
+            importRawTextAsNote(slidesText, false, file.name.replace(/\.pptx$/i, ''));
           }
-          importRawTextAsNote(slidesText, false, file.name.replace(/\.pptx$/i, ''));
         }
       }
       closeModal('transferModal');
     }
 
     function initIncomingBridge() {
+      const allowedOrigins = new Set([
+        location.origin,
+        'https://fatihdogukand.github.io',
+        'https://gemini.google.com',
+        'https://notebook.google.com',
+        'https://notebooklm.google.com'
+      ]);
       const params = new URLSearchParams(location.search);
       if (params.get('incoming') === '1' && window.opener) {
         window.opener.postMessage('STUDIO_READY', '*');
         window.opener.postMessage({ type: 'STUDIO_READY' }, '*');
       }
       window.addEventListener('message', (event) => {
+        const isTrustedOrigin = allowedOrigins.has(event.origin) || (window.opener && event.source === window.opener);
+        if (!isTrustedOrigin) return;
         const msg = event.data;
-        if (!msg || msg.type !== 'IMPORT_NOTE') return;
-        if (msg.html) createNewNote(false, msg.title || 'Sohbet Aktarımı', parseImportedHtmlToBlocks(msg.html));
-        else if (msg.text) importRawTextAsNote(msg.text, false, msg.title || 'Sohbet Aktarımı');
+        if (!msg || typeof msg !== 'object' || msg.type !== 'IMPORT_NOTE') return;
+        if (typeof msg.html === 'string' && msg.html.trim()) {
+          createNewNote(false, String(msg.title || 'Sohbet Aktarımı').slice(0, 80), parseImportedHtmlToBlocks(msg.html));
+        } else if (typeof msg.text === 'string' && msg.text.trim()) {
+          importRawTextAsNote(msg.text, false, String(msg.title || 'Sohbet Aktarımı').slice(0, 80));
+        }
       });
+    }
+
+    async function exportSingleFolderZip(folderId) {
+      const rootFolder = db.folders.find(f => f.id === folderId);
+      if (!rootFolder) return;
+      if (!window.JSZip) return alert('ZIP kütüphanesi henüz yüklenmedi.');
+      const zip = new JSZip();
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const safeRoot = rootFolder.name.replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'Klasor';
+      const rootDir = zip.folder(`${safeRoot}_${dateStr}`);
+
+      const addBranch = (fId, dir) => {
+        db.notes.filter(n => !n.isQuickPool && n.folderId === fId).forEach(n => {
+          const safeTitle = (n.title || 'Not').replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'Not';
+          const htmlDoc = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(n.title)}</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"></head><body style="font-family:system-ui,sans-serif;max-width:820px;margin:24px auto;padding:18px;line-height:1.7"><h1>${escapeHtml(n.title)}</h1>${n.blocks.map(b => b.html).join('<hr>')}</body></html>`;
+          dir.file(`${safeTitle}.html`, htmlDoc);
+        });
+        db.folders.filter(sub => (sub.parentId || null) === fId).forEach(sub => {
+          const subName = sub.name.replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'AltKlasor';
+          addBranch(sub.id, dir.folder(subName));
+        });
+      };
+
+      addBranch(folderId, rootDir);
+      downloadBlob(await zip.generateAsync({ type: 'blob' }), `${safeRoot}_${dateStr}.zip`);
     }
 
     async function exportZipBackup() {
@@ -3538,21 +3908,85 @@ ${list}`);
       downloadBlob(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }), `SohbetOkulu_Yedek_${dateStr}.json`);
     }
 
+    function applyValidatedBackup(parsed) {
+      if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.notes)) {
+        alert('Geçersiz veya bozuk yedek dosyası.');
+        return;
+      }
+      if (!Array.isArray(parsed.folders) || !parsed.folders.length) {
+        parsed.folders = [{ id: 'folder_general', parentId: null, name: 'Genel Dersler', pinned: false, collapsed: false, order: 0 }];
+      }
+      parsed.settings = { ...db.settings, ...(parsed.settings || {}) };
+      db = parsed;
+      saveDatabase();
+      renderAll();
+      alert(`${db.notes.length} adet not başarıyla geri yüklendi.`);
+    }
+
     async function importBackupFile(e) {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (file.name.endsWith('.json')) {
-        const parsed = JSON.parse(await file.text());
-        if (parsed.notes) { db = parsed; saveDatabase(); renderAll(); }
-      } else if (file.name.endsWith('.zip') && window.JSZip) {
-        const zip = await JSZip.loadAsync(await file.arrayBuffer());
-        const jsonEntry = Object.values(zip.files).find(f => f.name.endsWith('.json'));
-        if (jsonEntry) { const parsed = JSON.parse(await jsonEntry.async('text')); if (parsed.notes) { db = parsed; saveDatabase(); renderAll(); } }
+      try {
+        if (file.name.endsWith('.json')) {
+          applyValidatedBackup(JSON.parse(await file.text()));
+        } else if (file.name.endsWith('.zip') && window.JSZip) {
+          const zip = await JSZip.loadAsync(await file.arrayBuffer());
+          const jsonEntry = Object.values(zip.files).find(f => f.name.endsWith('.json'));
+          if (jsonEntry) applyValidatedBackup(JSON.parse(await jsonEntry.async('text')));
+        }
+      } catch (err) {
+        alert('Yedek dosyası okunamadı: ' + err.message);
       }
       closeModal('backupModal');
     }
 
     function downloadBlob(blob, filename) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); }
+
+    /* Offline Ses Kaydı IndexedDB Temizlik & Çökme Kurtarma */
+    function clearSavedAudioChunks() {
+      try {
+        const req = indexedDB.open('SohbetOkuluAudioDB', 1);
+        req.onsuccess = () => {
+          if (req.result.objectStoreNames.contains('chunks')) {
+            req.result.transaction('chunks', 'readwrite').objectStore('chunks').clear();
+          }
+        };
+      } catch (e) {}
+    }
+
+    function checkInterruptedAudioRecovery() {
+      try {
+        const req = indexedDB.open('SohbetOkuluAudioDB', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('chunks');
+        req.onsuccess = () => {
+          const store = req.result.transaction('chunks', 'readonly').objectStore('chunks');
+          const getAllReq = store.getAll();
+          getAllReq.onsuccess = () => {
+            const chunks = getAllReq.result || [];
+            if (chunks.length > 0 && confirm(`Önceki oturumdan yarım kalmış ${chunks.length} parçalık bir offline ses kaydı bulundu. Cihazınıza indirilsin mi?`)) {
+              const blob = new Blob(chunks, { type: chunks[0].type || 'audio/webm' });
+              downloadBlob(blob, `SohbetOkulu_Kurtarilan_Ses_${new Date().toISOString().slice(0, 10)}.webm`);
+            }
+            if (chunks.length > 0) clearSavedAudioChunks();
+          };
+        };
+      } catch (e) {}
+    }
+
+    /* Sanal Klavye & Odak Durumu Algılama (Mobilde Alt Bar Çakışmasını Önler) */
+    document.addEventListener('focusin', (e) => {
+      if (window.innerWidth <= 840 && (e.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName))) {
+        document.body.classList.add('kb-open');
+      }
+    });
+    document.addEventListener('focusout', () => {
+      setTimeout(() => {
+        const active = document.activeElement;
+        if (!active || (!active.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName))) {
+          document.body.classList.remove('kb-open');
+        }
+      }, 120);
+    });
 
     /* Klavye Kısayolları: Ctrl+K Arama & Ctrl+Z Geri Al */
     document.addEventListener('keydown', (e) => {
@@ -3639,6 +4073,7 @@ ${list}`);
       }
       await loadDatabase();
       initIncomingBridge();
+      checkInterruptedAudioRecovery();
       renderAll();
     });
   </script>
