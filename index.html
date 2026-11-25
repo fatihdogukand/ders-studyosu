@@ -5415,8 +5415,48 @@
             }
             createNewNote(false, res.title, res.blocks);
           } else if (ext === 'html' || ext === 'htm') {
-            const blocks = parseImportedHtmlToBlocks(await file.text());
-            createNewNote(false, file.name.replace(/\.html?$/i, ''), blocks);
+            const rawHtml = await file.text();
+            let restored = false;
+            try {
+              const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
+              const dataEl = doc.getElementById('sohbetOkuluStandaloneData');
+              if (dataEl && dataEl.textContent) {
+                const payload = JSON.parse(dataEl.textContent);
+                if (payload?.note && Array.isArray(payload.note.blocks) && payload.note.blocks.length) {
+                  const blocks = payload.note.blocks.map((b, i) => ({
+                    id: uid('blk') + '_' + i,
+                    role: String(b.role || ''),
+                    pin: ['red', 'yellow', 'purple'].includes(b.pin) ? b.pin : '',
+                    pageBreak: Boolean(b.pageBreak),
+                    premisesHidden: Boolean(b.premisesHidden),
+                    sideNotesHidden: Boolean(b.sideNotesHidden),
+                    premises: Array.isArray(b.premises) ? b.premises.map((p, pi) => ({
+                      id: uid('pr') + '_' + pi,
+                      align: ['left', 'full', 'right'].includes(p.align) ? p.align : 'full',
+                      customW: String(p.customW || ''),
+                      customH: String(p.customH || ''),
+                      html: sanitizeImportedHtml(String(p.html || '')),
+                      mediaHtml: p.mediaHtml ? sanitizeImportedHtml(String(p.mediaHtml)) : ''
+                    })) : [],
+                    html: sanitizeImportedHtml(String(b.html || '')),
+                    sideNotes: Array.isArray(b.sideNotes) ? b.sideNotes.map((s, si) => ({
+                      id: uid('sn') + '_' + si,
+                      pos: s.pos === 'bottom' ? 'bottom' : 'right',
+                      offsetTop: Number(s.offsetTop || 0),
+                      customW: String(s.customW || ''),
+                      customH: String(s.customH || ''),
+                      html: sanitizeImportedHtml(String(s.html ?? escapeHtml(s.text || '')))
+                    })) : []
+                  }));
+                  createNewNote(false, String(payload.note.title || file.name.replace(/\.html?$/i, '')).slice(0, 80), blocks);
+                  restored = true;
+                }
+              }
+            } catch (err) {}
+            if (!restored) {
+              const blocks = parseImportedHtmlToBlocks(rawHtml);
+              createNewNote(false, file.name.replace(/\.html?$/i, ''), blocks);
+            }
           } else if (ext === 'csv' || ext === 'tsv') {
             const tbl = csvToHtmlTable(await file.text(), ext === 'tsv' ? '\t' : ',');
             createNewNote(false, file.name.replace(/\.(csv|tsv)$/i, ''), [{
@@ -5627,8 +5667,7 @@
       const addBranch = (fId, dir) => {
         db.notes.filter(n => !n.isQuickPool && n.folderId === fId).forEach(n => {
           const safeTitle = (n.title || 'Not').replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'Not';
-          const htmlDoc = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(n.title)}</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"></head><body style="font-family:system-ui,sans-serif;max-width:820px;margin:24px auto;padding:18px;line-height:1.7"><h1>${escapeHtml(n.title)}</h1>${n.blocks.map(b => b.html).join('<hr>')}</body></html>`;
-          dir.file(`${safeTitle}.html`, htmlDoc);
+          dir.file(`${safeTitle}.html`, buildStandaloneNoteHtml(n));
         });
         db.folders.filter(sub => (sub.parentId || null) === fId).forEach(sub => {
           const subName = sub.name.replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'AltKlasor';
@@ -5650,76 +5689,1337 @@
         const folder = db.folders.find(f => f.id === n.folderId)?.name || 'Hizli_Notlar';
         const safeFolder = folder.replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'Genel';
         const safeTitle = (n.title || 'Not').replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'Not';
-        const htmlDoc = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(n.title)}</title></head><body><h1>${escapeHtml(n.title)}</h1>${n.blocks.map(b => b.html).join('<hr>')}</body></html>`;
-        root.folder(safeFolder).file(`${safeTitle}_${dateStr}.html`, htmlDoc);
+        root.folder(safeFolder).file(`${safeTitle}_${dateStr}.html`, buildStandaloneNoteHtml(n));
       });
       downloadBlob(await zip.generateAsync({ type: 'blob' }), `SohbetOkulu_Yedek_${dateStr}.zip`);
     }
 
     function buildStandaloneNoteHtml(note) {
-      const dateStr = new Date(note.updatedAt || Date.now()).toISOString().slice(0, 10);
+      const APP_VER = '4.6.0';
       const safeTitle = escapeHtml(note.title || 'Ders Notu');
-      const cardsHtml = (note.blocks || []).map((b, idx) => {
-        const prems = Array.isArray(b.premises) ? b.premises : [];
-        const premHtml = prems.length
-          ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;">` +
-            prems.map((p, pi) => `<div style="padding:9px 12px;border-radius:10px;background:#f1f5f9;border-left:3.5px solid #1e563f;"><strong>Öncül ${ROMANS[pi] || (pi + 1) + '.'}:</strong> ${p.html || ''}${p.mediaHtml || ''}</div>`).join('') +
-            `</div>`
-          : '';
-        const sides = Array.isArray(b.sideNotes) ? b.sideNotes : [];
-        const sideHtml = sides.length
-          ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">` +
-            sides.map(s => `<div style="padding:8px 12px;border-radius:10px;background:#f2f5ee;border:1px dashed rgba(27,77,58,0.35);font-size:0.92em;"><strong>📝 Yan Not:</strong> ${s.html ?? escapeHtml(s.text || '')}</div>`).join('') +
-            `</div>`
-          : '';
-        const pinBorder = b.pin === 'red' ? '#ef4444' : b.pin === 'yellow' ? '#f59e0b' : b.pin === 'purple' ? '#8b5cf6' : '#e2e8f0';
-        return `<section class="export-card" style="border:1px solid #e2e8f0;border-left:4.5px solid ${pinBorder};border-radius:14px;padding:16px 18px;margin-bottom:14px;background:#ffffff;">
-          <div style="font-size:12px;color:#64748b;margin-bottom:8px;font-weight:600;">#${String(idx + 1).padStart(2, '0')}${b.role ? ' · ' + escapeHtml(b.role) : ''}</div>
-          <div class="export-body">${b.html || ''}</div>
-          ${premHtml}
-          ${sideHtml}
-        </section>`;
-      }).join('');
+      const liveCss = document.querySelector('style')?.textContent || '';
+      const standaloneExtraCss = `
+        .so-brand-chip {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 4px 10px 4px 6px; border-radius: 10px;
+          background: var(--bg-paper); border: 1px solid var(--border-soft);
+          box-shadow: var(--shadow-card); flex-shrink: 0;
+        }
+        .so-brand-badge-icon {
+          width: 24px; height: 24px; border-radius: 7px;
+          background: #143528; display: grid; place-items: center; flex-shrink: 0;
+        }
+        .so-brand-name {
+          font-family: var(--font-display); font-weight: 700; font-size: 14px;
+          color: var(--text-main); letter-spacing: -0.01em; white-space: nowrap;
+        }
+        .so-fdd-badge {
+          display: inline-flex; align-items: center; gap: 4px;
+          padding: 2px 7px; border-radius: 6px;
+          background: #143528; color: #d9e89c;
+          font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+          letter-spacing: 0.04em; white-space: nowrap;
+        }
+        .so-standalone-footer {
+          margin-top: 28px; padding: 14px 16px; border-radius: 14px;
+          background: var(--bg-paper); border: 1px solid var(--border-soft);
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted);
+        }
+        .so-standalone-footer strong { color: var(--text-main); }
+        @media (max-width: 480px) {
+          .so-brand-name { display: none; }
+        }
+        @media print {
+          .so-standalone-footer { border: none; border-top: 1px solid #ddd; border-radius: 0; margin-top: 18px; padding: 10px 0; }
+        }
+      `;
 
-      return `<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${safeTitle} · Sohbet Okulu</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"><\/script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"><\/script>
-  <style>
-    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f6f6f0; color: #18241e; max-width: 880px; margin: 28px auto; padding: 0 18px 60px; line-height: 1.72; }
-    h1 { font-family: Georgia, serif; font-size: 28px; margin-bottom: 6px; }
-    .meta { color: #5a6b62; font-size: 13px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #d6dcd5; }
-    .export-card img { max-width: 100%; height: auto; border-radius: 8px; }
-    mark.hl-yellow { background: rgba(253, 224, 71, 0.55); padding: 1px 3px; border-radius: 4px; }
-    mark.hl-green { background: rgba(134, 239, 172, 0.52); padding: 1px 3px; border-radius: 4px; }
-    mark.hl-pink { background: rgba(249, 168, 212, 0.55); padding: 1px 3px; border-radius: 4px; }
-    pre { background: #eef1ea; padding: 10px 12px; border-radius: 8px; overflow-x: auto; }
-  </style>
-</head>
-<body>
-  <h1>${safeTitle}</h1>
-  <div class="meta">Sohbet Okulu · Tarih: ${dateStr} · Toplam ${(note.blocks || []).length} kart</div>
-  ${cardsHtml}
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      if (typeof renderMathInElement === 'function') {
-        renderMathInElement(document.body, {
+      const cleanNote = {
+        id: String(note.id || 'shared_note'),
+        title: String(note.title || 'Ders Notu'),
+        createdAt: Number(note.createdAt || Date.now()),
+        updatedAt: Number(note.updatedAt || Date.now()),
+        blocks: (note.blocks || []).map((b, bi) => ({
+          id: String(b.id || ('blk_' + bi)),
+          role: String(b.role || ''),
+          pin: ['red', 'yellow', 'purple'].includes(b.pin) ? b.pin : '',
+          pageBreak: Boolean(b.pageBreak),
+          premisesHidden: Boolean(b.premisesHidden),
+          sideNotesHidden: Boolean(b.sideNotesHidden),
+          premises: Array.isArray(b.premises) ? b.premises.map((p, pi) => ({
+            id: String(p.id || ('pr_' + bi + '_' + pi)),
+            align: ['left', 'full', 'right'].includes(p.align) ? p.align : 'full',
+            customW: String(p.customW || ''),
+            customH: String(p.customH || ''),
+            html: String(p.html || ''),
+            mediaHtml: String(p.mediaHtml || '')
+          })) : [],
+          html: String(b.html || ''),
+          sideNotes: Array.isArray(b.sideNotes) ? b.sideNotes.map((s, si) => ({
+            id: String(s.id || ('sn_' + bi + '_' + si)),
+            pos: s.pos === 'bottom' ? 'bottom' : 'right',
+            offsetTop: Number(s.offsetTop || 0),
+            customW: String(s.customW || ''),
+            customH: String(s.customH || ''),
+            html: String(s.html ?? escapeHtml(s.text || ''))
+          })) : []
+        }))
+      };
+
+      const safeSettings = {
+        theme: db.settings?.theme || 'kenar',
+        font: db.settings?.font || 'jakarta',
+        fontSizePx: Number(db.settings?.fontSizePx || 16),
+        zoomPct: Number(db.settings?.zoomPct || 100),
+        fitToScreen: db.settings?.fitToScreen !== false,
+        spotlightOn: Boolean(db.settings?.spotlightOn),
+        dynamicMinutes: Number(db.settings?.dynamicMinutes || 0),
+        viewportMode: db.settings?.viewportMode || 'auto'
+      };
+
+      const embeddedJson = JSON.stringify({
+        brand: 'Sohbet Okulu',
+        trademark: 'FDD',
+        version: APP_VER,
+        standalone: true,
+        note: cleanNote,
+        settings: safeSettings
+      }).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+
+      const standaloneScript = `
+    const APP_VER = '${APP_VER}';
+    const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
+    const bootPayload = JSON.parse(document.getElementById('sohbetOkuluStandaloneData').textContent);
+    let noteData = bootPayload.note;
+    let settings = bootPayload.settings || { theme: 'kenar', font: 'jakarta', fontSizePx: 16, zoomPct: 100, fitToScreen: true, spotlightOn: false, dynamicMinutes: 0, viewportMode: 'auto' };
+
+    let activeMultiFilters = new Set();
+    let currentJumpCursor = -1;
+    let selectedBlockIds = new Set();
+    let openDropdownCardId = null;
+    let mobileNavBarExpanded = false;
+    let mobileReadOnly = window.innerWidth <= 640;
+    let inNoteSearchOpen = false;
+    let inNoteSearchQuery = '';
+    let inNoteMatchElements = [];
+    let inNoteMatchIndex = -1;
+    let undoStack = [];
+    let dynamicTimer = null;
+    let inspectZoomScale = 1;
+    let _uidSeq = 0;
+
+    function uid(prefix = 'id') {
+      _uidSeq = (_uidSeq + 1) % 10000;
+      return prefix + '_' + Date.now() + '_' + _uidSeq;
+    }
+    function escapeHtml(str) { return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+    function escapeAttr(str) { return escapeHtml(str); }
+    function stripHtml(html) { const div = document.createElement('div'); div.innerHTML = html || ''; return div.textContent || ''; }
+
+    function isMobileUI() {
+      const mode = settings.viewportMode || 'auto';
+      if (mode === 'mobile') return true;
+      if (mode === 'desktop') return false;
+      return window.innerWidth <= 640;
+    }
+    function applyViewportModeClass() {
+      document.body.classList.toggle('is-mobile-ui', isMobileUI());
+      const sel = document.getElementById('viewportModeSelect');
+      if (sel) sel.value = settings.viewportMode || 'auto';
+    }
+    function setViewportMode(mode) {
+      settings.viewportMode = mode;
+      applyViewportModeClass();
+      mobileReadOnly = isMobileUI();
+      if (isMobileUI()) document.getElementById('workspaceWrap')?.classList.add('right-collapsed');
+      updateDrawerBackdrop();
+      renderEditor();
+    }
+    window.addEventListener('resize', () => { applyViewportModeClass(); updateDrawerBackdrop(); });
+
+    document.addEventListener('click', (e) => {
+      if (openDropdownCardId && !e.target.closest('.card-actions')) {
+        openDropdownCardId = null;
+        document.querySelectorAll('.card-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+      }
+    });
+
+    function syncEmbeddedDataTag() {
+      const el = document.getElementById('sohbetOkuluStandaloneData');
+      if (!el) return;
+      el.textContent = JSON.stringify({
+        brand: 'Sohbet Okulu',
+        trademark: 'FDD',
+        version: APP_VER,
+        standalone: true,
+        note: noteData,
+        settings
+      }).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+    }
+
+    let studioToastTimer = null;
+    function showStudioToast(msg, actionLabel = null, actionFn = null, durationMs = 5500) {
+      const toast = document.getElementById('studioToast');
+      const msgEl = document.getElementById('studioToastMsg');
+      const actBtn = document.getElementById('studioToastAction');
+      if (!toast || !msgEl || !actBtn) return;
+      msgEl.textContent = msg;
+      if (actionLabel && typeof actionFn === 'function') {
+        actBtn.textContent = actionLabel;
+        actBtn.style.display = 'inline-flex';
+        actBtn.onclick = () => { hideStudioToast(); actionFn(); };
+      } else {
+        actBtn.style.display = 'none';
+        actBtn.onclick = null;
+      }
+      toast.classList.add('open');
+      if (studioToastTimer) clearTimeout(studioToastTimer);
+      studioToastTimer = setTimeout(hideStudioToast, durationMs);
+    }
+    function hideStudioToast() {
+      const toast = document.getElementById('studioToast');
+      if (toast) toast.classList.remove('open');
+      if (studioToastTimer) { clearTimeout(studioToastTimer); studioToastTimer = null; }
+    }
+
+    function pushUndo() {
+      const snap = JSON.stringify(noteData);
+      if (undoStack[undoStack.length - 1] === snap) return;
+      undoStack.push(snap);
+      if (undoStack.length > 30) undoStack.shift();
+    }
+    function undoLastAction() {
+      if (!undoStack.length) return alert('Geri alınacak işlem yok.');
+      noteData = JSON.parse(undoStack.pop());
+      selectedBlockIds.clear();
+      hideStudioToast();
+      syncEmbeddedDataTag();
+      renderEditor();
+    }
+
+    function applySettingsToDOM() {
+      const basePx = Math.min(24, Math.max(13, Number(settings.fontSizePx || 16)));
+      const zoomPct = Math.min(130, Math.max(80, Number(settings.zoomPct || 100)));
+      settings.fontSizePx = basePx;
+      settings.zoomPct = zoomPct;
+      const effectivePx = Math.round(basePx * (zoomPct / 100) * 10) / 10;
+
+      document.documentElement.setAttribute('data-theme', settings.theme || 'kenar');
+      document.documentElement.setAttribute('data-font', settings.font || 'jakarta');
+      document.documentElement.style.setProperty('--reader-font-px', effectivePx + 'px');
+
+      const editorEl = document.getElementById('editorContainer');
+      const spotOn = Boolean(settings.spotlightOn);
+      if (editorEl) editorEl.classList.toggle('spotlight-on', spotOn);
+      const spotBtn = document.getElementById('stickySpotlightBtn');
+      if (spotBtn) {
+        spotBtn.classList.toggle('active', spotOn);
+        spotBtn.textContent = spotOn ? '⛶ Odak: Açık' : '⛶ Odak';
+      }
+      const fitOn = settings.fitToScreen !== false;
+      const fitTag = document.getElementById('fitScreenStateTag');
+      const fitRow = document.getElementById('btnFitScreenRow');
+      if (fitTag) fitTag.textContent = fitOn ? 'Açık ✓' : 'Kapalı';
+      if (fitRow) fitRow.classList.toggle('active-tool', fitOn);
+
+      const lockBtn = document.getElementById('btnMobileReadLock');
+      if (lockBtn) {
+        lockBtn.classList.toggle('active', !mobileReadOnly);
+        lockBtn.textContent = mobileReadOnly ? '📖 Okuma' : '✏️ Düzenle';
+      }
+
+      document.getElementById('themeSelect').value = settings.theme || 'kenar';
+      document.getElementById('fontSelect').value = settings.font || 'jakarta';
+      document.getElementById('fontSizeValueLabel').textContent = basePx + ' px';
+      const zoomLbl = document.getElementById('zoomPctValueLabel');
+      if (zoomLbl) zoomLbl.textContent = '%' + zoomPct;
+      document.getElementById('dynamicThemeSelect').value = String(settings.dynamicMinutes || 0);
+      setupDynamicThemeTimer();
+      syncEmbeddedDataTag();
+    }
+
+    function stepFontSize(delta) { settings.fontSizePx = Math.min(24, Math.max(13, Number(settings.fontSizePx || 16) + delta)); applySettingsToDOM(); }
+    function stepZoomPct(delta) { settings.zoomPct = Math.min(130, Math.max(80, Number(settings.zoomPct || 100) + delta)); applySettingsToDOM(); renderEditor(); }
+    function toggleFitToScreen() { settings.fitToScreen = !(settings.fitToScreen !== false); applySettingsToDOM(); renderEditor(); }
+    function toggleMobileReadLock() { mobileReadOnly = !mobileReadOnly; applySettingsToDOM(); renderEditor(); }
+    function setTheme(theme) { settings.theme = theme; document.documentElement.setAttribute('data-theme', theme); document.getElementById('themeSelect').value = theme; syncEmbeddedDataTag(); }
+    function cycleThemeNow() { const all = ['kenar', 'warm', 'sage', 'nordic', 'sand', 'lavender', 'sepia', 'midnight']; setTheme(all[(all.indexOf(settings.theme) + 1) % all.length]); }
+    function setFont(font) { settings.font = font; document.documentElement.setAttribute('data-font', font); syncEmbeddedDataTag(); }
+    function setDynamicThemeInterval(mins) { settings.dynamicMinutes = Number(mins); if (settings.dynamicMinutes > 0) cycleThemeNow(); setupDynamicThemeTimer(); syncEmbeddedDataTag(); }
+    function setupDynamicThemeTimer() {
+      if (dynamicTimer) clearInterval(dynamicTimer);
+      const mins = settings.dynamicMinutes;
+      if (!mins) return;
+      const dayThemes = ['kenar', 'warm', 'sage', 'nordic', 'sand', 'lavender', 'sepia'];
+      dynamicTimer = setInterval(() => setTheme(dayThemes[(dayThemes.indexOf(settings.theme) + 1) % dayThemes.length]), mins * 60 * 1000);
+    }
+
+    function toggleSpotlight() {
+      settings.spotlightOn = !settings.spotlightOn;
+      applySettingsToDOM();
+      if (settings.spotlightOn && !noteData.blocks.some(b => Boolean(b.pin) || /<mark\\b/i.test(b.html || ''))) {
+        showStudioToast('Odak modu açık: pin veya vurgu eklediğiniz kartlar parlak kalır.');
+      }
+    }
+
+    let studySeconds = 0, studyInterval = null;
+    function toggleStudyTimer() {
+      const btn = document.getElementById('studyTimerBtn');
+      if (studyInterval) {
+        clearInterval(studyInterval); studyInterval = null;
+        if (btn) btn.textContent = '▶ Devam Et';
+      } else {
+        if (btn) btn.textContent = '⏸ Duraklat';
+        studyInterval = setInterval(() => {
+          studySeconds++;
+          const m = String(Math.floor(studySeconds / 60)).padStart(2, '0');
+          const s = String(studySeconds % 60).padStart(2, '0');
+          const disp = document.getElementById('studyTimerDisplay');
+          if (disp) disp.textContent = m + ':' + s;
+        }, 1000);
+      }
+    }
+    function resetStudyTimer() {
+      if (studyInterval) { clearInterval(studyInterval); studyInterval = null; }
+      studySeconds = 0;
+      const disp = document.getElementById('studyTimerDisplay');
+      const btn = document.getElementById('studyTimerBtn');
+      if (disp) disp.textContent = '00:00';
+      if (btn) btn.textContent = '▶ Başlat';
+    }
+
+    function toggleGlobalPremises() {
+      const hidden = document.body.classList.toggle('hide-all-premises');
+      const lbl = document.getElementById('lblGlobalPremises');
+      if (lbl) lbl.textContent = hidden ? '👁️ Tüm öncülleri aç' : '🙈 Tüm öncülleri kapa';
+    }
+    function toggleGlobalSideNotes() {
+      const hidden = document.body.classList.toggle('hide-all-sidenotes');
+      const lbl = document.getElementById('lblGlobalSideNotes');
+      if (lbl) lbl.textContent = hidden ? '👁️ Tüm yan notları aç' : '🙈 Tüm yan notları kapa';
+    }
+    function toggleCardSideNotesVisibility(blockId) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk) return;
+      blk.sideNotesHidden = !blk.sideNotesHidden;
+      syncEmbeddedDataTag(); renderEditor();
+    }
+
+    function blockMatchesMultiFilter(blk) {
+      if (activeMultiFilters.size === 0) return true;
+      if (activeMultiFilters.has('red') && blk.pin === 'red') return true;
+      if (activeMultiFilters.has('yellow') && blk.pin === 'yellow') return true;
+      if (activeMultiFilters.has('purple') && blk.pin === 'purple') return true;
+      if (activeMultiFilters.has('highlight') && /<mark\\b/i.test(blk.html || '')) return true;
+      return false;
+    }
+    function toggleMobileNavBar() {
+      mobileNavBarExpanded = !mobileNavBarExpanded;
+      const nav = document.getElementById('stickyNoteNav');
+      if (nav) {
+        nav.classList.toggle('mob-collapsed', !mobileNavBarExpanded);
+        const toggleBtn = nav.querySelector('.sticky-nav-mobile-toggle span:last-child');
+        if (toggleBtn) toggleBtn.textContent = mobileNavBarExpanded ? '▴ Kapat' : '▾ Aç';
+      }
+    }
+    function toggleMultiFilterChip(key) {
+      if (key === 'all') activeMultiFilters.clear();
+      else if (activeMultiFilters.has(key)) activeMultiFilters.delete(key);
+      else activeMultiFilters.add(key);
+      currentJumpCursor = -1;
+      renderEditor();
+    }
+    function toggleTopbarPinsFilter() {
+      const allPins = activeMultiFilters.has('red') && activeMultiFilters.has('yellow') && activeMultiFilters.has('purple') && !activeMultiFilters.has('highlight');
+      activeMultiFilters = allPins ? new Set() : new Set(['red', 'yellow', 'purple']);
+      currentJumpCursor = -1;
+      renderEditor();
+    }
+    function jumpFilteredCard(step) {
+      const matching = noteData.blocks.filter(b => blockMatchesMultiFilter(b));
+      if (!matching.length) return alert('Seçili filtrede kart bulunamadı.');
+      currentJumpCursor = (currentJumpCursor + step + matching.length) % matching.length;
+      scrollToBlock(matching[currentJumpCursor].id);
+    }
+    function scrollToBlock(blockId) {
+      const row = document.getElementById('row_' + blockId);
+      if (!row) return;
+      if (window.innerWidth <= 1080) closeMobileDrawers();
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const card = row.querySelector('.lesson-card');
+      if (card) { card.classList.add('jump-flash'); setTimeout(() => card.classList.remove('jump-flash'), 1100); }
+    }
+
+    function startTouchBoxResize(e, type, blockId, itemId) {
+      e.preventDefault(); e.stopPropagation();
+      const grip = e.currentTarget;
+      const box = grip.parentElement;
+      if (!box) return;
+      const startX = e.clientX, startY = e.clientY;
+      const startW = box.getBoundingClientRect().width, startH = box.getBoundingClientRect().height;
+      grip.setPointerCapture(e.pointerId);
+      const onMove = (ev) => {
+        box.style.width = Math.max(180, Math.round(startW + (ev.clientX - startX))) + 'px';
+        box.style.height = Math.max(54, Math.round(startH + (ev.clientY - startY))) + 'px';
+      };
+      const onUp = (ev) => {
+        grip.releasePointerCapture(ev.pointerId);
+        grip.removeEventListener('pointermove', onMove);
+        grip.removeEventListener('pointerup', onUp);
+        const blk = noteData.blocks.find(b => b.id === blockId);
+        if (!blk) return;
+        if (type === 'premise') {
+          const pr = blk.premises?.find(p => p.id === itemId);
+          if (pr) { pr.customW = box.style.width; pr.customH = box.style.height; syncEmbeddedDataTag(); }
+        } else if (type === 'side') {
+          const sn = blk.sideNotes?.find(s => s.id === itemId);
+          if (sn) { sn.customW = box.style.width; sn.customH = box.style.height; syncEmbeddedDataTag(); }
+        }
+      };
+      grip.addEventListener('pointermove', onMove);
+      grip.addEventListener('pointerup', onUp);
+    }
+    function resetBoxAutoSize(type, blockId, itemId) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk) return;
+      if (type === 'premise') {
+        const pr = blk.premises?.find(p => p.id === itemId);
+        if (pr) { pr.customW = ''; pr.customH = ''; syncEmbeddedDataTag(); renderEditor(); }
+      } else if (type === 'side') {
+        const sn = blk.sideNotes?.find(s => s.id === itemId);
+        if (sn) { sn.customW = ''; sn.customH = ''; sn.offsetTop = 0; syncEmbeddedDataTag(); renderEditor(); }
+      }
+    }
+
+    function toggleCardDropdown(e, blockId) {
+      e.stopPropagation();
+      const wasOpen = openDropdownCardId === blockId;
+      document.querySelectorAll('.card-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+      openDropdownCardId = wasOpen ? null : blockId;
+      if (!wasOpen) document.getElementById('cardMenu_' + blockId)?.classList.add('open');
+    }
+    function closeAllCardDropdowns() {
+      openDropdownCardId = null;
+      document.querySelectorAll('.card-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    }
+    function editCardOptionalTag(blockId) {
+      closeAllCardDropdowns();
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk) return;
+      const next = prompt('Bu kart için kısa etiket:', blk.role || '');
+      if (next !== null) { blk.role = next.trim(); syncEmbeddedDataTag(); renderEditor(); }
+    }
+
+    function updateBulkMoveBar() {
+      const validIds = new Set(noteData.blocks.map(b => b.id));
+      for (const id of [...selectedBlockIds]) if (!validIds.has(id)) selectedBlockIds.delete(id);
+      const bar = document.getElementById('bulkMoveBar');
+      const count = selectedBlockIds.size;
+      bar.classList.toggle('active', count > 0);
+      document.getElementById('bulkSelectedLabel').innerHTML = '<strong>' + count + ' kart</strong> seçildi';
+    }
+    function toggleBlockBulkSelect(blockId) { if (selectedBlockIds.has(blockId)) selectedBlockIds.delete(blockId); else selectedBlockIds.add(blockId); updateBulkMoveBar(); renderEditor(); }
+    function clearBlockSelection() { selectedBlockIds.clear(); updateBulkMoveBar(); renderEditor(); }
+    function moveSelectedBlocksGroup(direction) {
+      if (!selectedBlockIds.size) return;
+      pushUndo();
+      const blocks = noteData.blocks;
+      if (direction === -1) {
+        for (let i = 1; i < blocks.length; i++) if (selectedBlockIds.has(blocks[i].id) && !selectedBlockIds.has(blocks[i - 1].id)) [blocks[i - 1], blocks[i]] = [blocks[i], blocks[i - 1]];
+      } else {
+        for (let i = blocks.length - 2; i >= 0; i--) if (selectedBlockIds.has(blocks[i].id) && !selectedBlockIds.has(blocks[i + 1].id)) [blocks[i + 1], blocks[i]] = [blocks[i], blocks[i + 1]];
+      }
+      noteData.updatedAt = Date.now(); syncEmbeddedDataTag(); renderEditor();
+    }
+    function deleteSelectedBlocks() {
+      const validIds = new Set(noteData.blocks.filter(b => selectedBlockIds.has(b.id)).map(b => b.id));
+      const count = validIds.size;
+      if (!count) return clearBlockSelection();
+      if (!confirm('Seçili ' + count + ' kart silinsin mi?')) return;
+      pushUndo();
+      noteData.blocks = noteData.blocks.filter(b => !validIds.has(b.id));
+      if (!noteData.blocks.length) noteData.blocks.push({ id: uid('blk'), role: '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: '<p></p>', sideNotes: [] });
+      selectedBlockIds.clear();
+      noteData.updatedAt = Date.now();
+      syncEmbeddedDataTag(); renderEditor();
+      showStudioToast(count + ' kart silindi.', '↩ Geri Al', () => undoLastAction(), 6500);
+    }
+
+    function extractCleanEditorHtml(el) {
+      const clone = el.cloneNode(true);
+      clone.querySelectorAll('.katex-display').forEach(kd => {
+        const ann = kd.querySelector('annotation[encoding="application/x-tex"]');
+        if (ann) kd.replaceWith(document.createTextNode('$$' + ann.textContent + '$$'));
+      });
+      clone.querySelectorAll('.katex').forEach(k => {
+        const ann = k.querySelector('annotation[encoding="application/x-tex"]');
+        if (ann) k.replaceWith(document.createTextNode('$' + ann.textContent + '$'));
+      });
+      return clone.innerHTML;
+    }
+
+    function renderMathInContainer(el) {
+      if (!el || typeof renderMathInElement !== 'function') return;
+      try {
+        renderMathInElement(el, {
           delimiters: [
             { left: '$$', right: '$$', display: true },
             { left: '$', right: '$', display: false },
-            { left: '\\(', right: '\\)', display: false },
-            { left: '\\[', right: '\\]', display: true }
+            { left: '\\\\(', right: '\\\\)', display: false },
+            { left: '\\\\[', right: '\\\\]', display: true }
           ],
           throwOnError: false
         });
+      } catch (e) {}
+    }
+
+    function autoFitWideBlocksInContainer(rootEl) {
+      if (!rootEl) return;
+      const fitEnabled = settings.fitToScreen !== false;
+      const targets = rootEl.querySelectorAll('.card-content table, .card-content .katex-display, .card-content pre, .premise-text-area table, .premise-text-area .katex-display');
+      targets.forEach(el => {
+        if (el.closest('.fit-scale-wrapper')) return;
+        const parentBox = el.parentElement;
+        if (!parentBox) return;
+        const availW = parentBox.clientWidth || (window.innerWidth - 48);
+        const naturalW = el.scrollWidth;
+        const naturalH = el.offsetHeight;
+        if (naturalW > availW + 4 && availW > 120) {
+          const wrap = document.createElement('div');
+          wrap.className = 'fit-scale-wrapper';
+          const inner = document.createElement('div');
+          inner.className = 'fit-scale-inner';
+          const zoomBtn = document.createElement('button');
+          zoomBtn.type = 'button';
+          zoomBtn.className = 'fit-zoom-btn';
+          zoomBtn.textContent = '🔍 Büyüt';
+          zoomBtn.onclick = (ev) => { ev.stopPropagation(); openZoomInspectHtml(el.outerHTML, el.tagName === 'TABLE' ? 'Tablo İnceleyici' : 'Formül / Blok İnceleyici'); };
+          el.parentNode.insertBefore(wrap, el);
+          inner.appendChild(el);
+          wrap.appendChild(inner);
+          wrap.appendChild(zoomBtn);
+          if (fitEnabled) {
+            const ratio = Math.max(0.42, Math.min(1, (availW - 4) / naturalW));
+            inner.style.transform = 'scale(' + ratio + ')';
+            wrap.style.height = Math.ceil((naturalH || 60) * ratio + 6) + 'px';
+          } else {
+            wrap.style.overflowX = 'auto';
+          }
+        }
+      });
+    }
+
+    function openZoomInspectHtml(rawInnerHtml, title = '🔍 Yakınlaştır & İncele') {
+      const stage = document.getElementById('zoomInspectStage');
+      const titleEl = document.getElementById('zoomInspectTitle');
+      if (!stage) return;
+      if (titleEl) titleEl.textContent = title;
+      stage.innerHTML = rawInnerHtml;
+      stage.querySelectorAll('.fit-zoom-btn').forEach(b => b.remove());
+      renderMathInContainer(stage);
+      document.getElementById('zoomInspectModal').classList.add('open');
+      setTimeout(() => fitInspectStageToModal(), 30);
+    }
+    function openZoomInspectForBlock(blockId) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (blk) openZoomInspectHtml(blk.html || '', '🔍 Kart Tam Ekran İnceleme');
+    }
+    function setInspectZoom(nextScale) {
+      inspectZoomScale = Math.min(2.6, Math.max(0.45, Math.round(nextScale * 100) / 100));
+      const stage = document.getElementById('zoomInspectStage');
+      const lbl = document.getElementById('inspectZoomLabel');
+      if (stage) stage.style.transform = 'scale(' + inspectZoomScale + ')';
+      if (lbl) lbl.textContent = '%' + Math.round(inspectZoomScale * 100);
+    }
+    function fitInspectStageToModal() {
+      const vp = document.getElementById('zoomInspectViewport');
+      const stage = document.getElementById('zoomInspectStage');
+      if (!vp || !stage) return;
+      stage.style.transform = 'scale(1)';
+      const availW = Math.max(200, vp.clientWidth - 28);
+      const contentW = stage.scrollWidth || availW;
+      setInspectZoom(contentW > availW ? Math.max(0.45, availW / contentW) : 1);
+    }
+    function openPhotoLightbox(src) {
+      if (!src) return;
+      document.getElementById('photoLightboxImg').src = src;
+      document.getElementById('photoLightboxModal').classList.add('open');
+    }
+
+    function toggleInNoteSearchBar() {
+      inNoteSearchOpen = !inNoteSearchOpen;
+      if (!inNoteSearchOpen) { clearInNoteSearchHighlights(); inNoteSearchQuery = ''; }
+      renderEditor();
+      if (inNoteSearchOpen) setTimeout(() => { const inp = document.getElementById('inNoteSearchInput'); if (inp) { inp.focus(); inp.select(); } }, 40);
+    }
+    function closeInNoteSearchBar() { inNoteSearchOpen = false; inNoteSearchQuery = ''; clearInNoteSearchHighlights(); renderEditor(); }
+    function clearInNoteSearchHighlights() {
+      document.querySelectorAll('#editorContainer mark.search-hit').forEach(m => {
+        const p = m.parentNode;
+        if (p) { p.replaceChild(document.createTextNode(m.textContent), m); p.normalize(); }
+      });
+      inNoteMatchElements = []; inNoteMatchIndex = -1;
+    }
+    function runInNoteSearch(val) { inNoteSearchQuery = val; applyInNoteSearchHighlights(true); }
+    function applyInNoteSearchHighlights(autoJumpFirst = true) {
+      clearInNoteSearchHighlights();
+      const countEl = document.getElementById('inNoteSearchCount');
+      const q = (inNoteSearchQuery || '').trim();
+      if (!q) { if (countEl) countEl.textContent = '0 / 0'; return; }
+      const lowerQ = q.toLowerCase();
+      const container = document.getElementById('editorContainer');
+      if (!container) return;
+      container.querySelectorAll('.card-content, .premise-text-area, .side-note-body').forEach(area => {
+        const walker = document.createTreeWalker(area, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+            if (node.parentElement?.closest('.katex, script, style, .fit-zoom-btn')) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        });
+        const nodes = []; let cur;
+        while ((cur = walker.nextNode())) nodes.push(cur);
+        nodes.forEach(textNode => {
+          const text = textNode.nodeValue, lowerText = text.toLowerCase();
+          let startIdx = 0, foundIdx = lowerText.indexOf(lowerQ, startIdx);
+          if (foundIdx === -1) return;
+          const frag = document.createDocumentFragment();
+          while (foundIdx !== -1) {
+            if (foundIdx > startIdx) frag.appendChild(document.createTextNode(text.slice(startIdx, foundIdx)));
+            const mark = document.createElement('mark');
+            mark.className = 'search-hit';
+            mark.textContent = text.slice(foundIdx, foundIdx + q.length);
+            frag.appendChild(mark);
+            inNoteMatchElements.push(mark);
+            startIdx = foundIdx + q.length;
+            foundIdx = lowerText.indexOf(lowerQ, startIdx);
+          }
+          if (startIdx < text.length) frag.appendChild(document.createTextNode(text.slice(startIdx)));
+          textNode.parentNode.replaceChild(frag, textNode);
+        });
+      });
+      if (inNoteMatchElements.length > 0) {
+        inNoteMatchIndex = 0;
+        if (countEl) countEl.textContent = '1 / ' + inNoteMatchElements.length;
+        if (autoJumpFirst) focusInNoteMatch(0);
+      } else {
+        if (countEl) countEl.textContent = '0 / 0';
+      }
+    }
+    function stepInNoteMatch(step) {
+      if (!inNoteMatchElements.length) return;
+      inNoteMatchIndex = (inNoteMatchIndex + step + inNoteMatchElements.length) % inNoteMatchElements.length;
+      focusInNoteMatch(inNoteMatchIndex);
+    }
+    function focusInNoteMatch(idx) {
+      inNoteMatchElements.forEach((el, i) => el.classList.toggle('search-hit-current', i === idx));
+      const target = inNoteMatchElements[idx];
+      if (!target) return;
+      const countEl = document.getElementById('inNoteSearchCount');
+      if (countEl) countEl.textContent = (idx + 1) + ' / ' + inNoteMatchElements.length;
+      const row = target.closest('.block-row');
+      if (row && row.classList.contains('filtered-out')) row.classList.remove('filtered-out');
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function updateNoteTitle(val) {
+      noteData.title = val.trim() || 'Adsız Not';
+      noteData.updatedAt = Date.now();
+      document.getElementById('topbarCrumb').textContent = noteData.title;
+      document.title = noteData.title + ' · Sohbet Okulu (FDD)';
+      syncEmbeddedDataTag();
+    }
+    function saveBlockHtml(blockId, html) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk || blk.html === html) return;
+      blk.html = html; noteData.updatedAt = Date.now();
+      syncEmbeddedDataTag();
+      renderMathInContainer(document.getElementById('row_' + blockId));
+    }
+    function toggleBlockPin(blockId, pinColor) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk) return;
+      blk.pin = blk.pin === pinColor ? '' : pinColor; noteData.updatedAt = Date.now();
+      syncEmbeddedDataTag(); renderEditor();
+    }
+    function togglePageBreak(blockId) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (blk) { blk.pageBreak = !blk.pageBreak; syncEmbeddedDataTag(); renderEditor(); }
+    }
+    function moveSingleBlock(index, dir) {
+      const next = index + dir;
+      if (next < 0 || next >= noteData.blocks.length) return;
+      pushUndo();
+      [noteData.blocks[index], noteData.blocks[next]] = [noteData.blocks[next], noteData.blocks[index]];
+      noteData.updatedAt = Date.now(); syncEmbeddedDataTag(); renderEditor();
+    }
+    function duplicateBlock(blockId) {
+      const idx = noteData.blocks.findIndex(b => b.id === blockId);
+      if (idx === -1) return;
+      pushUndo();
+      const copy = JSON.parse(JSON.stringify(noteData.blocks[idx]));
+      copy.id = uid('blk');
+      noteData.blocks.splice(idx + 1, 0, copy);
+      noteData.updatedAt = Date.now(); syncEmbeddedDataTag(); renderEditor();
+    }
+    function addCardAtEnd() { insertCardAfter(noteData.blocks.length - 1); }
+    function insertCardAfter(index) {
+      pushUndo();
+      noteData.blocks.splice(index + 1, 0, { id: uid('blk'), role: '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: '<p>Yeni içerik...</p>', sideNotes: [] });
+      noteData.updatedAt = Date.now(); syncEmbeddedDataTag(); renderEditor();
+    }
+    function deleteBlock(blockId) {
+      if (noteData.blocks.length <= 1) return alert('Notta en az bir kart kalmalıdır.');
+      pushUndo();
+      noteData.blocks = noteData.blocks.filter(b => b.id !== blockId);
+      selectedBlockIds.delete(blockId);
+      syncEmbeddedDataTag(); renderEditor();
+    }
+
+    function addIndependentPremise(blockId) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk) return;
+      blk.premises = blk.premises || [];
+      blk.premisesHidden = false;
+      blk.premises.push({ id: uid('pr'), align: 'full', customW: '', customH: '', html: 'Öncül metnini yazın...', mediaHtml: '' });
+      syncEmbeddedDataTag(); renderEditor();
+    }
+    function togglePremisesVisibility(blockId) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (blk) { blk.premisesHidden = !blk.premisesHidden; syncEmbeddedDataTag(); renderEditor(); }
+    }
+    function setIndependentPremiseAlign(blockId, prId, align) {
+      const pr = noteData.blocks.find(b => b.id === blockId)?.premises?.find(p => p.id === prId);
+      if (pr) { pr.align = align; pr.customW = ''; syncEmbeddedDataTag(); renderEditor(); }
+    }
+    function updateIndependentPremiseHtml(blockId, prId, html) {
+      const pr = noteData.blocks.find(b => b.id === blockId)?.premises?.find(p => p.id === prId);
+      if (pr) { pr.html = html; syncEmbeddedDataTag(); }
+    }
+    function deleteIndependentPremise(blockId, prId) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk?.premises) return;
+      blk.premises = blk.premises.filter(p => p.id !== prId);
+      syncEmbeddedDataTag(); renderEditor();
+    }
+
+    function addSideNote(blockId, pos = 'right') {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk) return;
+      blk.sideNotes = blk.sideNotes || [];
+      blk.sideNotesHidden = false;
+      blk.sideNotes.push({ id: uid('sn'), pos, offsetTop: 0, customW: '', customH: '', html: 'Yan not...' });
+      syncEmbeddedDataTag(); renderEditor();
+    }
+    function updateSideNoteHtml(blockId, snId, html) {
+      const sn = noteData.blocks.find(b => b.id === blockId)?.sideNotes?.find(s => s.id === snId);
+      if (sn) { sn.html = html; syncEmbeddedDataTag(); }
+    }
+    function deleteSideNote(blockId, snId) {
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (blk?.sideNotes) { blk.sideNotes = blk.sideNotes.filter(s => s.id !== snId); syncEmbeddedDataTag(); renderEditor(); }
+    }
+    function nudgeSideNoteOffset(blockId, snId, deltaPx) {
+      const sn = noteData.blocks.find(b => b.id === blockId)?.sideNotes?.find(s => s.id === snId);
+      if (sn) { sn.offsetTop = Math.max(0, Number(sn.offsetTop || 0) + deltaPx); syncEmbeddedDataTag(); renderEditor(); }
+    }
+    function toggleSingleSidePos(blockId, snId) {
+      const sn = noteData.blocks.find(b => b.id === blockId)?.sideNotes?.find(s => s.id === snId);
+      if (sn) { sn.pos = (sn.pos || 'right') === 'right' ? 'bottom' : 'right'; sn.customW = ''; syncEmbeddedDataTag(); renderEditor(); }
+    }
+
+    let sideDragInfo = null;
+    function onSideDragStart(e, blockId, snId) {
+      sideDragInfo = { blockId, snId };
+      e.dataTransfer.effectAllowed = 'move';
+      document.body.classList.add('is-dragging-sidenote');
+      const bot = document.getElementById('row_' + blockId)?.querySelector('.side-bottom-row');
+      if (bot) bot.style.display = 'flex';
+    }
+    function onSideDragEnd() {
+      document.body.classList.remove('is-dragging-sidenote');
+      document.querySelectorAll('.side-bottom-row[data-has-bottom="0"]').forEach(el => el.style.display = 'none');
+    }
+    function onSideDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('active-drop'); }
+    function onSideDragLeave(e) { e.currentTarget.classList.remove('active-drop'); }
+    function onSideDrop(e, targetBlockId, targetPos) {
+      e.preventDefault(); e.currentTarget.classList.remove('active-drop'); onSideDragEnd();
+      if (!sideDragInfo || sideDragInfo.blockId !== targetBlockId) return;
+      const sn = noteData.blocks.find(b => b.id === targetBlockId)?.sideNotes?.find(s => s.id === sideDragInfo.snId);
+      if (sn) { sn.pos = targetPos; syncEmbeddedDataTag(); renderEditor(); }
+      sideDragInfo = null;
+    }
+
+    function compressImageToTarget(imgOrCanvas, targetKb = 50) {
+      const canvas = document.createElement('canvas');
+      const maxDim = 1100;
+      let w = imgOrCanvas.width, h = imgOrCanvas.height;
+      if (w > maxDim || h > maxDim) {
+        const ratio = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(imgOrCanvas, 0, 0, w, h);
+      let quality = 0.78;
+      let dataUrl = canvas.toDataURL('image/jpeg', quality);
+      while (dataUrl.length / 1024 > targetKb * 1.35 && quality > 0.28) {
+        quality -= 0.1;
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+      }
+      return dataUrl;
+    }
+    function attachImageToTarget(e, targetType, blockId, sideNoteId = null, premiseBoxId = null) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const compressed = compressImageToTarget(img, 50);
+          const photoId = uid('img');
+          const photoHtml = '<div class="inline-photo-card" id="' + photoId + '" contenteditable="false"><div class="inline-photo-bar"><button class="card-mini-btn" onclick="rotateInlineImage(\\'' + photoId + '\\')">↻</button><button class="card-mini-btn" onclick="removeInlineImage(\\'' + photoId + '\\')">✕</button></div><img src="' + compressed + '" alt="Ders görseli" style="cursor:zoom-in;" onclick="openPhotoLightbox(this.src)" /></div>';
+          const blk = noteData.blocks.find(b => b.id === blockId);
+          if (!blk) return;
+          if (targetType === 'side' && sideNoteId) {
+            const sn = blk.sideNotes?.find(s => s.id === sideNoteId);
+            if (sn) sn.html = (sn.html ?? escapeHtml(sn.text || '')) + photoHtml;
+          } else if (targetType === 'premise' && premiseBoxId) {
+            const pr = blk.premises?.find(p => p.id === premiseBoxId);
+            if (pr) pr.mediaHtml = (pr.mediaHtml || '') + photoHtml;
+          } else {
+            blk.html = (blk.html || '') + photoHtml;
+          }
+          syncEmbeddedDataTag(); renderEditor();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    function rotateInlineImage(photoId) {
+      const box = document.getElementById(photoId);
+      const img = box?.querySelector('img');
+      if (!img) return;
+      const temp = new Image();
+      temp.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = temp.height; canvas.height = temp.width;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(temp, -temp.width / 2, -temp.height / 2);
+        img.src = compressImageToTarget(canvas, 50);
+        const row = box.closest('.block-row');
+        const blk = noteData.blocks.find(b => b.id === row?.id?.replace('row_', ''));
+        if (blk && row) {
+          const sb = box.closest('.side-note-box');
+          const pb = box.closest('.independent-premise-box');
+          if (sb) { const idx = [...row.querySelectorAll('.side-note-box')].indexOf(sb); if (blk.sideNotes[idx]) blk.sideNotes[idx].html = extractCleanEditorHtml(sb.querySelector('.side-note-body')); }
+          else if (pb) { const idx = [...row.querySelectorAll('.independent-premise-box')].indexOf(pb); if (blk.premises[idx]) blk.premises[idx].mediaHtml = pb.querySelector('.premise-media-area')?.innerHTML || ''; }
+          else blk.html = extractCleanEditorHtml(row.querySelector('.card-content'));
+          syncEmbeddedDataTag();
+        }
+      };
+      temp.src = img.src;
+    }
+    function removeInlineImage(photoId) {
+      const box = document.getElementById(photoId);
+      if (!box) return;
+      const row = box.closest('.block-row');
+      box.remove();
+      const blk = noteData.blocks.find(b => b.id === row?.id?.replace('row_', ''));
+      if (blk && row) {
+        blk.html = extractCleanEditorHtml(row.querySelector('.card-content'));
+        row.querySelectorAll('.independent-premise-box').forEach((pb, idx) => { if (blk.premises[idx]) blk.premises[idx].mediaHtml = pb.querySelector('.premise-media-area')?.innerHTML || ''; });
+        row.querySelectorAll('.side-note-box').forEach((sb, idx) => { if (blk.sideNotes[idx]) blk.sideNotes[idx].html = extractCleanEditorHtml(sb.querySelector('.side-note-body')); });
+        syncEmbeddedDataTag(); renderEditor();
+      }
+    }
+
+    let selDebounceTimer = null;
+    document.addEventListener('mouseup', showSelectionBarIfNeeded);
+    document.addEventListener('keyup', showSelectionBarIfNeeded);
+    document.addEventListener('touchend', () => setTimeout(showSelectionBarIfNeeded, 110));
+    document.addEventListener('selectionchange', () => { if (selDebounceTimer) clearTimeout(selDebounceTimer); selDebounceTimer = setTimeout(showSelectionBarIfNeeded, 120); });
+
+    function showSelectionBarIfNeeded() {
+      const sel = window.getSelection();
+      const pop = document.getElementById('selectionPopover');
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) { pop.style.display = 'none'; return; }
+      if (isMobileUI()) { pop.style.display = 'flex'; return; }
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      pop.style.left = Math.min(window.innerWidth - 260, Math.max(10, rect.left + rect.width / 2 - 125)) + 'px';
+      pop.style.top = Math.max(10, rect.top - 50) + 'px';
+      pop.style.display = 'flex';
+    }
+    function triggerMobileHighlightAction() {
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.toString().trim()) return applyHighlight('hl-yellow');
+      alert('Vurgulamak istediğiniz metni parmağınızla seçtiğinizde altta fosforlu kalem paleti açılır.');
+    }
+    function syncEditableContainer(editableEl) {
+      if (!editableEl) return;
+      const row = editableEl.closest('.block-row');
+      if (!row) return;
+      const blockId = row.id.replace('row_', '');
+      if (editableEl.classList.contains('card-content')) {
+        saveBlockHtml(blockId, extractCleanEditorHtml(editableEl));
+      } else if (editableEl.classList.contains('premise-text-area')) {
+        const idx = [...row.querySelectorAll('.independent-premise-box')].indexOf(editableEl.closest('.independent-premise-box'));
+        const blk = noteData.blocks.find(b => b.id === blockId);
+        if (blk?.premises?.[idx]) { blk.premises[idx].html = extractCleanEditorHtml(editableEl); syncEmbeddedDataTag(); }
+      } else if (editableEl.classList.contains('side-note-body')) {
+        const idx = [...row.querySelectorAll('.side-note-box')].indexOf(editableEl.closest('.side-note-box'));
+        const blk = noteData.blocks.find(b => b.id === blockId);
+        if (blk?.sideNotes?.[idx]) { blk.sideNotes[idx].html = extractCleanEditorHtml(editableEl); syncEmbeddedDataTag(); }
+      }
+    }
+    function applyTextStyle(cmd) {
+      const sel = window.getSelection();
+      const anchorEl = sel?.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
+      const editableEl = anchorEl?.closest('.card-content, .premise-text-area, .side-note-body');
+      if (editableEl) pushUndo();
+      document.execCommand(cmd, false, null);
+      if (editableEl) syncEditableContainer(editableEl);
+    }
+    function applyHighlight(cls) {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) return;
+      const range = sel.getRangeAt(0);
+      const editableEl = (range.commonAncestorContainer.nodeType === 1 ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement)?.closest('.card-content, .premise-text-area, .side-note-body');
+      if (!editableEl) return;
+      pushUndo();
+      const mark = document.createElement('mark');
+      mark.className = cls;
+      mark.appendChild(range.extractContents());
+      range.insertNode(mark);
+      syncEditableContainer(editableEl);
+      renderEditor();
+      sel.removeAllRanges();
+      document.getElementById('selectionPopover').style.display = 'none';
+    }
+    function removeHighlight() {
+      const sel = window.getSelection();
+      const mark = sel?.anchorNode?.parentElement?.closest('mark');
+      if (mark) {
+        const editableEl = mark.closest('.card-content, .premise-text-area, .side-note-body');
+        pushUndo();
+        mark.replaceWith(document.createTextNode(mark.textContent));
+        syncEditableContainer(editableEl);
+        renderEditor();
+      }
+      document.getElementById('selectionPopover').style.display = 'none';
+    }
+    function copyAllHighlights() {
+      const marks = noteData.blocks.flatMap(b => {
+        const tmp = document.createElement('div'); tmp.innerHTML = b.html || '';
+        return [...tmp.querySelectorAll('mark')].map(m => '• ' + m.textContent);
+      });
+      if (!marks.length) return alert('Bu notta henüz fosforlu vurgu bulunmuyor.');
+      navigator.clipboard?.writeText(marks.join('\\n'));
+      showStudioToast(marks.length + ' vurgu panoya kopyalandı.');
+    }
+
+    function saveStandaloneCopyHtml() {
+      syncEmbeddedDataTag();
+      const docClone = document.documentElement.cloneNode(true);
+      docClone.querySelectorAll('#editorContainer, #zoomInspectStage').forEach(el => { el.innerHTML = ''; });
+      docClone.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('open'));
+      docClone.querySelectorAll('#selectionPopover, #studioToast').forEach(el => { el.style.display = 'none'; el.classList.remove('open'); });
+      const htmlOut = '<!DOCTYPE html>\\n' + docClone.outerHTML;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const safeFile = (noteData.title || 'Ders_Notu').replace(/[^\\w\\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim().replace(/\\s+/g, '_') || 'Ders_Notu';
+      const blob = new Blob([htmlOut], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = safeFile + '_' + dateStr + '.html';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+
+    function renderSingleSideNoteHtml(blockId, sn) {
+      const pos = sn.pos || 'right';
+      const offsetTop = Number(sn.offsetTop || 0);
+      const customStyle = (pos === 'right' && offsetTop > 0 ? 'margin-top:' + offsetTop + 'px;' : '') + (sn.customW ? 'width:' + sn.customW + ';' : '') + (sn.customH ? 'height:' + sn.customH + ';' : '');
+      const ro = isMobileUI() && mobileReadOnly ? 'false' : 'true';
+      return '<div class="side-note-box" style="' + customStyle + '" draggable="true" ondragstart="onSideDragStart(event, \\'' + blockId + '\\', \\'' + sn.id + '\\')" ondragend="onSideDragEnd()">' +
+        '<div class="side-note-head"><span>⠿ 📝 Yan Not</span><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;">' +
+        (pos === 'right' ? '<button class="card-mini-btn" onclick="nudgeSideNoteOffset(\\'' + blockId + '\\', \\'' + sn.id + '\\', -36)" title="Yukarı">▲</button><button class="card-mini-btn" onclick="nudgeSideNoteOffset(\\'' + blockId + '\\', \\'' + sn.id + '\\', 36)" title="Aşağı">▼</button>' : '') +
+        '<button class="card-mini-btn" onclick="toggleSingleSidePos(\\'' + blockId + '\\', \\'' + sn.id + '\\')">' + (pos === 'right' ? '⬇ Alta' : '➡ Yana') + '</button>' +
+        '<button class="card-mini-btn" onclick="resetBoxAutoSize(\\'side\\', \\'' + blockId + '\\', \\'' + sn.id + '\\')">↺ Oto</button>' +
+        '<label class="card-mini-btn" style="cursor:pointer;" title="Fotoğraf Ekle">📷<input type="file" accept="image/*" hidden onchange="attachImageToTarget(event, \\'side\\', \\'' + blockId + '\\', \\'' + sn.id + '\\')" /></label>' +
+        '<button class="card-mini-btn" onclick="deleteSideNote(\\'' + blockId + '\\', \\'' + sn.id + '\\')">✕</button>' +
+        '</div></div>' +
+        '<div class="side-note-body" contenteditable="' + ro + '" ondblclick="if(isMobileUI()&&mobileReadOnly)toggleMobileReadLock()" onfocus="pushUndo()" onblur="updateSideNoteHtml(\\'' + blockId + '\\', \\'' + sn.id + '\\', extractCleanEditorHtml(this))">' + (sn.html || '') + '</div>' +
+        '<span class="touch-resize-grip" onpointerdown="startTouchBoxResize(event, \\'side\\', \\'' + blockId + '\\', \\'' + sn.id + '\\')">↘</span></div>';
+    }
+
+    function renderEditor() {
+      const container = document.getElementById('editorContainer');
+      updateBulkMoveBar();
+      applySettingsToDOM();
+      document.getElementById('topbarCrumb').textContent = noteData.title;
+
+      const redCount = noteData.blocks.filter(b => b.pin === 'red').length;
+      const yellowCount = noteData.blocks.filter(b => b.pin === 'yellow').length;
+      const purpleCount = noteData.blocks.filter(b => b.pin === 'purple').length;
+      const hlCount = noteData.blocks.filter(b => /<mark\\b/i.test(b.html || '')).length;
+      const totalPins = redCount + yellowCount + purpleCount;
+      const topPinBadge = document.getElementById('topbarPinBadge');
+      const topPinBtn = document.getElementById('btnTopbarPins');
+      if (topPinBadge) topPinBadge.textContent = totalPins;
+      if (topPinBtn) topPinBtn.classList.toggle('active', activeMultiFilters.has('red') && activeMultiFilters.has('yellow') && activeMultiFilters.has('purple') && !activeMultiFilters.has('highlight'));
+
+      const filteredList = noteData.blocks.map((b, i) => ({ b, i })).filter(({ b }) => blockMatchesMultiFilter(b));
+      const ro = isMobileUI() && mobileReadOnly ? 'false' : 'true';
+
+      let html = '<header class="note-header-compact">' +
+        '<div class="note-header-title-wrap">' +
+        '<input class="note-title-input" value="' + escapeAttr(noteData.title) + '" onchange="updateNoteTitle(this.value)" placeholder="Konu Başlığı..." />' +
+        '<div class="note-tiny-stats"><span>' + new Date(noteData.updatedAt).toLocaleDateString('tr-TR', { day:'numeric', month:'short', year:'numeric' }) + '</span><span>·</span><span class="tiny-stat-pill">🗂️ ' + noteData.blocks.length + ' kart</span><span class="tiny-stat-pill">Sohbet Okulu · FDD</span></div>' +
+        '</div>' +
+        '<div class="note-header-actions">' +
+        '<button class="tool-btn ' + (inNoteSearchOpen ? 'active' : '') + '" onclick="toggleInNoteSearchBar()">🔍 Not İçi Ara</button>' +
+        '<button class="tool-btn" onclick="undoLastAction()">↩ Geri Al (' + undoStack.length + ')</button>' +
+        '<button class="tool-btn active" onclick="addCardAtEnd()">+ Kart ekle</button>' +
+        '</div></header>';
+
+      html += '<div class="in-note-search-bar ' + (inNoteSearchOpen ? 'open' : '') + '" id="inNoteSearchBar">' +
+        '<input type="text" id="inNoteSearchInput" class="in-note-search-input" value="' + escapeAttr(inNoteSearchQuery) + '" placeholder="Bu not içinde kelime, formül ara..." oninput="runInNoteSearch(this.value)" />' +
+        '<span id="inNoteSearchCount" style="font-size:11.5px;font-weight:700;color:var(--text-muted);white-space:nowrap;">0 / 0</span>' +
+        '<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="stepInNoteMatch(-1)">▲</button>' +
+        '<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="stepInNoteMatch(1)">▼</button>' +
+        '<button class="card-mini-btn" onclick="closeInNoteSearchBar()">✕</button></div>';
+
+      html += '<div class="sticky-note-nav ' + (mobileNavBarExpanded ? '' : 'mob-collapsed') + '" id="stickyNoteNav">' +
+        '<button class="sticky-nav-mobile-toggle" onclick="toggleMobileNavBar()">' +
+        '<span>🧭 Gezinti, Pin & Odak ' + (activeMultiFilters.size > 0 ? '(' + activeMultiFilters.size + ' süzgeç)' : '') + '</span>' +
+        '<span>' + (mobileNavBarExpanded ? '▴ Kapat' : '▾ Aç') + '</span></button>' +
+        '<div class="sticky-nav-filters">' +
+        '<button class="multi-chip ' + (activeMultiFilters.size === 0 ? 'active' : '') + '" onclick="toggleMultiFilterChip(\\'all\\')">Tümü (' + noteData.blocks.length + ')</button>' +
+        '<button class="multi-chip ' + (activeMultiFilters.has('red') ? 'active' : '') + '" onclick="toggleMultiFilterChip(\\'red\\')">🔴 ' + redCount + '</button>' +
+        '<button class="multi-chip ' + (activeMultiFilters.has('yellow') ? 'active' : '') + '" onclick="toggleMultiFilterChip(\\'yellow\\')">🟡 ' + yellowCount + '</button>' +
+        '<button class="multi-chip ' + (activeMultiFilters.has('purple') ? 'active' : '') + '" onclick="toggleMultiFilterChip(\\'purple\\')">🟣 ' + purpleCount + '</button>' +
+        '<button class="multi-chip ' + (activeMultiFilters.has('highlight') ? 'active' : '') + '" onclick="toggleMultiFilterChip(\\'highlight\\')">🖍️ ' + hlCount + '</button>' +
+        '<button class="multi-chip ' + (settings.spotlightOn ? 'active' : '') + '" id="stickySpotlightBtn" onclick="toggleSpotlight()">⛶ ' + (settings.spotlightOn ? 'Odak: Açık' : 'Odak') + '</button>' +
+        '</div>' +
+        '<div class="sticky-nav-jump"><select class="nav-jump-select" onchange="if(this.value) scrollToBlock(this.value)"><option value="">☰ Karta git (' + filteredList.length + ')...</option>' +
+        filteredList.map(({ b, i }) => {
+          const prev = stripHtml(b.html).trim() || b.role || 'Boş kart';
+          const pIcon = b.pin === 'red' ? '🔴 ' : b.pin === 'yellow' ? '🟡 ' : b.pin === 'purple' ? '🟣 ' : '';
+          return '<option value="' + b.id + '">#' + String(i + 1).padStart(2, '0') + ' · ' + pIcon + escapeAttr(prev.slice(0, 42)) + '</option>';
+        }).join('') +
+        '</select><button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(-1)">▲</button>' +
+        '<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(1)">▼</button></div></div>';
+
+      noteData.blocks.forEach((blk, idx) => {
+        const premises = blk.premises || [];
+        const sideNotes = blk.sideNotes || [];
+        const rightSides = sideNotes.filter(s => (s.pos || 'right') === 'right');
+        const bottomSides = sideNotes.filter(s => (s.pos || 'right') === 'bottom');
+        const hasPin = Boolean(blk.pin);
+        const hasHl = /<mark\\b/i.test(blk.html || '');
+        const isBulkSel = selectedBlockIds.has(blk.id);
+        const isVisible = blockMatchesMultiFilter(blk);
+        const numStr = '#' + String(idx + 1).padStart(2, '0');
+        const optionalRole = (blk.role || '').trim();
+
+        html += '<div class="block-row ' + (hasPin ? 'has-pin' : '') + ' ' + (hasHl ? 'has-highlight' : '') + ' ' + (blk.pageBreak ? 'page-break-before' : '') + ' ' + (blk.sideNotesHidden ? 'side-notes-hidden' : '') + ' ' + (!isVisible ? 'filtered-out' : '') + '" id="row_' + blk.id + '">' +
+          '<article class="lesson-card ' + (isBulkSel ? 'bulk-selected' : '') + '" data-pin="' + (blk.pin || '') + '">' +
+          '<div class="card-toolbar"><div class="card-left-meta">' +
+          '<input type="checkbox" class="card-bulk-chk" ' + (isBulkSel ? 'checked' : '') + ' onchange="toggleBlockBulkSelect(\\'' + blk.id + '\\')" />' +
+          '<span class="card-index-num">' + numStr + '</span>' +
+          (optionalRole ? '<span class="card-optional-tag">' + escapeHtml(optionalRole) + '</span>' : '') +
+          (blk.pageBreak ? '<span class="card-optional-tag">📄 Sayfa Kesmesi</span>' : '') +
+          '</div><div class="card-actions">' +
+          '<button class="card-mini-btn ' + (blk.pin === 'red' ? 'pin-active' : '') + '" onclick="toggleBlockPin(\\'' + blk.id + '\\', \\'red\\')">🔴 <span class="pin-label-text">Anlamadım</span></button>' +
+          '<button class="card-mini-btn ' + (blk.pin === 'yellow' ? 'pin-active' : '') + '" onclick="toggleBlockPin(\\'' + blk.id + '\\', \\'yellow\\')">🟡 <span class="pin-label-text">Tekrar</span></button>' +
+          '<button class="card-mini-btn ' + (blk.pin === 'purple' ? 'pin-active' : '') + '" onclick="toggleBlockPin(\\'' + blk.id + '\\', \\'purple\\')">🟣 <span class="pin-label-text">Önemli</span></button>' +
+          '<button class="card-mini-btn" onclick="addSideNote(\\'' + blk.id + '\\', \\'right\\')" title="Sağa Yan Not Ekle">📝</button>' +
+          '<button class="card-mini-btn" onclick="toggleCardDropdown(event, \\'' + blk.id + '\\')">•••</button>' +
+          '<div class="card-dropdown-menu" id="cardMenu_' + blk.id + '" onclick="event.stopPropagation()">' +
+          '<button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); openZoomInspectForBlock(\\'' + blk.id + '\\')"><span>🔍</span><span>Tam Ekran / Zoom İncele</span></button>' +
+          '<label class="dropdown-menu-item" style="cursor:pointer;"><span>📷</span><span>Fotoğraf Ekle</span><input type="file" accept="image/*" hidden onchange="closeAllCardDropdowns(); attachImageToTarget(event, \\'card\\', \\'' + blk.id + '\\')" /></label>' +
+          '<button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); moveSingleBlock(' + idx + ', -1)"><span>⬆</span><span>Kartı Yukarı Taşı</span></button>' +
+          '<button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); moveSingleBlock(' + idx + ', 1)"><span>⬇</span><span>Kartı Aşağı Taşı</span></button>' +
+          '<button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); duplicateBlock(\\'' + blk.id + '\\')"><span>📑</span><span>Kartı Çoğalt</span></button>' +
+          '<button class="dropdown-menu-item" onclick="editCardOptionalTag(\\'' + blk.id + '\\')"><span>🏷️</span><span>Kart Etiketi Düzenle</span></button>' +
+          '<button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); togglePageBreak(\\'' + blk.id + '\\')"><span>📄</span><span>' + (blk.pageBreak ? 'Sayfa Kesmesini Kaldır' : 'PDF Sayfa Kesmesi Ekle') + '</span></button>' +
+          '<div class="dropdown-sep"></div>' +
+          '<button class="dropdown-menu-item danger" onclick="closeAllCardDropdowns(); deleteBlock(\\'' + blk.id + '\\')"><span>🗑</span><span>Kartı Sil</span></button>' +
+          '</div></div></div>' +
+          '<div class="card-content" contenteditable="' + ro + '" ondblclick="if(isMobileUI()&&mobileReadOnly)toggleMobileReadLock()" onfocus="pushUndo()" onblur="saveBlockHtml(\\'' + blk.id + '\\', extractCleanEditorHtml(this))">' + blk.html + '</div>' +
+          (premises.length ? '<div class="premises-stack ' + (blk.premisesHidden ? 'hidden' : '') + '">' + premises.map((pr, pIdx) => {
+            const cStyle = (pr.customW ? 'width:' + pr.customW + ';' : '') + (pr.customH ? 'height:' + pr.customH + ';' : '');
+            return '<div class="independent-premise-box align-' + (pr.align || 'full') + '" style="' + cStyle + '">' +
+              '<div class="premise-box-head"><span>📌 Öncül ' + (ROMANS[pIdx] || (pIdx + 1) + '.') + '</span><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;">' +
+              '<button class="card-mini-btn" onclick="setIndependentPremiseAlign(\\'' + blk.id + '\\', \\'' + pr.id + '\\', \\'left\\')">◧ Sol</button>' +
+              '<button class="card-mini-btn" onclick="setIndependentPremiseAlign(\\'' + blk.id + '\\', \\'' + pr.id + '\\', \\'full\\')">↔ Tam</button>' +
+              '<button class="card-mini-btn" onclick="setIndependentPremiseAlign(\\'' + blk.id + '\\', \\'' + pr.id + '\\', \\'right\\')">◨ Sağ</button>' +
+              '<button class="card-mini-btn" onclick="resetBoxAutoSize(\\'premise\\', \\'' + blk.id + '\\', \\'' + pr.id + '\\')">↺ Oto</button>' +
+              '<label class="card-mini-btn" style="cursor:pointer;">📷<input type="file" accept="image/*" hidden onchange="attachImageToTarget(event, \\'premise\\', \\'' + blk.id + '\\', null, \\'' + pr.id + '\\')" /></label>' +
+              '<button class="card-mini-btn" onclick="deleteIndependentPremise(\\'' + blk.id + '\\', \\'' + pr.id + '\\')">✕</button></div></div>' +
+              '<div class="premise-box-content"><div class="premise-text-area" contenteditable="' + ro + '" ondblclick="if(isMobileUI()&&mobileReadOnly)toggleMobileReadLock()" onfocus="pushUndo()" onblur="updateIndependentPremiseHtml(\\'' + blk.id + '\\', \\'' + pr.id + '\\', extractCleanEditorHtml(this))">' + (pr.html || '') + '</div>' +
+              (pr.mediaHtml ? '<div class="premise-media-area">' + pr.mediaHtml + '</div>' : '') + '</div>' +
+              '<span class="touch-resize-grip" onpointerdown="startTouchBoxResize(event, \\'premise\\', \\'' + blk.id + '\\', \\'' + pr.id + '\\')">↘</span></div>';
+          }).join('') + '</div>' : '') +
+          '<div class="card-bottom-bar"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+          '<button class="card-mini-btn" style="border:1px solid var(--border-soft);" onclick="addIndependentPremise(\\'' + blk.id + '\\')">➕ Öncül Ekle (' + (ROMANS[premises.length] || 'Yeni') + ')</button>' +
+          (premises.length ? '<button class="card-mini-btn" onclick="togglePremisesVisibility(\\'' + blk.id + '\\')">' + (blk.premisesHidden ? '👁️ Öncülleri Aç (' + premises.length + ')' : '🙈 Öncülleri Kapa (' + premises.length + ')') + '</button>' : '') +
+          (sideNotes.length ? '<button class="card-mini-btn" onclick="toggleCardSideNotesVisibility(\\'' + blk.id + '\\')">' + (blk.sideNotesHidden ? '👁️ Yan Notları Aç (' + sideNotes.length + ')' : '🙈 Yan Notları Kapa (' + sideNotes.length + ')') + '</button>' : '') +
+          '</div><button class="card-mini-btn" onclick="addSideNote(\\'' + blk.id + '\\', \\'bottom\\')">⬇ Alta Geniş Yan Not</button></div></article>' +
+          (rightSides.length ? '<div class="side-right-column side-dropzone" ondragover="onSideDragOver(event)" ondragleave="onSideDragLeave(event)" ondrop="onSideDrop(event, \\'' + blk.id + '\\', \\'right\\')">' + rightSides.map(sn => renderSingleSideNoteHtml(blk.id, sn)).join('') + '</div>' : '') +
+          (sideNotes.length ? '<div class="side-bottom-row side-dropzone" style="' + (bottomSides.length === 0 ? 'display:none;' : '') + '" data-has-bottom="' + (bottomSides.length > 0 ? '1' : '0') + '" ondragover="onSideDragOver(event)" ondragleave="onSideDragLeave(event)" ondrop="onSideDrop(event, \\'' + blk.id + '\\', \\'bottom\\')">' + bottomSides.map(sn => renderSingleSideNoteHtml(blk.id, sn)).join('') + '</div>' : '') +
+          '</div>' +
+          (isVisible ? '<div class="insert-strip"><button class="insert-pill" onclick="insertCardAfter(' + idx + ')">+ Araya ekle</button></div>' : '');
+      });
+
+      container.innerHTML = html;
+      container.querySelectorAll('.inline-photo-card img').forEach(im => { im.style.cursor = 'zoom-in'; im.onclick = () => openPhotoLightbox(im.src); });
+      renderMathInContainer(container);
+      autoFitWideBlocksInContainer(container);
+      if (inNoteSearchOpen && inNoteSearchQuery.trim()) applyInNoteSearchHighlights(false);
+    }
+
+    function updateDrawerBackdrop() {
+      const bd = document.getElementById('drawerBackdrop');
+      if (!bd) return;
+      const rdOpen = !document.getElementById('workspaceWrap').classList.contains('right-collapsed');
+      bd.classList.toggle('visible', (isMobileUI() || window.innerWidth <= 1080) && rdOpen);
+    }
+    function closeMobileDrawers() {
+      if (isMobileUI() || window.innerWidth <= 1080) document.getElementById('workspaceWrap').classList.add('right-collapsed');
+      updateDrawerBackdrop();
+    }
+    function toggleRightDrawer() {
+      document.getElementById('workspaceWrap').classList.toggle('right-collapsed');
+      applySettingsToDOM();
+      updateDrawerBackdrop();
+    }
+    function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        if (!inNoteSearchOpen) toggleInNoteSearchBar();
+        else document.getElementById('inNoteSearchInput')?.focus();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.target.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault(); undoLastAction();
       }
     });
-  <\/script>
+
+    window.addEventListener('DOMContentLoaded', () => {
+      applyViewportModeClass();
+      if (isMobileUI() || window.innerWidth <= 1080) document.getElementById('workspaceWrap').classList.add('right-collapsed');
+      mobileReadOnly = isMobileUI();
+      const edScroll = document.getElementById('editorScroll');
+      const topFab = document.getElementById('scrollTopFab');
+      if (edScroll && topFab) edScroll.addEventListener('scroll', () => topFab.classList.toggle('visible', edScroll.scrollTop > 380), { passive: true });
+      renderEditor();
+    });
+    window.addEventListener('load', () => {
+      renderMathInContainer(document.getElementById('editorContainer'));
+      autoFitWideBlocksInContainer(document.getElementById('editorContainer'));
+    });`;
+
+      return `<!DOCTYPE html>
+<html lang="tr" data-theme="${escapeAttr(safeSettings.theme)}" data-font="${escapeAttr(safeSettings.font)}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#143528" />
+  <title>${safeTitle} · Sohbet Okulu (FDD)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Comic+Neue:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"><\/script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/mhchem.min.js"><\/script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"><\/script>
+  <style>${liveCss}
+${standaloneExtraCss}</style>
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeMobileDrawers()"></div>
+    <main class="main-stage">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="so-brand-chip" title="Sohbet Okulu · FDD Çevrimdışı Çalışma Çıktısı">
+            <span class="so-brand-badge-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="4" y="3" width="16" height="18" rx="3" stroke="#d9e89c" stroke-width="2.2"/>
+                <path d="M8 8H16M8 12H16M8 16H12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="so-brand-name">Sohbet Okulu</span>
+            <span class="so-fdd-badge">FDD · v${APP_VER}</span>
+          </div>
+          <span class="topbar-note-crumb" id="topbarCrumb">${safeTitle}</span>
+        </div>
+        <div class="topbar-right">
+          <button class="tool-btn mobile-only-btn" id="btnMobileReadLock" onclick="toggleMobileReadLock()" title="Okuma / Düzenleme kilidi">📖 Okuma</button>
+          <button class="tool-btn mobile-only-btn" id="btnMobileInNoteSearch" onclick="toggleInNoteSearchBar()" title="Not içinde ara">🔍 Ara</button>
+          <button class="tool-btn" id="btnTopbarPins" onclick="toggleTopbarPinsFilter()" title="Pinli kartları süz">📌 Pinler <span class="pill-mini-badge" id="topbarPinBadge">0</span></button>
+          <button class="tool-btn" onclick="saveStandaloneCopyHtml()" title="Yaptığınız vurgu ve düzenlemeleri yeni HTML olarak indirin">💾 Kaydet</button>
+          <button class="tool-btn" id="btnRightDrawer" onclick="toggleRightDrawer()">☰ Ayarlar</button>
+        </div>
+      </header>
+
+      <div class="bulk-move-bar" id="bulkMoveBar">
+        <span id="bulkSelectedLabel"><strong>0 kart</strong> seçildi</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="tool-btn" onclick="moveSelectedBlocksGroup(-1)">⬆ Yukarı Taşı</button>
+          <button class="tool-btn" onclick="moveSelectedBlocksGroup(1)">⬇ Aşağı Taşı</button>
+          <button class="tool-btn btn-danger-soft" onclick="deleteSelectedBlocks()">🗑 Seçilenleri Sil</button>
+          <button class="tool-btn" onclick="clearBlockSelection()">✕ Temizle</button>
+        </div>
+      </div>
+
+      <div class="workspace-wrap" id="workspaceWrap">
+        <div class="editor-scroll" id="editorScroll">
+          <div class="editor-container" id="editorContainer"></div>
+          <div class="editor-container">
+            <footer class="so-standalone-footer">
+              <span><strong>Sohbet Okulu</strong> · Bağımsız Çalışma Çıktısı (Salt Not Modu)</span>
+              <span><strong>FDD</strong> Tasarım &amp; Eğitim Stüdyosu Tescilli Çıktısı · Sürüm <strong>v${APP_VER}</strong></span>
+            </footer>
+          </div>
+        </div>
+
+        <aside class="right-drawer" id="rightDrawer">
+          <div class="right-panel-section">
+            <div class="right-sec-title">
+              <span>🎛️ Not düzeni ve araçlar</span>
+              <button class="card-mini-btn" onclick="toggleRightDrawer()">✕</button>
+            </div>
+            <button class="reading-tool-row" onclick="saveStandaloneCopyHtml()"><span>💾 Düzenlenmiş HTML kaydet</span></button>
+            <button class="reading-tool-row" onclick="toggleGlobalPremises()"><span id="lblGlobalPremises">🙈 Tüm öncülleri kapa</span></button>
+            <button class="reading-tool-row" onclick="toggleGlobalSideNotes()"><span id="lblGlobalSideNotes">🙈 Tüm yan notları kapa</span></button>
+            <button class="reading-tool-row" onclick="copyAllHighlights()"><span>📋 Tüm vurguları kopyala</span></button>
+            <button class="reading-tool-row" onclick="window.print()"><span>🖨️ Akıllı A4 PDF / Yazdır</span></button>
+            <div style="border-top:1px solid var(--border-soft);margin-top:8px;padding-top:8px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+                <span>⏳ Çalışma Sayacı</span>
+                <strong id="studyTimerDisplay" style="font-family:var(--font-mono);color:var(--accent);">00:00</strong>
+              </div>
+              <div style="display:flex;gap:5px;margin-top:6px;">
+                <button class="card-mini-btn" style="flex:1;justify-content:center;border:1px solid var(--border-soft);" onclick="toggleStudyTimer()" id="studyTimerBtn">▶ Başlat</button>
+                <button class="card-mini-btn" style="border:1px solid var(--border-soft);" onclick="resetStudyTimer()">↺ Sıfırla</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="right-panel-section">
+            <div class="right-sec-title"><span>🎨 Tema ve yazı tipi</span></div>
+            <div class="font-stepper-box">
+              <button class="stepper-btn" onclick="stepFontSize(-1)">A-</button>
+              <span id="fontSizeValueLabel" style="font-size:12.5px;font-weight:700;">16 px</span>
+              <button class="stepper-btn" onclick="stepFontSize(1)">A+</button>
+            </div>
+            <div class="font-stepper-box">
+              <button class="stepper-btn" onclick="stepZoomPct(-10)">🔍-</button>
+              <span id="zoomPctValueLabel" style="font-size:12.5px;font-weight:700;">%100</span>
+              <button class="stepper-btn" onclick="stepZoomPct(10)">🔍+</button>
+            </div>
+            <button class="reading-tool-row" id="btnFitScreenRow" onclick="toggleFitToScreen()">
+              <span>📐 Tablo &amp; formülleri sığdır</span>
+              <span id="fitScreenStateTag" style="font-size:11px;font-weight:700;">Açık ✓</span>
+            </button>
+            <select id="fontSelect" class="right-select" onchange="setFont(this.value)">
+              <option value="jakarta">Aa Plus Jakarta Sans</option>
+              <option value="inter">Aa Inter (Net)</option>
+              <option value="newsreader">Aa Newsreader (Akademik)</option>
+              <option value="lora">Aa Lora (Kitap Serif)</option>
+              <option value="merriweather">Aa Merriweather (Klasik)</option>
+              <option value="atkinson">Aa Atkinson Hyperlegible</option>
+              <option value="comic">Aa Comic Neue (El Yazısı)</option>
+              <option value="mono">Aa JetBrains Mono (Teknik)</option>
+            </select>
+            <select id="themeSelect" class="right-select" onchange="setTheme(this.value)">
+              <option value="kenar">🌲 Orman Stüdyo (Kenar)</option>
+              <option value="warm">📜 Sıcak Kağıt (Warm)</option>
+              <option value="sage">🌿 Adaçayı Odak (Sage)</option>
+              <option value="nordic">❄️ İskandinav Günü (Nordic)</option>
+              <option value="sand">🏜️ Kum &amp; Kehribar (Sand)</option>
+              <option value="lavender">🪻 Lavanta Sakinliği</option>
+              <option value="sepia">☕ Klasik Kitap (Sepia)</option>
+              <option value="midnight">🌙 Gece Çalışması (Koyu)</option>
+            </select>
+            <div style="display:flex;gap:5px;margin-bottom:7px;">
+              <select id="dynamicThemeSelect" class="right-select" style="margin-bottom:0;" onchange="setDynamicThemeInterval(this.value)">
+                <option value="0">⏱️ Dinamik Tema: Kapalı</option>
+                <option value="1">⏱️ 1 dk'da bir değiştir</option>
+                <option value="30">⏱️ 30 dk'da bir değiştir</option>
+                <option value="60">⏱️ 60 dk'da bir değiştir</option>
+              </select>
+              <button class="tool-btn" style="padding:0 10px;" onclick="cycleThemeNow()" title="Sonraki Temaya Geç">✨</button>
+            </div>
+            <select id="viewportModeSelect" class="right-select" style="margin-bottom:0;" onchange="setViewportMode(this.value)">
+              <option value="auto">📱 Görünüm: Otomatik (Cihaza Göre)</option>
+              <option value="mobile">📱 Görünüm: Mobil Arayüz</option>
+              <option value="desktop">🖥️ Görünüm: Masaüstü (PC)</option>
+            </select>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div class="selection-popover" id="selectionPopover" onmousedown="event.preventDefault()" ontouchstart="event.stopPropagation()">
+    <button class="hl-swatch" style="background:#fde047;" onpointerdown="event.preventDefault();applyHighlight('hl-yellow')" title="Sarı Vurgu"></button>
+    <button class="hl-swatch" style="background:#86efac;" onpointerdown="event.preventDefault();applyHighlight('hl-green')" title="Yeşil Vurgu"></button>
+    <button class="hl-swatch" style="background:#f9a8d4;" onpointerdown="event.preventDefault();applyHighlight('hl-pink')" title="Pembe Vurgu"></button>
+    <button class="mini-icon-btn" style="color:#fff;font-size:13px;padding:4px 7px;" onpointerdown="event.preventDefault();removeHighlight()" title="Vurguyu Temizle">✕</button>
+    <span style="width:1px;height:18px;background:rgba(255,255,255,0.25);margin:0 2px;"></span>
+    <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('bold')" title="Kalın"><strong>B</strong></button>
+    <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('italic')" title="İtalik"><em>I</em></button>
+    <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('underline')" title="Altı Çizili"><u>U</u></button>
+  </div>
+
+  <button class="scroll-top-fab" id="scrollTopFab" onclick="document.getElementById('editorScroll').scrollTo({top:0,behavior:'smooth'})">↑ Başa Dön</button>
+
+  <nav class="mobile-bottom-nav">
+    <button class="mob-nav-btn" onclick="toggleInNoteSearchBar()"><span>🔍</span><span>Ara</span></button>
+    <button class="mob-nav-btn" onclick="addCardAtEnd()"><span>➕</span><span>Kart</span></button>
+    <button class="mob-nav-btn" onpointerdown="event.preventDefault();triggerMobileHighlightAction()"><span>🖍️</span><span>Vurgu</span></button>
+    <button class="mob-nav-btn" onclick="window.print()"><span>🖨️</span><span>Yazdır</span></button>
+    <button class="mob-nav-btn" onclick="toggleRightDrawer()"><span>⚙️</span><span>Ayarlar</span></button>
+  </nav>
+
+  <div class="modal-backdrop" id="zoomInspectModal" onclick="closeModal('zoomInspectModal')">
+    <div class="modal-box" style="max-width:94vw;width:94vw;" onclick="event.stopPropagation()">
+      <div class="modal-head" style="flex-wrap:wrap;gap:8px;">
+        <strong id="zoomInspectTitle">🔍 Yakınlaştır &amp; İncele</strong>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+          <button class="tool-btn" style="height:30px;padding:0 9px;" onclick="setInspectZoom(inspectZoomScale - 0.25)">➖</button>
+          <span id="inspectZoomLabel" style="font-size:12px;font-weight:700;min-width:44px;text-align:center;">%100</span>
+          <button class="tool-btn" style="height:30px;padding:0 9px;" onclick="setInspectZoom(inspectZoomScale + 0.25)">➕</button>
+          <button class="tool-btn" style="height:30px;padding:0 9px;" onclick="setInspectZoom(1.5)">%150</button>
+          <button class="tool-btn" style="height:30px;padding:0 9px;" onclick="fitInspectStageToModal()">📐 Sığdır</button>
+          <button class="card-mini-btn" onclick="closeModal('zoomInspectModal')">✕ Kapat</button>
+        </div>
+      </div>
+      <div class="zoom-inspect-viewport" id="zoomInspectViewport"><div class="zoom-inspect-stage" id="zoomInspectStage"></div></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="photoLightboxModal" onclick="closeModal('photoLightboxModal')">
+    <div style="position:relative;max-width:95vw;max-height:92vh;display:flex;flex-direction:column;align-items:center;gap:8px;" onclick="event.stopPropagation()">
+      <img id="photoLightboxImg" src="" style="max-width:94vw;max-height:84vh;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,0.65);background:#111;" alt="Tam ekran görsel" />
+      <button class="tool-btn active" onclick="closeModal('photoLightboxModal')">✕ Kapat</button>
+    </div>
+  </div>
+
+  <div class="studio-toast" id="studioToast" role="status" aria-live="polite">
+    <span id="studioToastMsg"></span>
+    <button class="studio-toast-btn" id="studioToastAction" style="display:none;"></button>
+    <button class="mini-icon-btn" style="color:#fff;" onclick="hideStudioToast()">✕</button>
+  </div>
+
+  <script id="sohbetOkuluStandaloneData" type="application/json">${embeddedJson}<\/script>
+  <script>${standaloneScript}<\/script>
 </body>
 </html>`;
     }
