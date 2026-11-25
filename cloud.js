@@ -173,11 +173,13 @@ onAuthStateChanged(auth, (user) => {
       }
     }
 
-    // 2. Uzakta silinmiş notları yerelden de temizle (metaDoc.noteIds listesine göre)
-    if (metaDoc && Array.isArray(metaDoc.noteIds)) {
+    // 2. Uzakta silinmiş notları yerelden de temizle (yalnızca yerel not metaDoc'tan eskiyse; offline yeni notları koru)
+    if (metaDoc && Array.isArray(metaDoc.noteIds) && (metaDoc.updatedAt || 0) > (local.updatedAt || 0)) {
       const validIds = new Set(metaDoc.noteIds);
       for (const localId of [...localNotesMap.keys()]) {
-        if (!validIds.has(localId) && remoteNotesMap.size > 0) {
+        const lNote = localNotesMap.get(localId);
+        const lTime = lNote?.updatedAt || lNote?.createdAt || 0;
+        if (!validIds.has(localId) && remoteNotesMap.size > 0 && lTime <= (metaDoc.updatedAt || 0)) {
           localNotesMap.delete(localId);
           changed = true;
         }
@@ -189,7 +191,7 @@ onAuthStateChanged(auth, (user) => {
     if (metaDoc && (metaDoc.updatedAt || 0) > (local.updatedAt || 0)) {
       if (Array.isArray(metaDoc.folders) && metaDoc.folders.length) mergedDb.folders = metaDoc.folders;
       if (metaDoc.settings) mergedDb.settings = { ...local.settings, ...metaDoc.settings };
-      if (metaDoc.activeNoteId) mergedDb.activeNoteId = metaDoc.activeNoteId;
+      if (metaDoc.activeNoteId && localNotesMap.has(metaDoc.activeNoteId)) mergedDb.activeNoteId = metaDoc.activeNoteId;
       mergedDb.updatedAt = metaDoc.updatedAt;
       changed = true;
     }
@@ -235,7 +237,9 @@ async function flushCloudSync(localDb) {
       const noteBytes = new Blob([serializedNote]).size;
 
       if (noteBytes > 980 * 1024) {
-        console.warn(`"${note.title}" notu 1 MB Firestore belge sınırına ulaştı (${Math.round(noteBytes / 1024)} KB).`);
+        const warnMsg = `"${note.title || 'Adsız Not'}" notu 1 MB Firestore belge sınırına ulaştı (${Math.round(noteBytes / 1024)} KB) ve buluta gönderilemedi.`;
+        console.warn(warnMsg);
+        window.onCloudSyncStatus?.({ type: 'warn', message: warnMsg });
         continue;
       }
 

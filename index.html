@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.5.0</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.0</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1263,13 +1263,16 @@
       flex: 1 1 100% !important;
       width: 100% !important;
       max-width: 100% !important;
-      overflow-x: hidden !important;
+      overflow: visible !important;
       padding: 13px 13px !important;
+    }
+    body.is-mobile-ui .card-content,
+    body.is-mobile-ui .premises-stack {
+      overflow-x: hidden;
     }
     body.is-mobile-ui .block-row {
       width: 100% !important;
       max-width: 100% !important;
-      overflow-x: hidden !important;
     }
     body.is-mobile-ui .card-toolbar {
       flex-wrap: wrap;
@@ -1285,6 +1288,57 @@
       border-radius: 6px;
       background: var(--bg-subtle);
       color: var(--text-muted);
+    }
+
+    @media (max-width: 920px) {
+      .net-status-pill, .battery-detail-text { display: none; }
+      .topbar { padding: 6px 10px; gap: 6px; }
+    }
+
+    /* Geri Al / Bildirim Çubuğu (Toast) */
+    .studio-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(16px);
+      background: #18241e;
+      color: #fff;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+      z-index: 120;
+      max-width: calc(100vw - 24px);
+    }
+    .studio-toast.open {
+      display: flex;
+      transform: translateX(-50%) translateY(0);
+    }
+    body.is-mobile-ui .studio-toast {
+      bottom: calc(68px + env(safe-area-inset-bottom));
+    }
+    .studio-toast-btn {
+      border: none;
+      background: #d9e89c;
+      color: #143528;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-danger-soft {
+      color: #dc2626 !important;
+      border-color: rgba(220, 38, 38, 0.35) !important;
+    }
+    .btn-danger-soft:hover {
+      background: rgba(220, 38, 38, 0.12) !important;
     }
 
     @media print {
@@ -1311,7 +1365,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.5.0</div>
+            <div class="brand-sub">Ders stüdyosu · v4.6.0</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1405,13 +1459,14 @@
         </div>
       </header>
 
-      <!-- Çoklu Seçili Kartları Blok Halinde Kaydırma Çubuğu -->
+      <!-- Çoklu Seçili Kartları Blok Halinde Kaydırma & Toplu İşlem Çubuğu -->
       <div class="bulk-move-bar" id="bulkMoveBar">
         <span id="bulkSelectedLabel"><strong>0 kart</strong> seçildi</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="tool-btn" onclick="moveSelectedBlocksGroup(-1)">⬆ Seçili Grubu Yukarı Taşı</button>
           <button class="tool-btn" onclick="moveSelectedBlocksGroup(1)">⬇ Seçili Grubu Aşağı Taşı</button>
           <button class="tool-btn" onclick="sendSelectedBlocksToQuickPool()">⚡ Seçilenleri Hızlı Nota At</button>
+          <button class="tool-btn btn-danger-soft" onclick="deleteSelectedBlocks()">🗑 Seçilenleri Sil</button>
           <button class="tool-btn" onclick="clearBlockSelection()">✕ Seçimi Temizle</button>
         </div>
       </div>
@@ -1680,11 +1735,11 @@
     </div>
   </div>
 
-  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.1.0) -->
+  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.6.0) -->
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.5.0)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.6.0)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -1698,8 +1753,13 @@
       <div style="border-top:1px solid var(--border-soft);padding-top:12px;">
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
 
-                                        <div class="changelog-item">
-          <span class="changelog-ver">v4.5.0 — Not Bazlı Bulut Senkronizasyonu (Delta Sync · 1 GB Kapasite) (Güncel)</span>
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.6.0 — Toplu Kart Silme (Geri Al), Mesajı Doğrudan Nota Ekleme, Güvenli Aktarım Köprüsü & Altyapı Bütünlüğü (Güncel)</span>
+          Çoklu seçili kartlar için <strong>Geri Al (Undo)</strong> destekli <strong>🗑 Seçilenleri Sil</strong> eklendi; <strong>Akıllı Yapıştır</strong> ve kart menüsüne (<code>••• → Altına Mesaj Yapıştır</code>) formül, tablo ve <code>A–E</code> şıklarını bozmadan doğrudan aktif nota kart ekleme akışı eklendi; <code>?incoming=1</code> aktarım köprüsü <code>tid</code> eşleştirmesi, tekil el sıkışma, tekrar koruması ve <em>Aktif Nota Ekle / Yeni Not Oluştur</em> seçimiyle sıkılaştırıldı; mobil bookmarklet uzun sohbet yükleme + tekil mesaj seçimi kazandı; <code>manifest.json</code>, <code>sw.js</code> ve <code>cloud.js</code> uyumlu hale getirildi.
+        </div>
+
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.5.0 — Not Bazlı Bulut Senkronizasyonu (Delta Sync · 1 GB Kapasite)</span>
           Tüm kütüphaneyi tek bir 1 MB Firestore belgesine sıkıştıran eski yapı yerine, <strong>her notu bulutta ayrı belge</strong> (<code>note_{id}</code>) olarak saklayan hızlı <strong>Delta Sync</strong> motoruna geçildi; toplam bulut kapasitesi <strong>1 GB</strong>'a çıkarılırken <strong>1 MB sınırı yalnızca tek bir not</strong> için geçerli hale getirildi; yalnızca düzenlediğiniz not buluta gönderildiği için hem telefon hem PC'de senkronizasyon çok daha hızlı ve hafif hale geldi; eski tek parça bulut yedeğiniz ilk girişte veri kaybı olmadan otomatik aktarılır.
         </div>
 
@@ -1807,14 +1867,42 @@
     </div>
   </div>
 
+  <!-- Dışarıdan Gelen Sohbet / Mesaj Hedef Seçici Modalı -->
+  <div class="modal-backdrop" id="incomingBridgeModal">
+    <div class="modal-box" style="max-width:500px;">
+      <div class="modal-head">
+        <strong>📥 Dışarıdan Sohbet / Mesaj Geldi</strong>
+        <button class="card-mini-btn" onclick="dismissIncomingBridgeModal()">✕ İptal</button>
+      </div>
+      <div id="incomingBridgeInfo" style="font-size:13px;line-height:1.55;margin-bottom:14px;"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="tool-btn active" style="justify-content:center;height:40px;" id="btnIncomingAppendActive" onclick="applyPendingIncoming('active')">➕ Aktif Nota Kart Olarak Ekle</button>
+        <button class="tool-btn" style="justify-content:center;height:40px;" onclick="applyPendingIncoming('new')">📄 Aktif Klasöre Yeni Not Oluştur</button>
+        <button class="tool-btn" style="justify-content:center;height:40px;" onclick="applyPendingIncoming('quick')">⚡ Hızlı Notlara Aktar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Geri Al / Bilgi Bildirim Çubuğu -->
+  <div class="studio-toast" id="studioToast" role="status" aria-live="polite">
+    <span id="studioToastMsg"></span>
+    <button class="studio-toast-btn" id="studioToastAction" style="display:none;"></button>
+    <button class="mini-icon-btn" style="color:#fff;" onclick="hideStudioToast()" title="Kapat">✕</button>
+  </div>
+
   <script type="module" src="./cloud.js"></script>
 
   <script>
     /* ==========================================================================
-       SOHBET OKULU v4.1.0 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
+       SOHBET OKULU v4.6.0 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
        ========================================================================== */
     const DB_KEY = 'ders_studyosu_db_v1';
     const IDB_NAME = 'SohbetOkuluMasterIDB';
+    let _uidSeq = 0;
+    function uid(prefix = 'id') {
+      _uidSeq = (_uidSeq + 1) % 10000;
+      return `${prefix}_${Date.now()}_${_uidSeq}_${Math.random().toString(36).slice(2, 6)}`;
+    }
     const DEFAULT_QUICK_TOOLS = [
       { id: 'dictate', icon: '🎙️', label: 'Kesintisiz Dikte' },
       { id: 'offline_rec', icon: '⏺️', label: 'Ses Kaydı İndir' },
@@ -1825,7 +1913,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.5.0',
+      version: '4.6.0',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -2005,7 +2093,7 @@
 
       if (parsed) {
         db = {
-          version: '4.5.0',
+          version: '4.6.0',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2049,7 +2137,7 @@
                 { id: 'pr_1', align: 'full', customW: '', customH: '', html: 'Sıcaklık artarsa endotermik tepkimede denge ürünler yönüne kayar.', mediaHtml: '' },
                 { id: 'pr_2', align: 'full', customW: '', customH: '', html: 'Katalizör yalnızca aktivasyon enerjisini düşürür; $K_c$ değerini değiştirmez.', mediaHtml: '' }
               ],
-              html: '<p><strong>Sohbet Okulu v4.5.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve vurgu sayıları kompakt biçimde birleştirildi. Sağdaki <strong>☰ Gezinti</strong> panelinden aynı anda birden fazla pin veya vurgu rengini seçerek kartları süzebilir, kart üzerindeki <strong>•••</strong> düğmesinden metin açıklamalı ek seçeneklere ulaşabilirsiniz.</p>',
+              html: '<p><strong>Sohbet Okulu v4.6.0</strong> ile kart başlıkları sadeleştirildi; not başlığının hemen altında tarih, kart, pin ve boyut sayacı kompakt biçimde birleştirildi. Not tepesindeki sabit <strong>Gezinti &amp; Süzgeç</strong> çubuğundan aynı anda birden fazla pin veya vurgu rengini seçebilir, çoklu kart seçimiyle toplu taşıma/silme yapabilir, <strong>📥 Mesaj Ekle</strong> ile istediğiniz mesajı şablonu bozmadan doğrudan aktif nota ekleyebilirsiniz.</p>',
               sideNotes: [
                 { id: 'sn_1', pos: 'right', offsetTop: 0, customW: '', customH: '', html: 'Sağ alt köşedeki ↘ tutamacını sürükleyerek bu kutuyu hem PC hem tablet/telefonda büyütebilirsiniz.' }
               ]
@@ -2062,14 +2150,50 @@
       window.getAppDb = () => db;
       window.setAppDb = (remoteDb) => {
         if (remoteDb && Array.isArray(remoteDb.notes)) {
-          db = { ...db, ...remoteDb };
+          const mergedSettings = { ...db.settings, ...(remoteDb.settings || {}) };
+          db = { ...db, ...remoteDb, settings: mergedSettings };
+          if (!db.notes.some(n => n.id === db.activeNoteId)) {
+            db.activeNoteId = db.notes[0]?.id || null;
+          }
           saveDatabase(false);
           renderAll();
         }
       };
+      window.onCloudSyncStatus = (info) => {
+        if (info?.message) showStudioToast(info.message, null, null, 6000);
+      };
 
       applySettingsToDOM();
       saveDatabase(false);
+    }
+
+    let studioToastTimer = null;
+    function showStudioToast(msg, actionLabel = null, actionFn = null, durationMs = 5500) {
+      const toast = document.getElementById('studioToast');
+      const msgEl = document.getElementById('studioToastMsg');
+      const actBtn = document.getElementById('studioToastAction');
+      if (!toast || !msgEl || !actBtn) return;
+      msgEl.textContent = msg;
+      if (actionLabel && typeof actionFn === 'function') {
+        actBtn.textContent = actionLabel;
+        actBtn.style.display = 'inline-flex';
+        actBtn.onclick = () => {
+          hideStudioToast();
+          actionFn();
+        };
+      } else {
+        actBtn.style.display = 'none';
+        actBtn.onclick = null;
+      }
+      toast.classList.add('open');
+      if (studioToastTimer) clearTimeout(studioToastTimer);
+      studioToastTimer = setTimeout(hideStudioToast, durationMs);
+    }
+
+    function hideStudioToast() {
+      const toast = document.getElementById('studioToast');
+      if (toast) toast.classList.remove('open');
+      if (studioToastTimer) { clearTimeout(studioToastTimer); studioToastTimer = null; }
     }
 
     function triggerManualCloudSync() {
@@ -2090,12 +2214,17 @@
     function undoLastAction() {
       if (!undoStack.length) return alert('Geri alınacak işlem yok.');
       db.notes = JSON.parse(undoStack.pop());
+      selectedBlockIds.clear();
+      if (!db.notes.some(n => n.id === db.activeNoteId)) {
+        db.activeNoteId = db.notes[0]?.id || null;
+      }
+      hideStudioToast();
       saveDatabase(true);
       renderAll();
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.5.0';
+      db.version = '4.6.0';
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -2838,8 +2967,11 @@
     function toggleMobileNavBar() {
       mobileNavBarExpanded = !mobileNavBarExpanded;
       const nav = document.getElementById('stickyNoteNav');
-      if (nav) nav.classList.toggle('mob-collapsed', !mobileNavBarExpanded);
-      renderEditor();
+      if (nav) {
+        nav.classList.toggle('mob-collapsed', !mobileNavBarExpanded);
+        const toggleBtn = nav.querySelector('.sticky-nav-mobile-toggle span:last-child');
+        if (toggleBtn) toggleBtn.textContent = mobileNavBarExpanded ? '▴ Kapat' : '▾ Aç';
+      }
     }
 
     function toggleMultiFilterChip(key) {
@@ -2997,10 +3129,19 @@
     }
 
     function updateBulkMoveBar() {
+      const note = getActiveNote();
+      if (note) {
+        const validIds = new Set(note.blocks.map(b => b.id));
+        for (const id of [...selectedBlockIds]) {
+          if (!validIds.has(id)) selectedBlockIds.delete(id);
+        }
+      } else {
+        selectedBlockIds.clear();
+      }
       const bar = document.getElementById('bulkMoveBar');
       const count = selectedBlockIds.size;
       bar.classList.toggle('active', count > 0);
-      document.getElementById('bulkSelectedLabel').innerHTML = `<strong>${count} kart</strong> blok halinde seçildi`;
+      document.getElementById('bulkSelectedLabel').innerHTML = `<strong>${count} kart</strong> seçildi`;
     }
 
     function toggleBlockBulkSelect(blockId) {
@@ -3010,6 +3151,34 @@
     }
 
     function clearBlockSelection() { selectedBlockIds.clear(); updateBulkMoveBar(); renderEditor(); }
+
+    function deleteSelectedBlocks() {
+      const note = getActiveNote();
+      if (!note || !selectedBlockIds.size) return;
+      const validIds = new Set(note.blocks.filter(b => selectedBlockIds.has(b.id)).map(b => b.id));
+      const count = validIds.size;
+      if (!count) { clearBlockSelection(); return; }
+      const willEmptyNote = count >= note.blocks.length;
+      const confirmMsg = willEmptyNote
+        ? `Seçili ${count} kartın tümü silinecek (notta 1 boş başlangıç kartı bırakılacak). Devam edilsin mi?`
+        : `Seçili ${count} kart silinsin mi?`;
+      if (!confirm(confirmMsg)) return;
+
+      pushUndo();
+      note.blocks = note.blocks.filter(b => !validIds.has(b.id));
+      if (!note.blocks.length) {
+        note.blocks.push({
+          id: uid('blk'), role: '', pin: '', pageBreak: false,
+          premisesHidden: false, sideNotesHidden: false, premises: [],
+          html: '<p></p>', sideNotes: []
+        });
+      }
+      selectedBlockIds.clear();
+      note.updatedAt = Date.now();
+      saveDatabase();
+      renderEditor();
+      showStudioToast(`${count} kart silindi.`, '↩ Geri Al', () => undoLastAction(), 6500);
+    }
 
     function moveSelectedBlocksGroup(direction) {
       const note = getActiveNote();
@@ -3137,6 +3306,7 @@
           <div class="note-header-actions">
             <button class="tool-btn ${inNoteSearchOpen ? 'active' : ''}" onclick="toggleInNoteSearchBar()" title="Bu notun içinde kelime veya formül ara">🔍 Not İçi Ara</button>
             <button class="tool-btn" onclick="undoLastAction()" title="Son Değişikliği Geri Al (Ctrl+Z)">↩ Geri Al (${undoStack.length})</button>
+            <button class="tool-btn" onclick="openTransferModal({ target: 'active', tab: 'paste' })" title="Kopyaladığın mesajı şablonu bozmadan aktif nota ekle">📥 Mesaj Ekle</button>
             <button class="tool-btn active" onclick="addCardAtEnd()">+ Kart ekle</button>
           </div>
         </header>
@@ -3228,6 +3398,9 @@
 
                   <!-- AÇILIR METİN AÇIKLAMALI KART SEÇENEKLERİ MENÜSÜ -->
                   <div class="card-dropdown-menu" id="cardMenu_${blk.id}" onclick="event.stopPropagation()">
+                    <button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); openTransferModal({ target: 'after-block', afterBlockId: '${blk.id}', tab: 'paste' })">
+                      <span>📥</span><span>Altına Mesaj Yapıştır</span>
+                    </button>
                     <button class="dropdown-menu-item" onclick="closeAllCardDropdowns(); openZoomInspectForBlock('${blk.id}')">
                       <span>🔍</span><span>Tam Ekran / Zoom İncele</span>
                     </button>
@@ -3297,7 +3470,8 @@
                           </div>
                         </div>
                         <div class="premise-box-content">
-                          <div class="premise-text-area" contenteditable="true"
+                          <div class="premise-text-area" contenteditable="${isMobileUI() && mobileReadOnly ? 'false' : 'true'}"
+                               ondblclick="if(isMobileUI() && mobileReadOnly){toggleMobileReadLock();}"
                                onfocus="pushUndo(); setFocusTarget('premise', '${blk.id}', null, '${pr.id}')"
                                onblur="updateIndependentPremiseHtml('${blk.id}', '${pr.id}', extractCleanEditorHtml(this))">${pr.html}</div>
                           ${pr.mediaHtml ? `<div class="premise-media-area">${pr.mediaHtml}</div>` : ''}
@@ -3408,7 +3582,8 @@
               <button class="card-mini-btn" onclick="deleteSideNote('${blockId}', '${sn.id}')" title="Sil">✕</button>
             </div>
           </div>
-          <div class="side-note-body" contenteditable="true"
+          <div class="side-note-body" contenteditable="${isMobileUI() && mobileReadOnly ? 'false' : 'true'}"
+               ondblclick="if(isMobileUI() && mobileReadOnly){toggleMobileReadLock();}"
                onfocus="pushUndo(); setFocusTarget('side', '${blockId}', '${sn.id}')"
                onblur="updateSideNoteHtml('${blockId}', '${sn.id}', extractCleanEditorHtml(this))">${sn.html ?? escapeHtml(sn.text || '')}</div>
           <span class="touch-resize-grip" onpointerdown="startTouchBoxResize(event, 'side', '${blockId}', '${sn.id}')" title="Sürükleyerek Boyutlandır">↘</span>
@@ -3752,13 +3927,27 @@
     function sanitizeImportedHtml(rawHtml) {
       const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
       doc.querySelectorAll('script, style, iframe, object, embed, applet, form, input, textarea, select, button, meta, link, base, mat-icon, svg, nav, header, footer, .toolbar, .card-top, .no-print, .copy-btn, .message-actions, .response-footer, .citation-marker, .citations-container, sup.citation, [data-testid*="copy"]').forEach(el => el.remove());
+      // Display formülleri ($$...$$) önce dönüştür ki satır içi .katex ile bölünmesin
+      doc.querySelectorAll('.katex-display').forEach(kd => {
+        const tex = kd.querySelector('annotation[encoding="application/x-tex"]');
+        if (!tex) return;
+        const div = doc.createElement('div');
+        div.textContent = '$$' + tex.textContent.trim() + '$$';
+        kd.replaceWith(div);
+      });
       doc.querySelectorAll('.katex').forEach(k => {
         const tex = k.querySelector('annotation[encoding="application/x-tex"]');
         if (!tex) return;
-        const isDisp = k.closest('.katex-display') !== null;
-        const span = doc.createElement(isDisp ? 'div' : 'span');
-        span.textContent = isDisp ? '$$' + tex.textContent.trim() + '$$' : '$' + tex.textContent.trim() + '$';
+        const span = doc.createElement('span');
+        span.textContent = '$' + tex.textContent.trim() + '$';
         k.replaceWith(span);
+      });
+      doc.querySelectorAll('math').forEach(m => {
+        const tex = m.querySelector('annotation[encoding="application/x-tex"]');
+        if (!tex) return;
+        const span = doc.createElement('span');
+        span.textContent = '$' + tex.textContent.trim() + '$';
+        m.replaceWith(span);
       });
       doc.querySelectorAll('*').forEach(el => {
         const cls = (el.className || '').toString();
@@ -3781,6 +3970,10 @@
           el.setAttribute('target', '_blank');
           el.setAttribute('rel', 'noopener noreferrer');
         }
+        if ((el.tagName === 'P' || el.tagName === 'DIV') && !el.querySelector('p, div, table, ul, ol')) {
+          const t = (el.textContent || '').trim();
+          if (/^[A-E][\)\.]\s+/.test(t)) el.classList.add('choice-line');
+        }
       });
       return doc.body.innerHTML;
     }
@@ -3793,14 +3986,24 @@
 
     function parseImportedHtmlToBlocks(rawHtml) {
       const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
-      const cardEls = [...doc.querySelectorAll('.card, .study-card, .study-block, article')].filter(el => el.innerText.trim().length > 0);
+      doc.querySelectorAll('script, style').forEach(el => el.remove());
+      const turnSelector = '.card, .study-card, .study-block, article, user-query, model-response, [data-message-author-role], .from-user-message-card-content, .to-user-message-card-content';
+      const rawEls = [...doc.querySelectorAll(turnSelector)];
+      const cardEls = rawEls.filter(el => {
+        const hasAncestor = el.parentElement && el.parentElement.closest(turnSelector);
+        if (hasAncestor) return false;
+        return (el.textContent || '').trim().length > 0 || el.querySelector('img, table, .katex');
+      });
       if (cardEls.length >= 1) {
         return cardEls.map((el, i) => {
-          const isUser = el.classList.contains('user') || el.classList.contains('role-user');
-          const contentEl = el.querySelector('.content, .card-body, .card-content') || el;
+          const authorAttr = (el.getAttribute('data-message-author-role') || '').toLowerCase();
+          const sig = (el.tagName + ' ' + (el.className || '') + ' ' + authorAttr).toLowerCase();
+          const isUser = /\buser\b|user-query|role-user|from-user/.test(sig);
+          const isCustomNote = el.classList.contains('custom-note');
+          const contentEl = el.querySelector('.content, .card-body, .card-content, .message-text-content, .markdown') || el;
           return {
-            id: 'blk_' + Date.now() + '_' + i,
-            role: isUser ? 'Benim Sorum' : '',
+            id: uid('blk') + '_' + i,
+            role: isUser ? 'Benim Sorum' : (isCustomNote ? 'Kendi Notum' : ''),
             pin: '',
             pageBreak: false,
             premisesHidden: false,
@@ -3813,7 +4016,7 @@
       }
       const clean = sanitizeImportedHtml(rawHtml);
       return [{
-        id: 'blk_' + Date.now(), role: '', pin: '', pageBreak: false,
+        id: uid('blk'), role: '', pin: '', pageBreak: false,
         premisesHidden: false, sideNotesHidden: false, premises: [], html: clean, sideNotes: []
       }];
     }
@@ -3833,6 +4036,16 @@
         }).join('');
       }
       document.execCommand('insertHTML', false, cleanHtml);
+      const targetEl = e.currentTarget;
+      setTimeout(() => {
+        if (!targetEl) return;
+        saveBlockHtml(blockId, extractCleanEditorHtml(targetEl));
+        const row = document.getElementById('row_' + blockId);
+        if (row) {
+          renderMathInContainer(row);
+          autoFitWideBlocksInContainer(row);
+        }
+      }, 0);
     }
 
     function updateNoteTitle(val) {
@@ -4118,13 +4331,12 @@
     }
 
     function applyTextStyle(cmd) {
-      document.execCommand(cmd, false, null);
       const sel = window.getSelection();
-      const row = sel?.anchorNode?.parentElement?.closest('.block-row');
-      if (row) {
-        const blk = getActiveNote()?.blocks.find(b => b.id === row.id.replace('row_', ''));
-        if (blk) { blk.html = extractCleanEditorHtml(row.querySelector('.card-content')); saveDatabase(); }
-      }
+      const anchorEl = sel?.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
+      const editableEl = anchorEl?.closest('.card-content, .premise-text-area, .side-note-body');
+      if (editableEl) pushUndo();
+      document.execCommand(cmd, false, null);
+      if (editableEl) syncEditableContainer(editableEl);
     }
 
     function syncEditableContainer(editableEl) {
@@ -4174,6 +4386,7 @@
       const mark = sel?.anchorNode?.parentElement?.closest('mark');
       if (mark) {
         const editableEl = mark.closest('.card-content, .premise-text-area, .side-note-body');
+        pushUndo();
         mark.replaceWith(document.createTextNode(mark.textContent));
         syncEditableContainer(editableEl);
         renderEditor();
@@ -4446,12 +4659,14 @@
         };
         mediaRecorder.onstop = () => {
           const blob = new Blob(audioChunks, { type: mime });
+          const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           const d = new Date();
           const gunler = ['Pazar', 'Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi'];
-          a.href = URL.createObjectURL(blob);
+          a.href = url;
           a.download = `SohbetOkulu_Ses_${d.toISOString().slice(0,10)}_${gunler[d.getDay()]}_${d.getHours()}-${d.getMinutes()}.${ext}`;
           a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
           stream.getTracks().forEach(t => t.stop());
           clearSavedAudioChunks();
         };
@@ -4523,8 +4738,219 @@
       else if (id === 'print_pdf') window.print();
     }
 
-    function openTransferModal() { document.getElementById('transferModal').classList.add('open'); showTransferTab('paste'); }
-    const MOB_BOOKMARKLET_CODE = "javascript:(()=>{const old=document.getElementById('ds-mob-bar');if(old)old.remove();const isNb=/notebook(lm)?\\.google\\.com/.test(location.hostname);const sels=isNb?['.from-user-message-card-content, .to-user-message-card-content','chat-message .message-text-content','chat-message','.chat-message-pair','labs-tailwind-doc-viewer']:['user-query, model-response','chat-message','[class*=\"message-card\"]','message-content'];let els=[];for(const s of sels){els=[...document.querySelectorAll(s)].filter(e=>e.innerText.trim().length>0);if(els.length)break;}if(!els.length)return alert('Sohbet bulunamad\u0131.');const tSels=isNb?['input.notebook-title','.notebook-title','[data-test-id=\"notebook-title\"]','.project-title','header h1','header [role=\"heading\"]']:['[data-test-id=\"conversation-title\"]','.conversation-title','.chat-title','[aria-current=\"page\"]','nav [aria-selected=\"true\"]','top-bar-actions .title'];let rawT='';for(const s of tSels){const el=document.querySelector(s);const v=el?(el.value||el.innerText||'').trim():'';if(v&&v.length>1&&!/^(google\\s*)?(gemini|notebook(lm)?|yeni sohbet|new chat)$/i.test(v)){rawT=v;break;}}if(!rawT){const dt=document.title.replace(/ - Google Gemini| - Notebook(LM)?/gi,'').trim();if(dt&&!/^(google\\s*)?(gemini|notebook(lm)?|yeni sohbet|new chat)$/i.test(dt))rawT=dt;}const title=(rawT||'Sohbet Notu').slice(0,60).trim();const cards=els.map(el=>{const c=el.cloneNode(true);c.querySelectorAll('.katex').forEach(k=>{const t=k.querySelector('annotation[encoding=\"application/x-tex\"]');if(!t)return;const d=k.closest('.katex-display')!==null;const w=document.createElement(d?'div':'span');w.textContent=d?'$$'+t.textContent.trim()+'$$':'$'+t.textContent.trim()+'$';k.replaceWith(w);});c.querySelectorAll('script,style,button,mat-icon,svg,[role=\"button\"],.message-actions,.response-footer,.citation-marker,.citations-container,sup.citation,mat-chip,img').forEach(b=>b.remove());c.querySelectorAll('*').forEach(n=>{[...n.attributes].forEach(a=>{if(!['href','colspan','rowspan'].includes(a.name))n.removeAttribute(a.name);});});const u=/user|query|human|from-user/i.test(el.tagName+' '+el.className);return{u,html:c.innerHTML.trim(),txt:c.innerText.trim()};}).filter(x=>x.txt.length>0);const cleanHtml=cards.map(x=>'<div class=\"card '+(x.u?'user':'ai')+'\">'+x.html+'</div>').join('');const cleanTxt=cards.map(x=>(x.u?'Soru: ':'Ders Notu: ')+x.txt).join('\\n\\n---\\n\\n');const bar=document.createElement('div');bar.id='ds-mob-bar';bar.style.cssText='position:fixed;bottom:16px;left:12px;right:12px;z-index:2147483647;background:#143528;color:#fff;padding:10px;border-radius:14px;display:flex;gap:8px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45);font-family:system-ui,sans-serif';const b1=document.createElement('button');b1.textContent='\ud83d\udccb Kopyala & Sohbet Okulu';b1.style.cssText='flex:1;background:#d9e89c;color:#143528;border:none;padding:12px 10px;border-radius:10px;font-weight:700;font-size:13.5px;cursor:pointer';b1.onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([cleanHtml],{type:'text/html'}),'text/plain':new Blob([cleanTxt],{type:'text/plain'})})]);}catch(e){await navigator.clipboard.writeText(cleanTxt);}window.open('https://fatihdogukand.github.io/ders-studyosu/','_blank');bar.remove();};const bx=document.createElement('button');bx.textContent='\u2715';bx.style.cssText='background:transparent;color:#9eb9ac;border:none;padding:8px 10px;font-size:16px;cursor:pointer';bx.onclick=()=>bar.remove();bar.append(b1,bx);document.body.appendChild(bar);})();";
+    let transferOptions = { target: 'new', afterBlockId: null };
+    function openTransferModal(opts = {}) {
+      transferOptions = {
+        target: opts.target || 'new',
+        afterBlockId: opts.afterBlockId || null
+      };
+      document.getElementById('transferModal').classList.add('open');
+      showTransferTab(opts.tab || 'paste');
+    }
+
+    function openPasteAfterBlock(blockId) {
+      openTransferModal({ target: 'after-block', afterBlockId: blockId, tab: 'paste' });
+    }
+
+    function __sohbetOkuluBookmarklet() {
+      if (window.__dsMobCleanup) window.__dsMobCleanup();
+      const old = document.getElementById('ds-mob-bar');
+      if (old) old.remove();
+      const host = location.hostname;
+      const isNb = /notebook(lm)?\.google\.com/.test(host);
+      const isGpt = /chatgpt\.com|chat\.openai\.com/.test(host);
+      const isClaude = /claude\.ai/.test(host);
+      const sels = isNb
+        ? ['.from-user-message-card-content, .to-user-message-card-content', 'chat-message .message-text-content', 'chat-message', '.chat-message-pair', 'labs-tailwind-doc-viewer']
+        : isGpt
+          ? ['[data-message-author-role]', 'article']
+          : isClaude
+            ? ['[data-testid*="message"]', '.font-claude-message, .font-user-message']
+            : ['user-query, model-response', '.conversation-container', 'chat-message', '[class*="message-card"]', 'message-content'];
+      function collectEls() {
+        for (const s of sels) {
+          const found = [...document.querySelectorAll(s)].filter(e => (e.innerText || '').trim().length > 0);
+          const top = found.filter(e => !found.some(o => o !== e && o.contains(e)));
+          if (top.length) return top;
+        }
+        return [];
+      }
+      function getTitle() {
+        const tSels = isNb
+          ? ['input.notebook-title', '.notebook-title', '[data-test-id="notebook-title"]', '.project-title', 'header h1', 'header [role="heading"]']
+          : ['[data-test-id="conversation-title"]', '.conversation-title', '.chat-title', '[aria-current="page"]', 'nav [aria-selected="true"]', 'top-bar-actions .title'];
+        for (const s of tSels) {
+          const el = document.querySelector(s);
+          const v = el ? (el.value || el.innerText || '').trim() : '';
+          if (v && v.length > 1 && !/^(google\s*)?(gemini|notebook(lm)?|chatgpt|claude|yeni sohbet|new chat)$/i.test(v)) return v.slice(0, 60);
+        }
+        const dt = document.title.replace(/ - Google Gemini| - Notebook(LM)?| \| ChatGPT| - Claude/gi, '').trim();
+        if (dt && !/^(google\s*)?(gemini|notebook(lm)?|chatgpt|claude|yeni sohbet|new chat)$/i.test(dt)) return dt.slice(0, 60);
+        return 'Sohbet Notu';
+      }
+      function serializeEls(list) {
+        const cards = list.map(el => {
+          const c = el.cloneNode(true);
+          c.querySelectorAll('.katex-display').forEach(kd => {
+            const t = kd.querySelector('annotation[encoding="application/x-tex"]');
+            if (!t) return;
+            const d = document.createElement('div');
+            d.textContent = '$$' + t.textContent.trim() + '$$';
+            kd.replaceWith(d);
+          });
+          c.querySelectorAll('.katex').forEach(k => {
+            const t = k.querySelector('annotation[encoding="application/x-tex"]');
+            if (!t) return;
+            const w = document.createElement('span');
+            w.textContent = '$' + t.textContent.trim() + '$';
+            k.replaceWith(w);
+          });
+          c.querySelectorAll('script,style,button,mat-icon,svg,[role="button"],.message-actions,.response-footer,.citation-marker,.citations-container,sup.citation,mat-chip').forEach(b => b.remove());
+          c.querySelectorAll('*').forEach(n => {
+            [...n.attributes].forEach(a => {
+              if (!['href', 'colspan', 'rowspan', 'src', 'alt'].includes(a.name)) n.removeAttribute(a.name);
+            });
+          });
+          const sig = (el.tagName + ' ' + el.className + ' ' + (el.getAttribute('data-message-author-role') || '')).toLowerCase();
+          const u = /user|query|human|from-user/.test(sig);
+          return { u, html: c.innerHTML.trim(), txt: (c.innerText || c.textContent || '').trim() };
+        }).filter(x => x.txt.length > 0 || /<img/i.test(x.html));
+        return {
+          cleanHtml: cards.map(x => '<div class="card ' + (x.u ? 'user' : 'ai') + '">' + x.html + '</div>').join(''),
+          cleanTxt: cards.map(x => (x.u ? 'Soru: ' : 'Ders Notu: ') + x.txt).join('\n\n---\n\n'),
+          count: cards.length
+        };
+      }
+      let els = collectEls();
+      if (!els.length) return alert('Sohbet bulunamadı.');
+      const picked = new Set();
+      let pickMode = false;
+      function cleanup() {
+        document.removeEventListener('click', onPagePick, true);
+        picked.forEach(el => { el.style.outline = ''; el.style.outlineOffset = ''; });
+        picked.clear();
+        window.__dsMobCleanup = null;
+      }
+      window.__dsMobCleanup = cleanup;
+      function onPagePick(ev) {
+        if (!pickMode || ev.target.closest('#ds-mob-bar')) return;
+        const cur = collectEls();
+        const hit = cur.find(el => el === ev.target || el.contains(ev.target));
+        if (!hit) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (picked.has(hit)) {
+          picked.delete(hit);
+          hit.style.outline = '';
+          hit.style.outlineOffset = '';
+        } else {
+          picked.add(hit);
+          hit.style.outline = '3px solid #d9e89c';
+          hit.style.outlineOffset = '4px';
+        }
+        updateButtons();
+      }
+      document.addEventListener('click', onPagePick, true);
+      async function sendPayload(list, targetMode) {
+        if (!list.length) return alert('Gönderilecek mesaj seçilmedi.');
+        const data = serializeEls(list);
+        const title = getTitle();
+        try {
+          await navigator.clipboard.write([new ClipboardItem({
+            'text/html': new Blob([data.cleanHtml], { type: 'text/html' }),
+            'text/plain': new Blob([data.cleanTxt], { type: 'text/plain' })
+          })]);
+        } catch (e) {
+          try { await navigator.clipboard.writeText(data.cleanTxt); } catch (e2) {}
+        }
+        const tid = 'tr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        const studioUrl = 'https://fatihdogukand.github.io/ders-studyosu/?incoming=1&tid=' + encodeURIComponent(tid);
+        const win = window.open(studioUrl, '_blank');
+        if (win) {
+          let sent = false;
+          const onMsg = (ev) => {
+            if (sent || ev.source !== win) return;
+            const d = ev.data;
+            const isReady = d === 'STUDIO_READY' || (d && d.type === 'STUDIO_READY');
+            if (!isReady) return;
+            if (d && d.tid && d.tid !== tid) return;
+            sent = true;
+            window.removeEventListener('message', onMsg);
+            win.postMessage({
+              type: 'IMPORT_NOTE',
+              transferId: tid,
+              sourceUrl: location.href,
+              title,
+              html: data.cleanHtml,
+              text: data.cleanTxt,
+              target: targetMode
+            }, '*');
+          };
+          window.addEventListener('message', onMsg);
+          setTimeout(() => { if (!sent) window.removeEventListener('message', onMsg); }, 20000);
+        }
+        cleanup();
+        bar.remove();
+      }
+      const bar = document.createElement('div');
+      bar.id = 'ds-mob-bar';
+      bar.style.cssText = 'position:fixed;bottom:14px;left:10px;right:10px;z-index:2147483647;background:#143528;color:#fff;padding:10px;border-radius:14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45);font-family:system-ui,sans-serif';
+      const bLoad = document.createElement('button');
+      bLoad.style.cssText = 'background:rgba(255,255,255,.14);color:#fff;border:none;padding:9px 10px;border-radius:9px;font-weight:600;font-size:12px;cursor:pointer';
+      bLoad.textContent = '📜 Tümünü Yükle';
+      bLoad.onclick = async () => {
+        bLoad.disabled = true;
+        bLoad.textContent = '⏳ Yükleniyor...';
+        const first = collectEls()[0];
+        let sc = document.scrollingElement || document.documentElement;
+        let p = first ? first.parentElement : null;
+        while (p && p !== document.body) {
+          const st = getComputedStyle(p);
+          if ((st.overflowY === 'auto' || st.overflowY === 'scroll') && p.scrollHeight > p.clientHeight + 40) { sc = p; break; }
+          p = p.parentElement;
+        }
+        let lastH = -1;
+        for (let i = 0; i < 12; i++) {
+          sc.scrollTop = 0;
+          await new Promise(r => setTimeout(r, 380));
+          if (sc.scrollHeight === lastH && sc.scrollTop <= 2) break;
+          lastH = sc.scrollHeight;
+        }
+        els = collectEls();
+        bLoad.textContent = '📜 Yüklendi (' + els.length + ')';
+        bLoad.disabled = false;
+        updateButtons();
+      };
+      const bPick = document.createElement('button');
+      bPick.style.cssText = 'background:rgba(255,255,255,.14);color:#fff;border:none;padding:9px 10px;border-radius:9px;font-weight:600;font-size:12px;cursor:pointer';
+      bPick.onclick = () => { pickMode = !pickMode; updateButtons(); };
+      const bSendPick = document.createElement('button');
+      bSendPick.style.cssText = 'flex:1;min-width:130px;background:#fef08a;color:#143528;border:none;padding:10px;border-radius:9px;font-weight:700;font-size:12.5px;cursor:pointer;display:none';
+      bSendPick.onclick = () => sendPayload([...picked], 'active');
+      const bAll = document.createElement('button');
+      bAll.style.cssText = 'flex:1;min-width:140px;background:#d9e89c;color:#143528;border:none;padding:10px;border-radius:9px;font-weight:700;font-size:12.5px;cursor:pointer';
+      bAll.onclick = () => sendPayload(collectEls(), 'new');
+      const bx = document.createElement('button');
+      bx.textContent = '✕';
+      bx.style.cssText = 'background:transparent;color:#9eb9ac;border:none;padding:8px;font-size:16px;cursor:pointer';
+      bx.onclick = () => { cleanup(); bar.remove(); };
+      function updateButtons() {
+        bPick.textContent = pickMode ? '☑️ Seçim Açık' : '☑️ Mesaj Seç';
+        bPick.style.background = pickMode ? '#f59e0b' : 'rgba(255,255,255,.14)';
+        bPick.style.color = pickMode ? '#143528' : '#fff';
+        bAll.textContent = '📥 Tümü (' + collectEls().length + ')';
+        if (picked.size > 0) {
+          bSendPick.style.display = 'inline-block';
+          bSendPick.textContent = '📩 Nota Ekle (' + picked.size + ')';
+        } else {
+          bSendPick.style.display = 'none';
+        }
+      }
+      updateButtons();
+      bar.append(bLoad, bPick, bSendPick, bAll, bx);
+      document.body.appendChild(bar);
+    }
+    const MOB_BOOKMARKLET_CODE = 'javascript:(' + __sohbetOkuluBookmarklet.toString() + ')();';
 
     function showTransferTab(tab) {
       ['tabBtnPaste', 'tabBtnFiles', 'tabBtnBookmarklet', 'tabBtnGuide'].forEach(id => {
@@ -4537,12 +4963,18 @@
 
       const box = document.getElementById('transferTabContent');
       if (tab === 'paste') {
+        const activeNote = getActiveNote();
+        const isAfterMode = transferOptions.target === 'after-block' && transferOptions.afterBlockId;
+        const targetBanner = isAfterMode
+          ? `Seçili kartın hemen altına yeni kart(lar) olarak eklenecek (mevcut şablon korunur).`
+          : `İstediğiniz mesajı yapıştırıp mevcut <strong>"${escapeHtml(activeNote?.title || 'Aktif Not')}"</strong> içine doğrudan kart olarak ekleyebilir veya yeni not oluşturabilirsiniz.`;
         box.innerHTML = `
-          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Gemini, NotebookLM veya GPT cevabını kopyalayıp aşağıdaki alana yapıştırın; başlıklar, tablolar ve formüller korunarak ayrı ders kartlarına dönüştürülür.</p>
+          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">${targetBanner} Başlıklar, tablolar, <code>A–E</code> şıkları ve KaTeX formülleri korunur.</p>
           <div id="smartPasteRichZone" class="rich-paste-box" contenteditable="true"></div>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <button class="tool-btn" onclick="processRichPasteZone(true)">⚡ Hızlı Notlara Aktar</button>
-            <button class="tool-btn active" onclick="processRichPasteZone(false)">📥 Aktif Klasöre Not Oluştur</button>
+            ${activeNote ? `<button class="tool-btn ${transferOptions.target !== 'new' ? 'active' : ''}" onclick="processRichPasteZone('${isAfterMode ? 'after-block' : 'active'}')">➕ ${isAfterMode ? 'Kartın Altına Ekle' : 'Aktif Nota Ekle'}</button>` : ''}
+            <button class="tool-btn" onclick="processRichPasteZone('quick')">⚡ Hızlı Notlara Aktar</button>
+            <button class="tool-btn ${!activeNote || transferOptions.target === 'new' ? 'active' : ''}" onclick="processRichPasteZone('new')">📥 Yeni Not Oluştur</button>
           </div>
         `;
         setTimeout(() => document.getElementById('smartPasteRichZone')?.focus(), 60);
@@ -4559,43 +4991,87 @@
         `;
       } else if (tab === 'bookmarklet') {
         box.innerHTML = `
-          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Mobil Chrome veya iPad Safari'de herhangi bir sayfayı yer imlerine <strong>NotGonder</strong> adıyla kaydedip URL kısmına aşağıdaki kodu yapıştırın. Gemini veya NotebookLM açıkken adres çubuğuna <code>NotGonder</code> yazıp yıldızlı öneriye dokunun:</p>
-          <textarea id="bmCodeBox" class="code-box" rows="4" readonly>${MOB_BOOKMARKLET_CODE}</textarea>
+          <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">Mobil Chrome veya iPad Safari'de herhangi bir sayfayı yer imlerine <strong>NotGonder</strong> adıyla kaydedip URL kısmına aşağıdaki kodu yapıştırın. Gemini, NotebookLM, ChatGPT veya Claude açıkken adres çubuğuna <code>NotGonder</code> yazıp yıldızlı öneriye dokunun (uzun sohbet yükleme ve tekil mesaj seçimi desteklidir):</p>
+          <textarea id="bmCodeBox" class="code-box" rows="4" readonly></textarea>
           <div style="display:flex;justify-content:flex-end;margin-top:8px;">
             <button class="tool-btn active" onclick="navigator.clipboard?.writeText(document.getElementById('bmCodeBox').value);alert('Bookmarklet kodu panoya kopyalandı!')">📋 Kodu Kopyala</button>
           </div>
         `;
+        const bmBox = document.getElementById('bmCodeBox');
+        if (bmBox) bmBox.value = MOB_BOOKMARKLET_CODE;
       } else {
         box.innerHTML = `
           <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.55;">
             <div class="changelog-item"><strong>1. Sabit Gezinti & Odak Modu:</strong> Not başlığının altındaki yapışkan çubuktan kırmızı/sarı/mor pinleri veya vurguları çoklu seçebilir, <strong>⛶ Odak</strong> ile aradaki normal kartları karartıp sadece işaretli yerlere çalışabilirsiniz.</div>
-            <div class="changelog-item"><strong>2. Çoklu Yan Not, Öncül & Tahta Fotoğrafı:</strong> Kartların sağındaki <strong>📝</strong> ile sağ sütuna sınırsız yan not, altındaki <strong>➕ Öncül Ekle</strong> ile aşamalı öncüller açabilirsiniz. Fotoğraflara tıklayınca tam ekran büyür; ↻ ile döndürüp ✂️ ile kırpabilirsiniz.</div>
-            <div class="changelog-item"><strong>3. Kesintisiz Dikte & Arka Plan Ses Kaydı:</strong> İnternet varken <strong>🎙️ Dikte</strong> hoca duraksasa bile kapanmaz, siz <strong>Durdur</strong> diyene kadar dinler. İnternet yoksa 5 saniyede bir yerel hafızaya yedeklenen <strong>Offline Ses Kaydı</strong> başlar.</div>
-            <div class="changelog-item"><strong>4. Hızlı Notlar & Klasör Yönetimi:</strong> Sol menüdeki <strong>⚡ Hızlı notlar</strong> geçici çalışma havuzudur; işiniz bitince tek tıkla kalıcı ders klasörüne aktarabilir, klasör yanındaki <strong>📦</strong> ile o dersi tarihli ZIP olarak indirebilirsiniz.</div>
+            <div class="changelog-item"><strong>2. Mesajı Doğrudan Nota Ekleme:</strong> Üstteki <strong>📥 Mesaj Ekle</strong> veya kart menüsündeki <strong>••• → Altına Mesaj Yapıştır</strong> ile seçtiğiniz mesajı şablonu, formülleri ve şıkları bozmadan doğrudan mevcut notunuza ekleyebilirsiniz.</div>
+            <div class="changelog-item"><strong>3. Çoklu Yan Not, Öncül & Tahta Fotoğrafı:</strong> Kartların sağındaki <strong>📝</strong> ile sağ sütuna sınırsız yan not, altındaki <strong>➕ Öncül Ekle</strong> ile aşamalı öncüller açabilirsiniz. Fotoğraflara tıklayınca tam ekran büyür; ↻ ile döndürüp ✂️ ile kırpabilirsiniz.</div>
+            <div class="changelog-item"><strong>4. Kesintisiz Dikte & Arka Plan Ses Kaydı:</strong> İnternet varken <strong>🎙️ Dikte</strong> hoca duraksasa bile kapanmaz, siz <strong>Durdur</strong> diyene kadar dinler. İnternet yoksa 5 saniyede bir yerel hafızaya yedeklenen <strong>Offline Ses Kaydı</strong> başlar.</div>
+            <div class="changelog-item"><strong>5. Hızlı Notlar & Klasör Yönetimi:</strong> Sol menüdeki <strong>⚡ Hızlı notlar</strong> geçici çalışma havuzudur; işiniz bitince tek tıkla kalıcı ders klasörüne aktarabilir, klasör yanındaki <strong>📦</strong> ile o dersi tarihli ZIP olarak indirebilirsiniz.</div>
           </div>
         `;
       }
     }
 
-    function processRichPasteZone(toQuickPool = false) {
+    function insertImportedBlocksToNote(blocks, opts = {}) {
+      const cleanBlocks = (blocks || []).filter(b => b && (stripHtml(b.html).trim().length > 0 || /<img/i.test(b.html)));
+      if (!cleanBlocks.length) return false;
+      const targetMode = opts.target || 'new';
+      const activeNote = getActiveNote();
+
+      if ((targetMode === 'active' || targetMode === 'after-block') && activeNote) {
+        pushUndo();
+        let insertIdx = activeNote.blocks.length;
+        if (targetMode === 'after-block' && opts.afterBlockId) {
+          const foundIdx = activeNote.blocks.findIndex(b => b.id === opts.afterBlockId);
+          if (foundIdx !== -1) insertIdx = foundIdx + 1;
+        }
+        const prepared = cleanBlocks.map((b, i) => ({
+          ...b,
+          id: uid('blk') + '_' + i
+        }));
+        activeNote.blocks.splice(insertIdx, 0, ...prepared);
+        activeNote.updatedAt = Date.now();
+        saveDatabase();
+        renderEditor();
+        const firstId = prepared[0]?.id;
+        if (firstId) setTimeout(() => scrollToBlock(firstId), 60);
+        showStudioToast(`${prepared.length} kart "${activeNote.title}" notuna eklendi.`, '↩ Geri Al', () => undoLastAction());
+        return true;
+      }
+
+      const toQuick = targetMode === 'quick';
+      createNewNote(toQuick, opts.customTitle || ('Aktarılan Sohbet · ' + new Date().toLocaleDateString('tr-TR')), cleanBlocks);
+      return true;
+    }
+
+    function processRichPasteZone(mode = 'new') {
       const zone = document.getElementById('smartPasteRichZone');
       if (!zone) return;
       const rawHtml = zone.innerHTML.trim();
       const rawText = zone.innerText.trim();
       if (!rawText && !/<img/i.test(rawHtml)) return alert('Önce yapıştırılacak metni kutuya yapıştırın.');
+      const normalizedMode = mode === true ? 'quick' : (mode === false ? 'new' : mode);
       const blocks = parseImportedHtmlToBlocks(rawHtml);
-      createNewNote(toQuickPool, 'Aktarılan Sohbet · ' + new Date().toLocaleDateString('tr-TR'), blocks);
+      insertImportedBlocksToNote(blocks, {
+        target: normalizedMode,
+        afterBlockId: transferOptions.afterBlockId,
+        customTitle: 'Aktarılan Sohbet · ' + new Date().toLocaleDateString('tr-TR')
+      });
       closeModal('transferModal');
+    }
+
+    function rawTextToBlocks(rawText) {
+      const chunks = String(rawText || '').split(/\n{2,}/).filter(Boolean);
+      return chunks.map((chunk, i) => ({
+        id: uid('blk') + '_' + i, role: '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [],
+        html: chunk.split(/\r?\n/).map(line => { const t = line.trim(); return /^[A-E][\)\.]\s+/.test(t) ? `<p class="choice-line">${escapeHtml(t)}</p>` : `<p>${escapeHtml(t)}</p>`; }).join(''),
+        sideNotes: []
+      }));
     }
 
     function importRawTextAsNote(rawText, toQuickPool = false, customTitle = '') {
       if (!rawText || !rawText.trim()) return alert('İçe aktarılacak metin boş.');
-      const chunks = rawText.split(/\n{2,}/).filter(Boolean);
-      const blocks = chunks.map((chunk, i) => ({
-        id: 'blk_' + Date.now() + '_' + i, role: '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [],
-        html: chunk.split(/\r?\n/).map(line => { const t = line.trim(); return /^[A-E][\)\.]\s+/.test(t) ? `<p class="choice-line">${escapeHtml(t)}</p>` : `<p>${escapeHtml(t)}</p>`; }).join(''),
-        sideNotes: []
-      }));
+      const blocks = rawTextToBlocks(rawText);
       createNewNote(toQuickPool, customTitle || 'Aktarılan Sohbet · ' + new Date().toLocaleDateString('tr-TR'), blocks);
       closeModal('transferModal');
     }
@@ -4612,20 +5088,26 @@
     let slideState = { mode: 'pdf', pdfDoc: null, pptxSlides: [], page: 1, notes: {}, title: '' };
 
     async function openFileInSlideViewer(file, ext) {
+      if (ext === 'pdf' && !window.pdfjsLib) {
+        return alert('PDF okuyucu kütüphanesi (PDF.js) henüz yüklenmedi. İnternet bağlantısını kontrol edip tekrar deneyin.');
+      }
+      if (ext === 'pptx' && !window.JSZip) {
+        return alert('PowerPoint okuyucu kütüphanesi (JSZip) henüz yüklenmedi. İnternet bağlantısını kontrol edip tekrar deneyin.');
+      }
       const buf = await file.arrayBuffer();
       slideState = { mode: ext, pdfDoc: null, pptxSlides: [], page: 1, notes: {}, title: file.name.replace(/\.(pdf|pptx)$/i, '') };
       const panel = document.getElementById('slideViewerPanel');
       const canvas = document.getElementById('slidePdfCanvas');
       const pptxBox = document.getElementById('slidePptxBox');
 
-      if (ext === 'pdf' && window.pdfjsLib) {
+      if (ext === 'pdf') {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         slideState.pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
         canvas.style.display = 'block';
         pptxBox.style.display = 'none';
         panel.classList.add('active');
         await renderCurrentSlide();
-      } else if (ext === 'pptx' && window.JSZip) {
+      } else if (ext === 'pptx') {
         const zip = await JSZip.loadAsync(buf);
         const slideFiles = Object.keys(zip.files)
           .filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k))
@@ -4698,101 +5180,123 @@
       const asSlides = document.getElementById('openAsSlidesChk')?.checked;
       for (const file of files) {
         const ext = file.name.split('.').pop().toLowerCase();
-        if (ext === 'txt' || ext === 'md') {
-          importRawTextAsNote(await file.text(), false, file.name.replace(/\.(txt|md)$/i, ''));
-        } else if (ext === 'html' || ext === 'htm') {
-          const blocks = parseImportedHtmlToBlocks(await file.text());
-          createNewNote(false, file.name.replace(/\.html?$/i, ''), blocks);
-        } else if (ext === 'csv' || ext === 'tsv') {
-          const tbl = csvToHtmlTable(await file.text(), ext === 'tsv' ? '\t' : ',');
-          createNewNote(false, file.name.replace(/\.(csv|tsv)$/i, ''), [{
-            id: 'blk_' + Date.now(), role: 'Veri Tablosu', pin: '', pageBreak: false,
-            premisesHidden: false, sideNotesHidden: false, premises: [], html: tbl, sideNotes: []
-          }]);
-        } else if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
-          const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(file); });
-          const img = await new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = dataUrl; });
-          const compressed = compressImageToTarget(img, 50);
-          const photoId = 'img_' + Date.now();
-          const photoHtml = `<div class="inline-photo-card" id="${photoId}" contenteditable="false"><div class="inline-photo-bar"><button class="card-mini-btn" onclick="rotateInlineImage('${photoId}')">↻</button><button class="card-mini-btn" onclick="openCropModalForInline('${photoId}')">✂️</button><button class="card-mini-btn" onclick="removeInlineImage('${photoId}')">✕</button></div><img src="${compressed}" data-rot="0" alt="${escapeAttr(file.name)}" style="cursor:zoom-in;" onclick="openPhotoLightbox(this.src)" /></div>`;
-          createNewNote(false, file.name.replace(/\.[^.]+$/, ''), [{
-            id: 'blk_' + Date.now(), role: 'Tahta Görseli', pin: 'purple', pageBreak: false,
-            premisesHidden: false, sideNotesHidden: false, premises: [], html: photoHtml, sideNotes: []
-          }]);
-        } else if (ext === 'ipynb') {
-          const nb = JSON.parse(await file.text());
-          const cells = Array.isArray(nb.cells) ? nb.cells : [];
-          const blocks = cells.map((c, i) => {
-            const srcTxt = Array.isArray(c.source) ? c.source.join('') : String(c.source || '');
-            const cellHtml = c.cell_type === 'code'
-              ? `<pre><code>${escapeHtml(srcTxt)}</code></pre>`
-              : srcTxt.split(/\n{2,}/).map(p => `<p>${escapeHtml(p)}</p>`).join('');
-            return { id: 'blk_' + Date.now() + '_' + i, role: c.cell_type === 'code' ? 'Kod Hücresi' : '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: cellHtml, sideNotes: [] };
-          }).filter(b => stripHtml(b.html).trim().length > 0);
-          if (blocks.length) createNewNote(false, file.name.replace(/\.ipynb$/i, ''), blocks);
-        } else if (['py', 'm', 'sql', 'js'].includes(ext)) {
-          const codeTxt = await file.text();
-          createNewNote(false, file.name, [{
-            id: 'blk_' + Date.now(), role: ext.toUpperCase() + ' Kodu', pin: '', pageBreak: false,
-            premisesHidden: false, sideNotesHidden: false, premises: [], html: `<pre><code>${escapeHtml(codeTxt)}</code></pre>`, sideNotes: []
-          }]);
-        } else if (ext === 'json') {
-          const parsed = JSON.parse(await file.text());
-          if (parsed && Array.isArray(parsed.notes) && Array.isArray(parsed.folders)) {
-            if (confirm(`${parsed.notes.length} not içeren Sohbet Okulu yedeği geri yüklensin mi?`)) {
-              db = parsed; saveDatabase(); renderAll();
-            }
-          } else {
-            createNewNote(false, file.name, [{
-              id: 'blk_' + Date.now(), role: 'JSON Veri', pin: '', pageBreak: false,
-              premisesHidden: false, sideNotesHidden: false, premises: [], html: `<pre><code>${escapeHtml(JSON.stringify(parsed, null, 2))}</code></pre>`, sideNotes: []
+        try {
+          if (ext === 'txt' || ext === 'md') {
+            importRawTextAsNote(await file.text(), false, file.name.replace(/\.(txt|md)$/i, ''));
+          } else if (ext === 'html' || ext === 'htm') {
+            const blocks = parseImportedHtmlToBlocks(await file.text());
+            createNewNote(false, file.name.replace(/\.html?$/i, ''), blocks);
+          } else if (ext === 'csv' || ext === 'tsv') {
+            const tbl = csvToHtmlTable(await file.text(), ext === 'tsv' ? '\t' : ',');
+            createNewNote(false, file.name.replace(/\.(csv|tsv)$/i, ''), [{
+              id: uid('blk'), role: 'Veri Tablosu', pin: '', pageBreak: false,
+              premisesHidden: false, sideNotesHidden: false, premises: [], html: tbl, sideNotes: []
             }]);
-          }
-        } else if (ext === 'epub' && window.JSZip) {
-          const zip = await JSZip.loadAsync(await file.arrayBuffer());
-          const xhtmlFiles = Object.keys(zip.files).filter(k => /\.(xhtml|html|htm)$/i.test(k)).sort();
-          const blocks = [];
-          for (let i = 0; i < xhtmlFiles.length; i++) {
-            const raw = await zip.files[xhtmlFiles[i]].async('text');
-            const clean = sanitizeImportedHtml(raw);
-            if (stripHtml(clean).trim().length > 20) {
-              blocks.push({ id: 'blk_' + Date.now() + '_' + i, role: `Bölüm ${blocks.length + 1}`, pin: '', pageBreak: true, premisesHidden: false, sideNotesHidden: false, premises: [], html: clean, sideNotes: [] });
+          } else if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
+            const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.readAsDataURL(file); });
+            const img = await new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = dataUrl; });
+            const compressed = compressImageToTarget(img, 50);
+            const photoId = uid('img');
+            const photoHtml = `<div class="inline-photo-card" id="${photoId}" contenteditable="false"><div class="inline-photo-bar"><button class="card-mini-btn" onclick="rotateInlineImage('${photoId}')">↻</button><button class="card-mini-btn" onclick="openCropModalForInline('${photoId}')">✂️</button><button class="card-mini-btn" onclick="removeInlineImage('${photoId}')">✕</button></div><img src="${compressed}" data-rot="0" alt="${escapeAttr(file.name)}" style="cursor:zoom-in;" onclick="openPhotoLightbox(this.src)" /></div>`;
+            createNewNote(false, file.name.replace(/\.[^.]+$/, ''), [{
+              id: uid('blk'), role: 'Tahta Görseli', pin: 'purple', pageBreak: false,
+              premisesHidden: false, sideNotesHidden: false, premises: [], html: photoHtml, sideNotes: []
+            }]);
+          } else if (ext === 'ipynb') {
+            const nb = JSON.parse(await file.text());
+            const cells = Array.isArray(nb.cells) ? nb.cells : [];
+            const blocks = cells.map((c, i) => {
+              const srcTxt = Array.isArray(c.source) ? c.source.join('') : String(c.source || '');
+              const cellHtml = c.cell_type === 'code'
+                ? `<pre><code>${escapeHtml(srcTxt)}</code></pre>`
+                : srcTxt.split(/\n{2,}/).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+              return { id: uid('blk') + '_' + i, role: c.cell_type === 'code' ? 'Kod Hücresi' : '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: cellHtml, sideNotes: [] };
+            }).filter(b => stripHtml(b.html).trim().length > 0);
+            if (blocks.length) createNewNote(false, file.name.replace(/\.ipynb$/i, ''), blocks);
+          } else if (['py', 'm', 'sql', 'js'].includes(ext)) {
+            const codeTxt = await file.text();
+            createNewNote(false, file.name, [{
+              id: uid('blk'), role: ext.toUpperCase() + ' Kodu', pin: '', pageBreak: false,
+              premisesHidden: false, sideNotesHidden: false, premises: [], html: `<pre><code>${escapeHtml(codeTxt)}</code></pre>`, sideNotes: []
+            }]);
+          } else if (ext === 'json') {
+            const parsed = JSON.parse(await file.text());
+            if (parsed && Array.isArray(parsed.notes) && Array.isArray(parsed.folders)) {
+              if (confirm(`${parsed.notes.length} not içeren Sohbet Okulu yedeği geri yüklensin mi?`)) {
+                applyValidatedBackup(parsed);
+              }
+            } else {
+              createNewNote(false, file.name, [{
+                id: uid('blk'), role: 'JSON Veri', pin: '', pageBreak: false,
+                premisesHidden: false, sideNotesHidden: false, premises: [], html: `<pre><code>${escapeHtml(JSON.stringify(parsed, null, 2))}</code></pre>`, sideNotes: []
+              }]);
             }
-          }
-          if (blocks.length) createNewNote(false, file.name.replace(/\.epub$/i, ''), blocks);
-        } else if (ext === 'docx' && window.mammoth) {
-          const res = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
-          createNewNote(false, file.name.replace(/\.docx$/i, ''), [{ id: 'blk_' + Date.now(), role: '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: sanitizeImportedHtml(res.value), sideNotes: [] }]);
-        } else if (ext === 'pdf' && window.pdfjsLib) {
-          if (asSlides) {
-            await openFileInSlideViewer(file, 'pdf');
-          } else {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-            let fullText = '';
-            for (let p = 1; p <= pdf.numPages; p++) {
-              const page = await pdf.getPage(p);
-              const tc = await page.getTextContent();
-              fullText += tc.items.map(it => it.str).join(' ') + '\n\n';
-            }
-            importRawTextAsNote(fullText, false, file.name.replace(/\.pdf$/i, ''));
-          }
-        } else if (ext === 'pptx' && window.JSZip) {
-          if (asSlides) {
-            await openFileInSlideViewer(file, 'pptx');
-          } else {
+          } else if (ext === 'epub') {
+            if (!window.JSZip) { alert(`"${file.name}" açılamadı: JSZip kütüphanesi henüz yüklenmedi.`); continue; }
             const zip = await JSZip.loadAsync(await file.arrayBuffer());
-            const slideFiles = Object.keys(zip.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort();
-            let slidesText = '';
-            for (const sf of slideFiles) {
-              const xml = await zip.files[sf].async('text');
-              slidesText += [...xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g)].map(m => m[1]).join(' ') + '\n\n';
+            const xhtmlFiles = Object.keys(zip.files).filter(k => /\.(xhtml|html|htm)$/i.test(k)).sort();
+            const blocks = [];
+            for (let i = 0; i < xhtmlFiles.length; i++) {
+              const raw = await zip.files[xhtmlFiles[i]].async('text');
+              const clean = sanitizeImportedHtml(raw);
+              if (stripHtml(clean).trim().length > 20) {
+                blocks.push({ id: uid('blk') + '_' + i, role: `Bölüm ${blocks.length + 1}`, pin: '', pageBreak: true, premisesHidden: false, sideNotesHidden: false, premises: [], html: clean, sideNotes: [] });
+              }
             }
-            importRawTextAsNote(slidesText, false, file.name.replace(/\.pptx$/i, ''));
+            if (blocks.length) createNewNote(false, file.name.replace(/\.epub$/i, ''), blocks);
+          } else if (ext === 'docx') {
+            if (!window.mammoth) { alert(`"${file.name}" açılamadı: Mammoth (.docx) kütüphanesi henüz yüklenmedi.`); continue; }
+            const res = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+            createNewNote(false, file.name.replace(/\.docx$/i, ''), [{ id: uid('blk'), role: '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: sanitizeImportedHtml(res.value), sideNotes: [] }]);
+          } else if (ext === 'pdf') {
+            if (!window.pdfjsLib) { alert(`"${file.name}" açılamadı: PDF.js kütüphanesi henüz yüklenmedi.`); continue; }
+            if (asSlides) {
+              await openFileInSlideViewer(file, 'pdf');
+            } else {
+              pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+              const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+              let fullText = '';
+              for (let p = 1; p <= pdf.numPages; p++) {
+                const page = await pdf.getPage(p);
+                const tc = await page.getTextContent();
+                fullText += tc.items.map(it => it.str).join(' ') + '\n\n';
+              }
+              importRawTextAsNote(fullText, false, file.name.replace(/\.pdf$/i, ''));
+            }
+          } else if (ext === 'pptx') {
+            if (!window.JSZip) { alert(`"${file.name}" açılamadı: JSZip (.pptx) kütüphanesi henüz yüklenmedi.`); continue; }
+            if (asSlides) {
+              await openFileInSlideViewer(file, 'pptx');
+            } else {
+              const zip = await JSZip.loadAsync(await file.arrayBuffer());
+              const slideFiles = Object.keys(zip.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort();
+              let slidesText = '';
+              for (const sf of slideFiles) {
+                const xml = await zip.files[sf].async('text');
+                slidesText += [...xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g)].map(m => m[1]).join(' ') + '\n\n';
+              }
+              importRawTextAsNote(slidesText, false, file.name.replace(/\.pptx$/i, ''));
+            }
           }
+        } catch (err) {
+          alert(`"${file.name}" içe aktarılırken hata oluştu: ${err.message}`);
         }
       }
       closeModal('transferModal');
+    }
+
+    let pendingIncomingPayload = null;
+    function dismissIncomingBridgeModal() {
+      pendingIncomingPayload = null;
+      closeModal('incomingBridgeModal');
+    }
+
+    function applyPendingIncoming(mode) {
+      if (!pendingIncomingPayload) return closeModal('incomingBridgeModal');
+      const p = pendingIncomingPayload;
+      pendingIncomingPayload = null;
+      closeModal('incomingBridgeModal');
+      insertImportedBlocksToNote(p.blocks, { target: mode, customTitle: p.title });
     }
 
     function initIncomingBridge() {
@@ -4801,23 +5305,82 @@
         'https://fatihdogukand.github.io',
         'https://gemini.google.com',
         'https://notebook.google.com',
-        'https://notebooklm.google.com'
+        'https://notebooklm.google.com',
+        'https://chatgpt.com',
+        'https://chat.openai.com',
+        'https://claude.ai'
       ]);
       const params = new URLSearchParams(location.search);
-      if (params.get('incoming') === '1' && window.opener) {
-        window.opener.postMessage('STUDIO_READY', '*');
-        window.opener.postMessage({ type: 'STUDIO_READY' }, '*');
+      const isIncoming = params.get('incoming') === '1';
+      const expectedTid = params.get('tid') || '';
+      const processedTransferIds = new Set();
+      let lastSignature = '';
+      let lastSignatureAt = 0;
+
+      if (isIncoming && window.opener) {
+        if (expectedTid) {
+          window.opener.postMessage({ type: 'STUDIO_READY', tid: expectedTid }, '*');
+        } else {
+          window.opener.postMessage({ type: 'STUDIO_READY' }, '*');
+        }
       }
+
       window.addEventListener('message', (event) => {
-        const isTrustedOrigin = allowedOrigins.has(event.origin) || (window.opener && event.source === window.opener);
+        const hasOpener = Boolean(window.opener);
+        const isTrustedOrigin = allowedOrigins.has(event.origin) || (hasOpener && event.source === window.opener);
         if (!isTrustedOrigin) return;
+        if (isIncoming && hasOpener && event.source !== window.opener) return;
+
         const msg = event.data;
         if (!msg || typeof msg !== 'object' || msg.type !== 'IMPORT_NOTE') return;
-        if (typeof msg.html === 'string' && msg.html.trim()) {
-          createNewNote(false, String(msg.title || 'Sohbet Aktarımı').slice(0, 80), parseImportedHtmlToBlocks(msg.html));
-        } else if (typeof msg.text === 'string' && msg.text.trim()) {
-          importRawTextAsNote(msg.text, false, String(msg.title || 'Sohbet Aktarımı').slice(0, 80));
+        if (expectedTid && msg.transferId && msg.transferId !== expectedTid) return;
+
+        if (msg.transferId) {
+          if (processedTransferIds.has(msg.transferId)) return;
+          processedTransferIds.add(msg.transferId);
         }
+
+        const rawHtml = typeof msg.html === 'string' ? msg.html.trim() : '';
+        const rawText = typeof msg.text === 'string' ? msg.text.trim() : '';
+        if (!rawHtml && !rawText) return;
+
+        const title = String(msg.title || 'Sohbet Aktarımı').slice(0, 80);
+        const sig = `${title}::${rawHtml.length}::${rawText.length}::${(rawHtml || rawText).slice(0, 120)}`;
+        const now = Date.now();
+        if (sig === lastSignature && now - lastSignatureAt < 5000) return;
+        lastSignature = sig;
+        lastSignatureAt = now;
+
+        const blocks = rawHtml ? parseImportedHtmlToBlocks(rawHtml) : rawTextToBlocks(rawText);
+        if (!blocks.length) return;
+
+        const explicitTarget = msg.target === 'active' || msg.target === 'new' || msg.target === 'quick' ? msg.target : null;
+        if (explicitTarget) {
+          insertImportedBlocksToNote(blocks, { target: explicitTarget, customTitle: title });
+          return;
+        }
+
+        const activeNote = getActiveNote();
+        if (!activeNote) {
+          insertImportedBlocksToNote(blocks, { target: 'new', customTitle: title });
+          return;
+        }
+
+        pendingIncomingPayload = { title, blocks, sourceUrl: msg.sourceUrl || event.origin };
+        const infoEl = document.getElementById('incomingBridgeInfo');
+        const activeBtn = document.getElementById('btnIncomingAppendActive');
+        if (infoEl) {
+          const preview = stripHtml(blocks[0].html || '').trim().slice(0, 140);
+          infoEl.innerHTML = `
+            <div><strong>Başlık:</strong> ${escapeHtml(title)}</div>
+            <div><strong>Kart Sayısı:</strong> ${blocks.length} kart</div>
+            ${preview ? `<div style="margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--bg-subtle);font-size:12px;color:var(--text-muted);">${escapeHtml(preview)}${preview.length >= 140 ? '...' : ''}</div>` : ''}
+          `;
+        }
+        if (activeBtn) {
+          activeBtn.textContent = `➕ Aktif Nota Ekle (${activeNote.title.slice(0, 32)})`;
+        }
+        document.getElementById('incomingBridgeModal').classList.add('open');
       });
     }
 
@@ -4981,10 +5544,15 @@
       try {
         if (file.name.endsWith('.json')) {
           applyValidatedBackup(JSON.parse(await file.text()));
-        } else if (file.name.endsWith('.zip') && window.JSZip) {
+        } else if (file.name.endsWith('.zip')) {
+          if (!window.JSZip) {
+            alert('ZIP kütüphanesi (JSZip) henüz yüklenmedi. İnternet bağlantısını kontrol edip tekrar deneyin.');
+            return;
+          }
           const zip = await JSZip.loadAsync(await file.arrayBuffer());
           const jsonEntry = Object.values(zip.files).find(f => f.name.endsWith('.json'));
           if (jsonEntry) applyValidatedBackup(JSON.parse(await jsonEntry.async('text')));
+          else alert('ZIP arşivinde yedek JSON dosyası bulunamadı.');
         }
       } catch (err) {
         alert('Yedek dosyası okunamadı: ' + err.message);
@@ -4992,7 +5560,14 @@
       closeModal('backupModal');
     }
 
-    function downloadBlob(blob, filename) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); }
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
 
     /* Offline Ses Kaydı IndexedDB Temizlik & Çökme Kurtarma */
     function clearSavedAudioChunks() {
@@ -5169,6 +5744,11 @@
       initIncomingBridge();
       checkInterruptedAudioRecovery();
       renderAll();
+    });
+
+    window.addEventListener('load', () => {
+      renderMathInContainer(document.getElementById('editorContainer'));
+      autoFitWideBlocksInContainer(document.getElementById('editorContainer'));
     });
   </script>
 </body>
