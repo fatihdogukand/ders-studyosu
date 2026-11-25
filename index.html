@@ -1754,8 +1754,8 @@
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
 
         <div class="changelog-item">
-          <span class="changelog-ver">v4.6.0 — Toplu Kart Silme (Geri Al), Mesajı Doğrudan Nota Ekleme, Güvenli Aktarım Köprüsü & Altyapı Bütünlüğü (Güncel)</span>
-          Çoklu seçili kartlar için <strong>Geri Al (Undo)</strong> destekli <strong>🗑 Seçilenleri Sil</strong> eklendi; <strong>Akıllı Yapıştır</strong> ve kart menüsüne (<code>••• → Altına Mesaj Yapıştır</code>) formül, tablo ve <code>A–E</code> şıklarını bozmadan doğrudan aktif nota kart ekleme akışı eklendi; <code>?incoming=1</code> aktarım köprüsü <code>tid</code> eşleştirmesi, tekil el sıkışma, tekrar koruması ve <em>Aktif Nota Ekle / Yeni Not Oluştur</em> seçimiyle sıkılaştırıldı; mobil bookmarklet uzun sohbet yükleme + tekil mesaj seçimi kazandı; <code>manifest.json</code>, <code>sw.js</code> ve <code>cloud.js</code> uyumlu hale getirildi.
+          <span class="changelog-ver">v4.6.0 — Toplu Kart Silme (Geri Al), Mesajı Doğrudan Nota Ekleme, Antigravity Sohbet (.jsonl / Markdown) Desteği & Altyapı Bütünlüğü (Güncel)</span>
+          Çoklu seçili kartlar için <strong>Geri Al (Undo)</strong> destekli <strong>🗑 Seçilenleri Sil</strong> eklendi; <strong>Akıllı Yapıştır</strong> ve kart menüsüne (<code>••• → Altına Mesaj Yapıştır</code>) formül, tablo ve <code>A–E</code> şıklarını bozmadan doğrudan aktif nota kart ekleme akışı eklendi; Antigravity sohbet kayıtlarını (<code>transcript_full.jsonl</code> / <code>transcript.jsonl</code>) ve zengin Markdown (<code>.md</code> veya yapıştırılan Markdown: tablo, kod, başlık, liste, KaTeX) içeriklerini soru-cevap kartlarına dönüştüren motor eklendi; <code>?incoming=1</code> aktarım köprüsü <code>tid</code> eşleştirmesi, tekil el sıkışma, tekrar koruması ve <em>Aktif Nota Ekle / Yeni Not Oluştur</em> seçimiyle sıkılaştırıldı; mobil bookmarklet uzun sohbet yükleme + tekil mesaj seçimi kazandı; <code>manifest.json</code>, <code>sw.js</code> ve <code>cloud.js</code> uyumlu hale getirildi.
         </div>
 
         <div class="changelog-item">
@@ -4027,7 +4027,11 @@
       if (!htmlData && !plainData) return;
       e.preventDefault();
       let cleanHtml = '';
-      if (htmlData) {
+      if (htmlData && /<(table|h[1-6]|ul|ol|blockquote|pre|strong|em|mark)\b/i.test(htmlData)) {
+        cleanHtml = sanitizeImportedHtml(htmlData);
+      } else if (plainData && looksLikeMarkdown(plainData)) {
+        cleanHtml = markdownToStudyHtml(plainData);
+      } else if (htmlData) {
         cleanHtml = sanitizeImportedHtml(htmlData);
       } else {
         cleanHtml = plainData.split(/\r?\n/).map(line => {
@@ -4981,13 +4985,20 @@
       } else if (tab === 'files') {
         box.innerHTML = `
           <p style="font-size:12.5px;color:var(--text-muted);margin-top:0;">
-            Desteklenen tüm biçimler: <strong>.html, .pdf, .pptx, .docx, .csv, .tsv, .ipynb, .py, .m, .sql, .epub, .txt, .md, .json</strong> ve <strong>tahta fotoğrafları (.png/.jpg/.webp)</strong>
+            Desteklenen tüm biçimler: <strong>.html, .pdf, .pptx, .docx, .md, .jsonl (Antigravity sohbet kaydı), .csv, .tsv, .ipynb, .py, .m, .sql, .epub, .txt, .json</strong> ve <strong>tahta fotoğrafları (.png/.jpg/.webp)</strong>
           </p>
+          <div style="padding:9px 11px;border-radius:10px;background:var(--bg-subtle);font-size:12px;line-height:1.5;margin-bottom:10px;">
+            <strong>🤖 Antigravity Sohbeti Taşıma:</strong> Antigravity'deki bir sohbetin tam kaydını almak için dosya seçicide şu yoldaki en güncel klasörü açıp <code>.system_generated\\logs\\transcript_full.jsonl</code> dosyasını seçebilirsiniz:
+            <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap;">
+              <code style="font-size:11px;padding:3px 6px;border-radius:6px;background:var(--bg-paper);">%USERPROFILE%\\.gemini\\antigravity\\brain</code>
+              <button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-paper);" onclick="navigator.clipboard?.writeText('%USERPROFILE%\\\\.gemini\\\\antigravity\\\\brain');showStudioToast('Antigravity klasör yolu kopyalandı!')">📋 Yolu Kopyala</button>
+            </div>
+          </div>
           <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;margin-bottom:10px;cursor:pointer;">
             <input type="checkbox" id="openAsSlidesChk" checked />
             <span><strong>PDF ve PowerPoint (.pptx)</strong> dosyalarını Slayt-Slayt Okuyucu + Hoca Uyarısı modunda aç</span>
           </label>
-          <input type="file" multiple accept=".html,.htm,.pdf,.pptx,.docx,.csv,.tsv,.ipynb,.py,.m,.sql,.js,.epub,.txt,.md,.json,.png,.jpg,.jpeg,.webp" onchange="handleMultiFileImport(event)" />
+          <input type="file" multiple accept=".html,.htm,.pdf,.pptx,.docx,.csv,.tsv,.ipynb,.py,.m,.sql,.js,.epub,.txt,.md,.json,.jsonl,.png,.jpg,.jpeg,.webp" onchange="handleMultiFileImport(event)" />
         `;
       } else if (tab === 'bookmarklet') {
         box.innerHTML = `
@@ -5044,6 +5055,209 @@
       return true;
     }
 
+    function looksLikeMarkdown(txt) {
+      const s = String(txt || '');
+      return /(^|\n)\s{0,3}(#{1,4}\s+|[-*+]\s+|\d+\.\s+|>\s+|```)|(\*\*[^*\n]+\*\*)|(^|\n)\s*\|.+\|\s*\n\s*\|?[\s:-]{3,}/m.test(s);
+    }
+
+    function markdownToStudyHtml(mdText) {
+      let src = String(mdText || '').replace(/\r\n/g, '\n');
+      const codeBlocks = [];
+      const inlineCodes = [];
+      const mathBlocks = [];
+
+      src = src.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, body) => {
+        const idx = codeBlocks.length;
+        codeBlocks.push(`<pre><code>${escapeHtml(body.replace(/\n$/, ''))}</code></pre>`);
+        return `\n@@SO_CODE_${idx}@@\n`;
+      });
+
+      src = src.replace(/`([^`\n]+)`/g, (_, code) => {
+        const idx = inlineCodes.length;
+        inlineCodes.push(`<code>${escapeHtml(code)}</code>`);
+        return `@@SO_ICODE_${idx}@@`;
+      });
+
+      src = src.replace(/\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]/g, (full) => {
+        const idx = mathBlocks.length;
+        mathBlocks.push(escapeHtml(full));
+        return `@@SO_MATH_${idx}@@`;
+      });
+
+      src = src.replace(/(^|[^\\])\$([^\n$]+?)\$|\\\(([^\n]+?)\\\)/g, (full, prefix, dMath, pMath) => {
+        const lead = pMath !== undefined ? '' : (prefix || '');
+        const mathBody = pMath !== undefined ? full : full.slice(lead.length);
+        const idx = mathBlocks.length;
+        mathBlocks.push(escapeHtml(mathBody));
+        return `${lead}@@SO_MATH_${idx}@@`;
+      });
+
+      const formatInline = (line) => {
+        let out = escapeHtml(line);
+        out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+        out = out.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+        out = out.replace(/__([^_\n]+?)__/g, '<strong>$1</strong>');
+        out = out.replace(/(^|[^\w])\*([^*\n]+?)\*(?=[^\w]|$)/g, '$1<em>$2</em>');
+        out = out.replace(/@@SO_ICODE_(\d+)@@/g, (_, i) => inlineCodes[Number(i)] || '');
+        out = out.replace(/@@SO_MATH_(\d+)@@/g, (_, i) => mathBlocks[Number(i)] || '');
+        return out;
+      };
+
+      const splitTableRow = (row) => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+      const isTableSep = (line) => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(line);
+
+      const lines = src.split('\n');
+      const out = [];
+      let i = 0;
+
+      while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        if (!trimmed) { i++; continue; }
+
+        const cbMatch = trimmed.match(/^@@SO_CODE_(\d+)@@$/);
+        if (cbMatch) {
+          out.push(codeBlocks[Number(cbMatch[1])] || '');
+          i++; continue;
+        }
+
+        if (/^(\*{3,}|-{3,}|_{3,})$/.test(trimmed)) {
+          out.push('<hr>');
+          i++; continue;
+        }
+
+        const hMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
+        if (hMatch) {
+          const lvl = hMatch[1].length;
+          out.push(`<h${lvl}>${formatInline(hMatch[2])}</h${lvl}>`);
+          i++; continue;
+        }
+
+        if (trimmed.includes('|') && i + 1 < lines.length && isTableSep(lines[i + 1])) {
+          const headers = splitTableRow(trimmed);
+          i += 2;
+          const bodyRows = [];
+          while (i < lines.length && lines[i].trim().includes('|') && lines[i].trim()) {
+            bodyRows.push(splitTableRow(lines[i]));
+            i++;
+          }
+          const th = '<thead><tr>' + headers.map(c => `<th>${formatInline(c)}</th>`).join('') + '</tr></thead>';
+          const tb = '<tbody>' + bodyRows.map(r => '<tr>' + headers.map((_, ci) => `<td>${formatInline(r[ci] || '')}</td>`).join('') + '</tr>').join('') + '</tbody>';
+          out.push(`<table>${th}${tb}</table>`);
+          continue;
+        }
+
+        if (/^>\s?/.test(trimmed)) {
+          const qLines = [];
+          while (i < lines.length && /^\s*>\s?/.test(lines[i])) {
+            qLines.push(lines[i].replace(/^\s*>\s?/, ''));
+            i++;
+          }
+          out.push(`<blockquote>${qLines.map(ql => `<p>${formatInline(ql)}</p>`).join('')}</blockquote>`);
+          continue;
+        }
+
+        if (/^[-*+]\s+/.test(trimmed)) {
+          const items = [];
+          while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) {
+            items.push(`<li>${formatInline(lines[i].replace(/^\s*[-*+]\s+/, ''))}</li>`);
+            i++;
+          }
+          out.push(`<ul>${items.join('')}</ul>`);
+          continue;
+        }
+
+        if (/^\d+\.\s+/.test(trimmed)) {
+          const items = [];
+          while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+            items.push(`<li>${formatInline(lines[i].replace(/^\s*\d+\.\s+/, ''))}</li>`);
+            i++;
+          }
+          out.push(`<ol>${items.join('')}</ol>`);
+          continue;
+        }
+
+        const pLines = [];
+        while (
+          i < lines.length &&
+          lines[i].trim() &&
+          !/^@@SO_CODE_\d+@@$/.test(lines[i].trim()) &&
+          !/^(\*{3,}|-{3,}|_{3,})$/.test(lines[i].trim()) &&
+          !/^(#{1,4})\s+/.test(lines[i].trim()) &&
+          !/^\s*([-*+]|\d+\.|>)\s+/.test(lines[i]) &&
+          !(lines[i].includes('|') && i + 1 < lines.length && isTableSep(lines[i + 1]))
+        ) {
+          pLines.push(lines[i].trim());
+          i++;
+        }
+        pLines.forEach(pl => {
+          out.push(/^[A-E][\)\.]\s+/.test(pl)
+            ? `<p class="choice-line">${formatInline(pl)}</p>`
+            : `<p>${formatInline(pl)}</p>`);
+        });
+      }
+
+      return out.join('');
+    }
+
+    function parseAntigravityTranscriptJsonl(rawJsonl) {
+      const lines = String(rawJsonl || '').split(/\r?\n/).filter(Boolean);
+      const blocks = [];
+      let derivedTitle = '';
+
+      for (const line of lines) {
+        let obj;
+        try { obj = JSON.parse(line); } catch (e) { continue; }
+        if (!obj || typeof obj !== 'object') continue;
+
+        if (obj.type === 'USER_INPUT' && typeof obj.content === 'string') {
+          let uText = obj.content;
+          const reqMatch = uText.match(/<USER_REQUEST>\s*([\s\S]*?)\s*<\/USER_REQUEST>/);
+          if (reqMatch) {
+            uText = reqMatch[1];
+          } else {
+            uText = uText
+              .replace(/<ADDITIONAL_METADATA>[\s\S]*?<\/ADDITIONAL_METADATA>/g, '')
+              .replace(/<USER_SETTINGS_CHANGE>[\s\S]*?<\/USER_SETTINGS_CHANGE>/g, '');
+          }
+          uText = uText.trim();
+          if (!uText) continue;
+          if (!derivedTitle) {
+            derivedTitle = uText.replace(/\s+/g, ' ').slice(0, 55).trim();
+          }
+          blocks.push({
+            id: uid('blk'),
+            role: 'Benim Sorum',
+            pin: '',
+            pageBreak: false,
+            premisesHidden: false,
+            sideNotesHidden: false,
+            premises: [],
+            html: markdownToStudyHtml(uText),
+            sideNotes: []
+          });
+        } else if (obj.type === 'PLANNER_RESPONSE' && typeof obj.content === 'string' && obj.content.trim()) {
+          blocks.push({
+            id: uid('blk'),
+            role: '',
+            pin: '',
+            pageBreak: false,
+            premisesHidden: false,
+            sideNotesHidden: false,
+            premises: [],
+            html: markdownToStudyHtml(obj.content.trim()),
+            sideNotes: []
+          });
+        }
+      }
+
+      return {
+        title: derivedTitle ? `Antigravity · ${derivedTitle}` : `Antigravity Sohbeti · ${new Date().toLocaleDateString('tr-TR')}`,
+        blocks
+      };
+    }
+
     function processRichPasteZone(mode = 'new') {
       const zone = document.getElementById('smartPasteRichZone');
       if (!zone) return;
@@ -5051,7 +5265,10 @@
       const rawText = zone.innerText.trim();
       if (!rawText && !/<img/i.test(rawHtml)) return alert('Önce yapıştırılacak metni kutuya yapıştırın.');
       const normalizedMode = mode === true ? 'quick' : (mode === false ? 'new' : mode);
-      const blocks = parseImportedHtmlToBlocks(rawHtml);
+      const hasSemanticHtml = /<(table|h[1-6]|ul|ol|blockquote|pre|img)\b/i.test(rawHtml) || /class=["'][^"']*(card|katex)/i.test(rawHtml);
+      const blocks = (!hasSemanticHtml && looksLikeMarkdown(rawText))
+        ? [{ id: uid('blk'), role: '', pin: '', pageBreak: false, premisesHidden: false, sideNotesHidden: false, premises: [], html: markdownToStudyHtml(rawText), sideNotes: [] }]
+        : parseImportedHtmlToBlocks(rawHtml);
       insertImportedBlocksToNote(blocks, {
         target: normalizedMode,
         afterBlockId: transferOptions.afterBlockId,
@@ -5181,8 +5398,22 @@
       for (const file of files) {
         const ext = file.name.split('.').pop().toLowerCase();
         try {
-          if (ext === 'txt' || ext === 'md') {
-            importRawTextAsNote(await file.text(), false, file.name.replace(/\.(txt|md)$/i, ''));
+          if (ext === 'txt') {
+            importRawTextAsNote(await file.text(), false, file.name.replace(/\.txt$/i, ''));
+          } else if (ext === 'md') {
+            const mdTxt = await file.text();
+            createNewNote(false, file.name.replace(/\.md$/i, ''), [{
+              id: uid('blk'), role: '', pin: '', pageBreak: false,
+              premisesHidden: false, sideNotesHidden: false, premises: [],
+              html: markdownToStudyHtml(mdTxt), sideNotes: []
+            }]);
+          } else if (ext === 'jsonl') {
+            const res = parseAntigravityTranscriptJsonl(await file.text());
+            if (!res.blocks.length) {
+              alert(`"${file.name}" içinde aktarılacak Antigravity sohbet mesajı bulunamadı.`);
+              continue;
+            }
+            createNewNote(false, res.title, res.blocks);
           } else if (ext === 'html' || ext === 'htm') {
             const blocks = parseImportedHtmlToBlocks(await file.text());
             createNewNote(false, file.name.replace(/\.html?$/i, ''), blocks);
