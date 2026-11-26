@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.0</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.1</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1422,6 +1422,51 @@
     .print-sim-stage .fit-scale-inner { transform: none !important; width: 100% !important; display: block !important; }
     .print-sim-stage table { display: table !important; width: 100% !important; font-size: 0.88em !important; }
 
+    /* A4 KAĞIT GÖRÜNÜM MODU (CANLI ÖNİZLEME & ÇALIŞMA) */
+    body.a4-view-mode .editor-scroll { padding: 20px 16px 120px; }
+    body.a4-view-mode #editorContainer {
+      max-width: 794px;
+      background: var(--bg-paper);
+      padding: 34px 42px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 10px 34px rgba(0, 0, 0, 0.11);
+      position: relative;
+    }
+    body.a4-view-mode .block-row { margin-bottom: 10px; }
+    body.a4-view-mode .lesson-card {
+      flex: 1 1 100% !important;
+      box-shadow: none;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    body.a4-view-mode .side-right-column { flex: 1 1 100%; min-width: 0; }
+    body.a4-view-mode .side-note-box { margin-top: 0 !important; width: 100% !important; }
+    @media (max-width: 640px) {
+      body.a4-view-mode .editor-scroll { padding: 10px 8px 125px; }
+      body.a4-view-mode #editorContainer { padding: 16px 12px; }
+    }
+    .a4-page-guide {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0;
+      color: var(--accent);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      user-select: none;
+      opacity: 0.85;
+    }
+    .a4-page-guide::before, .a4-page-guide::after {
+      content: '';
+      flex: 1;
+      border-top: 1.5px dashed var(--accent);
+      opacity: 0.45;
+    }
+
     @media print {
       @page { size: A4; margin: 12mm; }
       .sidebar, .topbar, .right-drawer, .quick-dock-wrap, .mobile-bottom-nav,
@@ -1430,16 +1475,25 @@
       .sticky-note-nav, .in-note-search-bar, .scroll-top-fab, .studio-toast,
       .fit-zoom-btn, .selection-popover, .table-action-pill, .inline-photo-bar,
       .premise-box-head button, .side-note-head button, .modal-backdrop,
-      .auto-page-break-badge, .block-row.filtered-out { display: none !important; }
-      body, .app-shell, .workspace-wrap, .editor-scroll { height: auto !important; overflow: visible !important; background: #fff !important; color: #111827 !important; padding: 0 !important; }
-      .editor-container { max-width: 100% !important; }
-      .lesson-card { box-shadow: none !important; border: 1px solid #d1d5db !important; break-inside: avoid; page-break-inside: avoid; }
-      .lesson-card.allow-internal-break { break-inside: auto !important; page-break-inside: auto !important; }
-      .lesson-card.allow-internal-break h1, .lesson-card.allow-internal-break h2,
-      .lesson-card.allow-internal-break h3, .lesson-card.allow-internal-break h4 { break-after: avoid; page-break-after: avoid; }
-      .lesson-card.allow-internal-break pre, .lesson-card.allow-internal-break blockquote,
-      .lesson-card.allow-internal-break .katex-display, .lesson-card.allow-internal-break .choice-line,
-      .lesson-card.allow-internal-break .independent-premise-box { break-inside: avoid; page-break-inside: avoid; }
+      .auto-page-break-badge, .a4-page-guide, .block-row.filtered-out { display: none !important; }
+      body, .app-shell, .workspace-wrap, .editor-scroll, body.a4-view-mode .editor-scroll {
+        height: auto !important; overflow: visible !important; background: #fff !important; color: #111827 !important; padding: 0 !important;
+      }
+      .editor-container, body.a4-view-mode #editorContainer {
+        max-width: 100% !important; width: 100% !important; padding: 0 !important;
+        box-shadow: none !important; border: none !important; background: #fff !important;
+      }
+      .block-row { margin-bottom: 10px !important; }
+      .lesson-card { box-shadow: none !important; border: 1px solid #d1d5db !important; break-inside: auto; page-break-inside: auto; }
+      .lesson-card.print-atomic-card { break-inside: avoid !important; page-break-inside: avoid !important; }
+      body.print-clean-book .lesson-card {
+        border: none !important; border-top: 1px solid #e2e8f0 !important; border-radius: 0 !important; padding: 10px 2px !important;
+      }
+      body.print-clean-book .block-row:first-of-type .lesson-card { border-top: none !important; }
+      h1, h2, h3, h4, .print-keep-with-next { break-after: avoid !important; page-break-after: avoid !important; }
+      p { orphans: 3; widows: 3; }
+      li, tr, pre, blockquote, .katex-display, .choice-line, .inline-photo-card,
+      .independent-premise-box, .side-note-box { break-inside: avoid !important; page-break-inside: avoid !important; }
       .page-break-before, .auto-page-break { break-before: page !important; page-break-before: always !important; }
       .fit-scale-wrapper { height: auto !important; overflow: visible !important; }
       .fit-scale-inner { transform: none !important; width: 100% !important; display: block !important; }
@@ -1471,7 +1525,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.6.0</div>
+            <div class="brand-sub">Ders stüdyosu · v4.6.1</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1664,6 +1718,11 @@
               <span>✨ Vurgulardan özet not yap</span>
             </button>
 
+            <button class="reading-tool-row" id="btnA4ViewRow" onclick="toggleA4ViewMode()">
+              <span>📄 A4 Sayfa Görünümü</span>
+              <span id="a4ViewStateTag" style="font-size:11px;font-weight:700;">Kapalı</span>
+            </button>
+
             <button class="reading-tool-row" onclick="openPrintOptimizerModal()">
               <span>🖨️ Akıllı Sayfa Böl &amp; A4 PDF</span>
             </button>
@@ -1848,11 +1907,11 @@
     </div>
   </div>
 
-  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.6.0) -->
+  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.6.1) -->
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.6.0)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.6.1)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -1867,7 +1926,12 @@
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
 
         <div class="changelog-item">
-          <span class="changelog-ver">v4.6.0 — Toplu Kart Silme (Geri Al), Mesajı Doğrudan Nota Ekleme, Antigravity Sohbet (.jsonl / Markdown) Desteği & Altyapı Bütünlüğü (Güncel)</span>
+          <span class="changelog-ver">v4.6.1 — A4 Sayfa Görünümü &amp; Boşluksuz Akıllı A4 PDF Akışı (Güncel)</span>
+          Sağ ayarlar paneline ve bağımsız HTML çıktısına notu canlı A4 kâğıdı boyutunda ve sayfa sınır çizgileriyle görüntülemeyi sağlayan <strong>📄 A4 Sayfa Görünümü</strong> modu eklendi; yazdırma motorundaki sahte başlık (<code>&lt;p&gt;&lt;strong&gt;...&lt;/strong&gt;&lt;/p&gt;</code>) + uzun liste kaynaklı dev boşluk ve boş sayfa hatası semantik akışla (<code>print-keep-with-next</code>, ünite başlangıcı koruma eşiği ve <em>Boşluksuz Ders Notu Akışı</em>) tamamen giderildi.
+        </div>
+
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.6.0 — Toplu Kart Silme (Geri Al), Mesajı Doğrudan Nota Ekleme, Antigravity Sohbet (.jsonl / Markdown) Desteği & Altyapı Bütünlüğü</span>
           Çoklu seçili kartlar için <strong>Geri Al (Undo)</strong> destekli <strong>🗑 Seçilenleri Sil</strong> eklendi; <strong>Akıllı Yapıştır</strong> ve kart menüsüne (<code>••• → Altına Mesaj Yapıştır</code>) formül, tablo ve <code>A–E</code> şıklarını bozmadan doğrudan aktif nota kart ekleme akışı eklendi; Antigravity sohbet kayıtlarını (<code>transcript_full.jsonl</code> / <code>transcript.jsonl</code>) ve zengin Markdown (<code>.md</code> veya yapıştırılan Markdown: tablo, kod, başlık, liste, KaTeX) içeriklerini soru-cevap kartlarına dönüştüren motor eklendi; <code>?incoming=1</code> aktarım köprüsü <code>tid</code> eşleştirmesi, tekil el sıkışma, tekrar koruması ve <em>Aktif Nota Ekle / Yeni Not Oluştur</em> seçimiyle sıkılaştırıldı; mobil bookmarklet uzun sohbet yükleme + tekil mesaj seçimi kazandı; <code>manifest.json</code>, <code>sw.js</code> ve <code>cloud.js</code> uyumlu hale getirildi.
         </div>
 
@@ -2029,18 +2093,23 @@
           Sayfa düzeni analiz ediliyor...
         </div>
         <label style="display:flex;flex-direction:column;gap:5px;font-weight:600;">
-          <span>Sayfa Bölme Stratejisi:</span>
+          <span>Baskı Düzeni &amp; Sayfalama Stratejisi:</span>
           <select id="printStrategySelect" class="right-select" style="margin-bottom:0;" onchange="refreshPrintOptimizerSummary()">
-            <option value="smart">🧠 Akıllı Böl (Başlık, Soru-Cevap, Şıklar &amp; Tablo Korumalı)</option>
+            <option value="smart-book">✨ Boşluksuz Ders Notu Akışı (Önerilen · Sıfır Boş Sayfa)</option>
+            <option value="smart-cards">🗂️ Kart Çerçeveli Akış (Başlık &amp; Tablo Korumalı)</option>
             <option value="manual">📄 Yalnızca Manuel Sayfa Kesmeleri</option>
           </select>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="printUnitBreakChk" onchange="refreshPrintOptimizerSummary()" />
+          <span>Ana ünite / bölüm başlıklarında (<code>H1–H2</code>, <code>ÜNİTE</code>) yeni sayfa başlat</span>
         </label>
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="printFitTablesChk" checked onchange="refreshPrintOptimizerSummary()" />
           <span>Tabloları A4 genişliğine otomatik sığdır ve başlık satırını her sayfada tekrarla</span>
         </label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:4px;">
-          <button class="tool-btn" id="btnTogglePrintPreviewBadges" onclick="togglePrintPreviewBadges()">👁️ Kesmeleri Sayfada Göster</button>
+          <button class="tool-btn" id="btnTogglePrintPreviewBadges" onclick="togglePrintPreviewBadges()">👁️ Sayfa Sınırlarını Göster</button>
           <button class="tool-btn active" onclick="executeSmartPrint()">🖨️ PDF Al / Yazdır</button>
         </div>
       </div>
@@ -2051,7 +2120,7 @@
 
   <script>
     /* ==========================================================================
-       SOHBET OKULU v4.6.0 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
+       SOHBET OKULU v4.6.1 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
        ========================================================================== */
     const DB_KEY = 'ders_studyosu_db_v1';
     const IDB_NAME = 'SohbetOkuluMasterIDB';
@@ -2070,7 +2139,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.6.0',
+      version: '4.6.1',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -2080,6 +2149,7 @@
         fontSizePx: 16,
         dynamicMinutes: 0,
         spotlightOn: false,
+        a4View: false,
         quickTools: DEFAULT_QUICK_TOOLS
       }
     };
@@ -2250,7 +2320,7 @@
 
       if (parsed) {
         db = {
-          version: '4.6.0',
+          version: '4.6.1',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2264,6 +2334,7 @@
             zoomPct: Number(parsed.settings?.zoomPct || 100),
             mathScalePct: Number(parsed.settings?.mathScalePct || 100),
             fitToScreen: parsed.settings?.fitToScreen !== false,
+            a4View: Boolean(parsed.settings?.a4View),
             quickTools: Array.isArray(parsed.settings?.quickTools) && parsed.settings.quickTools.length
               ? parsed.settings.quickTools : DEFAULT_QUICK_TOOLS
           }
@@ -2382,7 +2453,7 @@
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.6.0';
+      db.version = '4.6.1';
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -2469,6 +2540,13 @@
       if (fitTag) fitTag.textContent = fitOn ? 'Açık ✓' : 'Kapalı';
       if (fitRow) fitRow.classList.toggle('active-tool', fitOn);
 
+      const a4On = Boolean(db.settings.a4View);
+      document.body.classList.toggle('a4-view-mode', a4On);
+      const a4Tag = document.getElementById('a4ViewStateTag');
+      const a4Row = document.getElementById('btnA4ViewRow');
+      if (a4Tag) a4Tag.textContent = a4On ? 'Açık ✓' : 'Kapalı';
+      if (a4Row) a4Row.classList.toggle('active-tool', a4On);
+
       const lockBtn = document.getElementById('btnMobileReadLock');
       if (lockBtn) {
         lockBtn.classList.toggle('active', !mobileReadOnly);
@@ -2505,6 +2583,74 @@
       applySettingsToDOM();
       saveDatabase();
       renderEditor();
+    }
+
+    function toggleA4ViewMode() {
+      db.settings.a4View = !Boolean(db.settings.a4View);
+      applySettingsToDOM();
+      saveDatabase();
+      renderEditor();
+    }
+
+    function renderA4PageGuides(forceShow = false) {
+      const container = document.getElementById('editorContainer');
+      if (!container) return;
+      container.querySelectorAll('.a4-page-guide').forEach(el => el.remove());
+      const showGuides = Boolean(forceShow || db.settings.a4View);
+      if (!showGuides) return;
+
+      const PAGE_STEP_PX = 980;
+      const createGuideEl = (label) => {
+        const g = document.createElement('div');
+        g.className = 'a4-page-guide';
+        g.setAttribute('contenteditable', 'false');
+        g.textContent = label;
+        return g;
+      };
+      const relTop = (el) => el.getBoundingClientRect().top - container.getBoundingClientRect().top;
+
+      let pageNum = 1;
+      let nextCutTop = PAGE_STEP_PX;
+      const rows = [...container.querySelectorAll(':scope > .block-row:not(.filtered-out)')];
+
+      for (const row of rows) {
+        if (row.classList.contains('page-break-before')) {
+          pageNum++;
+          row.parentNode.insertBefore(createGuideEl(`✂ Manuel Kesme · Sayfa ${pageNum} Başı`), row);
+          nextCutTop = relTop(row) + PAGE_STEP_PX;
+        }
+        const rowTop = relTop(row);
+        if (rowTop >= nextCutTop) {
+          pageNum++;
+          row.parentNode.insertBefore(createGuideEl(`📄 A4 Sayfa ${pageNum} Sınırı (~${pageNum - 1}. sayfa sonu)`), row);
+          nextCutTop = relTop(row) + PAGE_STEP_PX;
+        }
+
+        // Uzun tek kartların içinde başlık/paragraf sınırlarından canlı A4 kılavuzu göster
+        const cardContent = row.querySelector('.card-content');
+        if (cardContent && relTop(row) + row.offsetHeight > nextCutTop) {
+          const children = [...cardContent.children];
+          for (const ch of children) {
+            if (ch.classList.contains('a4-page-guide')) continue;
+            const chTop = relTop(ch);
+            if (chTop >= nextCutTop) {
+              pageNum++;
+              ch.parentNode.insertBefore(createGuideEl(`📄 A4 Sayfa ${pageNum} Sınırı`), ch);
+              nextCutTop = relTop(ch) + PAGE_STEP_PX;
+            } else if ((ch.tagName === 'UL' || ch.tagName === 'OL') && chTop + ch.offsetHeight > nextCutTop) {
+              for (const li of [...ch.children]) {
+                if (li.tagName !== 'LI') continue;
+                const liTop = relTop(li);
+                if (liTop >= nextCutTop) {
+                  pageNum++;
+                  li.parentNode.insertBefore(createGuideEl(`📄 A4 Sayfa ${pageNum} Sınırı`), li);
+                  nextCutTop = relTop(li) + PAGE_STEP_PX;
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     function toggleMobileReadLock() {
@@ -3411,14 +3557,16 @@
 
     function extractCleanEditorHtml(el) {
       const clone = el.cloneNode(true);
-      clone.querySelectorAll('.fit-zoom-btn, .auto-page-break-badge').forEach(b => b.remove());
+      clone.querySelectorAll('.fit-zoom-btn, .auto-page-break-badge, .a4-page-guide').forEach(b => b.remove());
       clone.querySelectorAll('.fit-scale-wrapper').forEach(wrap => {
         const inner = wrap.querySelector('.fit-scale-inner');
         const target = inner ? inner.firstElementChild : null;
         if (target) wrap.replaceWith(target);
         else wrap.remove();
       });
-      clone.querySelectorAll('.auto-page-break').forEach(n => n.classList.remove('auto-page-break'));
+      clone.querySelectorAll('.auto-page-break, .print-keep-with-next, .print-atomic-card, .allow-internal-break').forEach(n => {
+        n.classList.remove('auto-page-break', 'print-keep-with-next', 'print-atomic-card', 'allow-internal-break');
+      });
       clone.querySelectorAll('.katex-display').forEach(kd => {
         const ann = kd.querySelector('annotation[encoding="application/x-tex"]');
         if (ann) kd.replaceWith(document.createTextNode('$$' + ann.textContent + '$$'));
@@ -3737,6 +3885,7 @@
       });
       renderMathInContainer(container);
       autoFitWideBlocksInContainer(container);
+      renderA4PageGuides();
       if (inNoteSearchOpen && inNoteSearchQuery.trim()) {
         applyInNoteSearchHighlights(false);
       }
@@ -4159,42 +4308,78 @@
     let printPreviewBadgesVisible = false;
 
     function clearAutoPageBreaks() {
-      document.body.classList.remove('print-fit-tables');
+      document.body.classList.remove('print-fit-tables', 'print-clean-book');
       document.querySelectorAll('.auto-page-break').forEach(el => el.classList.remove('auto-page-break'));
       document.querySelectorAll('.allow-internal-break').forEach(el => el.classList.remove('allow-internal-break'));
+      document.querySelectorAll('.print-keep-with-next').forEach(el => el.classList.remove('print-keep-with-next'));
+      document.querySelectorAll('.print-atomic-card').forEach(el => el.classList.remove('print-atomic-card'));
       document.querySelectorAll('.auto-page-break-badge').forEach(el => el.remove());
       printPreviewBadgesVisible = false;
+      renderA4PageGuides();
       const btn = document.getElementById('btnTogglePrintPreviewBadges');
-      if (btn) btn.textContent = '👁️ Kesmeleri Sayfada Göster';
+      if (btn) btn.textContent = '👁️ Sayfa Sınırlarını Göster';
     }
 
-    function computeAutoPageBreaks(strategy = 'smart') {
+    function classifyPrintElementRole(el, nextEl) {
+      if (!el || el.nodeType !== 1) return { isHeading: false, isUnit: false };
+      const tag = el.tagName;
+      const txt = (el.textContent || '').trim().replace(/\s+/g, ' ');
+      if (!txt) return { isHeading: false, isUnit: false };
+
+      const isHtmlHeading = /^H[1-6]$/.test(tag);
+      const isUnitText = /^(ÜNİTE|BÖLÜM|PART|MODÜL)\s*\d+/i.test(txt) && txt.length <= 140;
+      let isPseudoHeading = false;
+
+      if (!isHtmlHeading && (tag === 'P' || tag === 'DIV') && txt.length <= 130 && !el.querySelector('br')) {
+        const firstEl = el.firstElementChild;
+        const strongTxt = firstEl && (firstEl.tagName === 'STRONG' || firstEl.tagName === 'B')
+          ? firstEl.textContent.trim().replace(/\s+/g, ' ')
+          : '';
+        if (strongTxt && strongTxt.length >= txt.length * 0.72) isPseudoHeading = true;
+        else if (/^(\d+(\.\d+)+\.?(\s|$)|Soru\s*\d+|S\d+[:.)]|Kritik\s+Terimler|Özet\b)/i.test(txt)) isPseudoHeading = true;
+      }
+
+      const isQuestionStem = Boolean(nextEl && nextEl.classList?.contains('choice-line') && !el.classList?.contains('choice-line'));
+      return {
+        isHeading: isHtmlHeading || isPseudoHeading || isQuestionStem,
+        isUnit: /^H[12]$/.test(tag) || isUnitText
+      };
+    }
+
+    function computeAutoPageBreaks(strategy = 'smart-book', unitBreakOn = false) {
       const container = document.getElementById('editorContainer');
-      if (!container) return { pageCount: 1, autoBreaksCount: 0, breakTargets: [], internalBreakCards: [] };
+      if (!container) return { pageCount: 1, autoBreaksCount: 0, breakTargets: [], keepWithNextTargets: [], atomicCards: [], headingCount: 0 };
 
       const liveRows = [...container.querySelectorAll(':scope > .block-row:not(.filtered-out)')];
-      if (!liveRows.length) return { pageCount: 1, autoBreaksCount: 0, breakTargets: [], internalBreakCards: [] };
+      if (!liveRows.length) return { pageCount: 1, autoBreaksCount: 0, breakTargets: [], keepWithNextTargets: [], atomicCards: [], headingCount: 0 };
 
       const sim = container.cloneNode(true);
       sim.id = '';
       sim.className = 'editor-container print-sim-stage';
-      sim.querySelectorAll('.auto-page-break-badge').forEach(b => b.remove());
-      sim.querySelectorAll('.auto-page-break').forEach(b => b.classList.remove('auto-page-break'));
+      sim.querySelectorAll('.auto-page-break-badge, .a4-page-guide').forEach(b => b.remove());
+      sim.querySelectorAll('.auto-page-break, .print-keep-with-next, .print-atomic-card').forEach(b => {
+        b.classList.remove('auto-page-break', 'print-keep-with-next', 'print-atomic-card');
+      });
       document.body.appendChild(sim);
 
-      const PAGE_H = 950;
+      const PAGE_H = 980;
+      const UNIT_MIN_USED = 220; // Boş sayfa önleme eşiği: sayfa başında en az 220px içerik yoksa zorla bölme
       const simHeader = sim.querySelector('.note-header-compact');
       const simRows = [...sim.querySelectorAll(':scope > .block-row:not(.filtered-out)')];
-      let pageUsed = simHeader ? simHeader.offsetHeight + 16 : 0;
+      let pageUsed = simHeader ? simHeader.offsetHeight + 14 : 0;
       let pageCount = 1;
       const breakTargets = [];
-      const internalBreakCards = [];
+      const keepWithNextTargets = [];
+      const atomicCards = [];
 
-      const isQuestionRow = (row) => {
-        const tag = (row.querySelector('.card-optional-tag')?.textContent || '').trim();
-        if (/soru/i.test(tag)) return true;
-        const txt = (row.querySelector('.card-content')?.textContent || '').trim().slice(0, 90);
-        return /^(soru\s*\d+|s\d+[:.)]|\d+[\.)]\s)/i.test(txt);
+      const advanceFlow = (h) => {
+        if (!h || h <= 0) return;
+        if (pageUsed + h > PAGE_H) {
+          pageCount++;
+          pageUsed = h <= PAGE_H ? h : (h % PAGE_H);
+        } else {
+          pageUsed += h;
+        }
       };
 
       for (let i = 0; i < liveRows.length; i++) {
@@ -4202,102 +4387,82 @@
         const simRow = simRows[i];
         if (!simRow) continue;
 
-        if (liveRow.classList.contains('page-break-before')) {
-          pageUsed = 0;
+        if (liveRow.classList.contains('page-break-before') && pageUsed > 40) {
           pageCount++;
+          pageUsed = 0;
         }
 
-        const rowH = simRow.offsetHeight || 80;
-        if (strategy === 'manual') {
-          if (pageUsed > 60 && pageUsed + rowH > PAGE_H) {
-            pageCount += Math.max(1, Math.floor((pageUsed + rowH) / PAGE_H));
-            pageUsed = (pageUsed + rowH) % PAGE_H;
-          } else {
-            pageUsed += rowH + 14;
-          }
-          continue;
+        const liveCard = liveRow.querySelector('.lesson-card');
+        const simCard = simRow.querySelector('.lesson-card');
+        if (liveCard && simCard && simCard.offsetHeight <= 220) {
+          atomicCards.push(liveCard);
         }
 
-        // Soru + Cevap kart ikilisini aynı sayfada tutmaya çalış
-        if (isQuestionRow(liveRow) && i + 1 < liveRows.length && !liveRow.classList.contains('page-break-before')) {
-          const nextH = simRows[i + 1]?.offsetHeight || 0;
-          if (pageUsed > 50 && rowH + nextH <= PAGE_H && pageUsed + rowH + Math.min(nextH, 230) > PAGE_H) {
-            breakTargets.push({ type: 'row', el: liveRow, label: 'Soru-Cevap Bütünlüğü' });
+        const liveContent = liveRow.querySelector('.card-content');
+        const simContent = simRow.querySelector('.card-content');
+        const liveChildren = liveContent ? [...liveContent.children] : [];
+        const simChildren = simContent ? [...simContent.children] : [];
+
+        for (let ci = 0; ci < liveChildren.length; ci++) {
+          const liveCh = liveChildren[ci];
+          const simCh = simChildren[ci];
+          if (!simCh) continue;
+
+          const role = classifyPrintElementRole(liveCh, liveChildren[ci + 1]);
+          if (role.isHeading) keepWithNextTargets.push(liveCh);
+
+          if (strategy !== 'manual' && unitBreakOn && role.isUnit && pageUsed >= UNIT_MIN_USED) {
+            breakTargets.push({ type: 'unit', el: liveCh, label: 'Ünite / Ana Bölüm' });
             pageCount++;
             pageUsed = 0;
           }
-        }
 
-        if (rowH <= PAGE_H * 0.88) {
-          if (pageUsed > 50 && pageUsed + rowH > PAGE_H && !breakTargets.some(t => t.el === liveRow)) {
-            breakTargets.push({ type: 'row', el: liveRow, label: 'Kart Bütünlüğü' });
-            pageCount++;
-            pageUsed = rowH + 14;
+          if ((simCh.tagName === 'UL' || simCh.tagName === 'OL') && simCh.offsetHeight > 160) {
+            for (const li of [...simCh.children]) {
+              advanceFlow((li.offsetHeight || 22) + 4);
+            }
           } else {
-            pageUsed += rowH + 14;
+            advanceFlow((simCh.offsetHeight || 24) + 6);
           }
-        } else {
-          // Çok uzun kart: içeride başlık/soru/tablo sınırlarından akıllı böl
-          const liveCard = liveRow.querySelector('.lesson-card');
-          if (liveCard) internalBreakCards.push(liveCard);
-
-          const liveContent = liveRow.querySelector('.card-content');
-          const simContent = simRow.querySelector('.card-content');
-          const liveChildren = liveContent ? [...liveContent.children] : [];
-          const simChildren = simContent ? [...simContent.children] : [];
-
-          for (let ci = 0; ci < liveChildren.length; ci++) {
-            const liveCh = liveChildren[ci];
-            const simCh = simChildren[ci];
-            if (!simCh) continue;
-            const chH = simCh.offsetHeight || 24;
-            const nextH = simChildren[ci + 1]?.offsetHeight || 0;
-            const isHeading = /^H[1-4]$/.test(liveCh.tagName);
-            const isChoice = liveCh.classList.contains('choice-line');
-            const isQStart = !isChoice && /^(soru\s*\d+|\d+[\.)]\s)/i.test((liveCh.textContent || '').trim());
-
-            if ((isHeading || isQStart) && pageUsed > 70 && pageUsed + chH + Math.min(nextH, 160) > PAGE_H) {
-              breakTargets.push({ type: 'child', el: liveCh, label: isHeading ? 'Başlık Öncesi' : 'Soru Başlangıcı' });
-              pageCount++;
-              pageUsed = chH + 8;
-            } else if (!isChoice && pageUsed > 70 && pageUsed + chH > PAGE_H) {
-              breakTargets.push({ type: 'child', el: liveCh, label: 'Blok Sığdırma' });
-              pageCount++;
-              pageUsed = chH + 8;
-            } else {
-              pageUsed += chH + 8;
-            }
-          }
-
-          const livePrems = [...liveRow.querySelectorAll('.independent-premise-box')];
-          const simPrems = [...simRow.querySelectorAll('.independent-premise-box')];
-          livePrems.forEach((lp, pi) => {
-            const pH = simPrems[pi]?.offsetHeight || 60;
-            if (pageUsed > 60 && pageUsed + pH > PAGE_H) {
-              breakTargets.push({ type: 'child', el: lp, label: 'Öncül Bütünlüğü' });
-              pageCount++;
-              pageUsed = pH + 10;
-            } else {
-              pageUsed += pH + 10;
-            }
-          });
         }
+
+        liveRow.querySelectorAll('.independent-premise-box').forEach((_, pi) => {
+          const simP = simRow.querySelectorAll('.independent-premise-box')[pi];
+          advanceFlow((simP?.offsetHeight || 60) + 8);
+        });
+        liveRow.querySelectorAll('.side-note-box').forEach((_, si) => {
+          const simS = simRow.querySelectorAll('.side-note-box')[si];
+          advanceFlow((simS?.offsetHeight || 60) + 8);
+        });
       }
 
       sim.remove();
-      return { pageCount, autoBreaksCount: breakTargets.length, breakTargets, internalBreakCards };
+      return {
+        pageCount,
+        autoBreaksCount: breakTargets.length,
+        breakTargets,
+        keepWithNextTargets,
+        atomicCards,
+        headingCount: keepWithNextTargets.length
+      };
     }
 
-    function applyComputedPrintBreaks(plan, withVisualBadges = false) {
+    function applyComputedPrintBreaks(plan, strategy = 'smart-book', withVisualBadges = false) {
       clearAutoPageBreaks();
-      plan.internalBreakCards.forEach(c => c?.classList.add('allow-internal-break'));
+      if (strategy === 'smart-book') {
+        document.body.classList.add('print-clean-book');
+      }
+      if (strategy !== 'manual') {
+        plan.atomicCards.forEach(c => c?.classList.add('print-atomic-card'));
+        plan.keepWithNextTargets.forEach(el => el?.classList.add('print-keep-with-next'));
+      }
       plan.breakTargets.forEach(t => {
         if (!t.el) return;
         t.el.classList.add('auto-page-break');
         if (withVisualBadges && t.el.parentNode) {
           const badge = document.createElement('div');
           badge.className = 'auto-page-break-badge';
-          badge.textContent = `✂ Otomatik A4 Sayfa Sonu (${t.label})`;
+          badge.textContent = `✂ Yeni Sayfa (${t.label})`;
           t.el.parentNode.insertBefore(badge, t.el);
         }
       });
@@ -4311,14 +4476,21 @@
     }
 
     function refreshPrintOptimizerSummary() {
-      const strategy = document.getElementById('printStrategySelect')?.value || 'smart';
-      const plan = computeAutoPageBreaks(strategy);
+      const strategy = document.getElementById('printStrategySelect')?.value || 'smart-book';
+      const unitBreakOn = Boolean(document.getElementById('printUnitBreakChk')?.checked);
+      const plan = computeAutoPageBreaks(strategy, unitBreakOn);
       const box = document.getElementById('printSummaryBox');
       if (!box) return;
-      box.innerHTML = strategy === 'smart'
-        ? `<div><strong>Tahmini Çıktı:</strong> ~${plan.pageCount} A4 sayfası</div>
-           <div style="margin-top:4px;color:var(--text-muted);">Akıllı motor <strong>${plan.autoBreaksCount}</strong> noktada başlık, soru-cevap ikilisi, şıklar ve tabloları bölmeden otomatik sayfa sonu yerleştirdi.</div>`
-        : `<div><strong>Tahmini Çıktı:</strong> ~${plan.pageCount} A4 sayfası (yalnızca manuel sayfa kesmeleri aktif)</div>`;
+      if (strategy === 'manual') {
+        box.innerHTML = `<div><strong>Tahmini Çıktı:</strong> ~${plan.pageCount} A4 sayfası</div>
+           <div style="margin-top:4px;color:var(--text-muted);">Yalnızca sizin eklediğiniz manuel sayfa kesmeleri uygulanır; liste ve paragraflar tarayıcı akışıyla dolar.</div>`;
+      } else {
+        const modeText = strategy === 'smart-book'
+          ? 'Kart kenarlıkları baskıda kaldırılır ve içerik boşluksuz ders kitabı gibi akar.'
+          : 'Kart kutuları korunur, ancak uzun kartlar sayfa sonuna dev boşluk bırakmadan içeriden bölünür.';
+        box.innerHTML = `<div><strong>Tahmini Çıktı:</strong> ~${plan.pageCount} A4 sayfası</div>
+           <div style="margin-top:4px;color:var(--text-muted);">${modeText} <strong>${plan.headingCount}</strong> başlık/soru kökü altındaki liste ve şıklarla birleştirildi${unitBreakOn ? `, <strong>${plan.autoBreaksCount}</strong> ünite başlangıcına yeni sayfa eklendi` : ''}.</div>`;
+      }
     }
 
     function togglePrintPreviewBadges() {
@@ -4326,21 +4498,24 @@
         clearAutoPageBreaks();
         return;
       }
-      const strategy = document.getElementById('printStrategySelect')?.value || 'smart';
-      const plan = computeAutoPageBreaks(strategy);
-      applyComputedPrintBreaks(plan, true);
+      const strategy = document.getElementById('printStrategySelect')?.value || 'smart-book';
+      const unitBreakOn = Boolean(document.getElementById('printUnitBreakChk')?.checked);
+      const plan = computeAutoPageBreaks(strategy, unitBreakOn);
+      applyComputedPrintBreaks(plan, strategy, true);
+      renderA4PageGuides(true);
       printPreviewBadgesVisible = true;
       const btn = document.getElementById('btnTogglePrintPreviewBadges');
-      if (btn) btn.textContent = '🙈 Kesme İşaretlerini Gizle';
+      if (btn) btn.textContent = '🙈 Sayfa Sınırlarını Gizle';
       closeModal('printOptimizerModal');
-      showStudioToast(`${plan.autoBreaksCount} otomatik sayfa sonu ekranda işaretlendi.`, '🖨️ Yazdır', () => openPrintOptimizerModal(), 6500);
+      showStudioToast(`~${plan.pageCount} A4 sayfa sınırı ekranda işaretlendi.`, '🖨️ Yazdır', () => openPrintOptimizerModal(), 6500);
     }
 
     function executeSmartPrint() {
-      const strategy = document.getElementById('printStrategySelect')?.value || 'smart';
+      const strategy = document.getElementById('printStrategySelect')?.value || 'smart-book';
+      const unitBreakOn = Boolean(document.getElementById('printUnitBreakChk')?.checked);
       const fitTables = document.getElementById('printFitTablesChk')?.checked !== false;
-      const plan = computeAutoPageBreaks(strategy);
-      applyComputedPrintBreaks(plan, false);
+      const plan = computeAutoPageBreaks(strategy, unitBreakOn);
+      applyComputedPrintBreaks(plan, strategy, false);
       if (fitTables) document.body.classList.add('print-fit-tables');
       closeModal('printOptimizerModal');
 
@@ -6353,7 +6528,7 @@
     }
 
     function buildStandaloneNoteHtml(note) {
-      const APP_VER = '4.6.0';
+      const APP_VER = '4.6.1';
       const safeTitle = escapeHtml(note.title || 'Ders Notu');
       const liveCss = document.querySelector('style')?.textContent || '';
       const standaloneExtraCss = `
@@ -6432,6 +6607,7 @@
         zoomPct: Number(db.settings?.zoomPct || 100),
         mathScalePct: Number(db.settings?.mathScalePct || 100),
         fitToScreen: db.settings?.fitToScreen !== false,
+        a4View: Boolean(db.settings?.a4View),
         spotlightOn: Boolean(db.settings?.spotlightOn),
         dynamicMinutes: Number(db.settings?.dynamicMinutes || 0),
         viewportMode: db.settings?.viewportMode || 'auto'
@@ -6451,7 +6627,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
     const bootPayload = JSON.parse(document.getElementById('sohbetOkuluStandaloneData').textContent);
     let noteData = bootPayload.note;
-    let settings = bootPayload.settings || { theme: 'kenar', font: 'jakarta', fontSizePx: 16, zoomPct: 100, fitToScreen: true, spotlightOn: false, dynamicMinutes: 0, viewportMode: 'auto' };
+    let settings = bootPayload.settings || { theme: 'kenar', font: 'jakarta', fontSizePx: 16, zoomPct: 100, mathScalePct: 100, fitToScreen: true, a4View: false, spotlightOn: false, dynamicMinutes: 0, viewportMode: 'auto' };
 
     let activeMultiFilters = new Set();
     let currentJumpCursor = -1;
@@ -6585,6 +6761,13 @@
       if (fitTag) fitTag.textContent = fitOn ? 'Açık ✓' : 'Kapalı';
       if (fitRow) fitRow.classList.toggle('active-tool', fitOn);
 
+      const a4On = Boolean(settings.a4View);
+      document.body.classList.toggle('a4-view-mode', a4On);
+      const a4Tag = document.getElementById('a4ViewStateTag');
+      const a4Row = document.getElementById('btnA4ViewRow');
+      if (a4Tag) a4Tag.textContent = a4On ? 'Açık ✓' : 'Kapalı';
+      if (a4Row) a4Row.classList.toggle('active-tool', a4On);
+
       const lockBtn = document.getElementById('btnMobileReadLock');
       if (lockBtn) {
         lockBtn.classList.toggle('active', !mobileReadOnly);
@@ -6607,6 +6790,7 @@
     function stepZoomPct(delta) { settings.zoomPct = Math.min(130, Math.max(80, Number(settings.zoomPct || 100) + delta)); applySettingsToDOM(); renderEditor(); }
     function stepMathScale(delta) { settings.mathScalePct = Math.min(180, Math.max(80, Number(settings.mathScalePct || 100) + delta)); applySettingsToDOM(); renderEditor(); }
     function toggleFitToScreen() { settings.fitToScreen = !(settings.fitToScreen !== false); applySettingsToDOM(); renderEditor(); }
+    function toggleA4ViewMode() { settings.a4View = !Boolean(settings.a4View); applySettingsToDOM(); renderEditor(); }
     function toggleMobileReadLock() { mobileReadOnly = !mobileReadOnly; applySettingsToDOM(); renderEditor(); }
     function setTheme(theme) { settings.theme = theme; document.documentElement.setAttribute('data-theme', theme); document.getElementById('themeSelect').value = theme; syncEmbeddedDataTag(); }
     function cycleThemeNow() { const all = ['kenar', 'warm', 'sage', 'nordic', 'sand', 'lavender', 'sepia', 'midnight']; setTheme(all[(all.indexOf(settings.theme) + 1) % all.length]); }
@@ -6813,14 +6997,16 @@
 
     function extractCleanEditorHtml(el) {
       const clone = el.cloneNode(true);
-      clone.querySelectorAll('.fit-zoom-btn, .auto-page-break-badge').forEach(b => b.remove());
+      clone.querySelectorAll('.fit-zoom-btn, .auto-page-break-badge, .a4-page-guide').forEach(b => b.remove());
       clone.querySelectorAll('.fit-scale-wrapper').forEach(wrap => {
         const inner = wrap.querySelector('.fit-scale-inner');
         const target = inner ? inner.firstElementChild : null;
         if (target) wrap.replaceWith(target);
         else wrap.remove();
       });
-      clone.querySelectorAll('.auto-page-break').forEach(n => n.classList.remove('auto-page-break'));
+      clone.querySelectorAll('.auto-page-break, .print-keep-with-next, .print-atomic-card, .allow-internal-break').forEach(n => {
+        n.classList.remove('auto-page-break', 'print-keep-with-next', 'print-atomic-card', 'allow-internal-break');
+      });
       clone.querySelectorAll('.katex-display').forEach(kd => {
         const ann = kd.querySelector('annotation[encoding="application/x-tex"]');
         if (ann) kd.replaceWith(document.createTextNode('$$' + ann.textContent + '$$'));
@@ -7285,46 +7471,97 @@
         showStudioToast('Formül/çözüm işaretlendi. Sağ paneldeki fx+ düğmesiyle büyütebilirsiniz.');
       }
     }
-    function smartPrintStandalone() {
+    function renderA4PageGuides() {
       const container = document.getElementById('editorContainer');
-      if (!container) return window.print();
-      document.querySelectorAll('.auto-page-break').forEach(el => el.classList.remove('auto-page-break'));
-      document.querySelectorAll('.allow-internal-break').forEach(el => el.classList.remove('allow-internal-break'));
-      const liveRows = [...container.querySelectorAll(':scope > .block-row:not(.filtered-out)')];
-      const sim = container.cloneNode(true);
-      sim.id = ''; sim.className = 'editor-container print-sim-stage';
-      document.body.appendChild(sim);
-      const PAGE_H = 950;
-      const simHeader = sim.querySelector('.note-header-compact');
-      const simRows = [...sim.querySelectorAll(':scope > .block-row:not(.filtered-out)')];
-      let pageUsed = simHeader ? simHeader.offsetHeight + 16 : 0;
-      for (let i = 0; i < liveRows.length; i++) {
-        const lr = liveRows[i], sr = simRows[i];
-        if (!sr) continue;
-        if (lr.classList.contains('page-break-before')) pageUsed = 0;
-        const rowH = sr.offsetHeight || 80;
-        if (rowH <= PAGE_H * 0.88) {
-          if (pageUsed > 50 && pageUsed + rowH > PAGE_H) { lr.classList.add('auto-page-break'); pageUsed = rowH + 14; }
-          else pageUsed += rowH + 14;
-        } else {
-          lr.querySelector('.lesson-card')?.classList.add('allow-internal-break');
-          const lc = [...(lr.querySelector('.card-content')?.children || [])];
-          const sc = [...(sr.querySelector('.card-content')?.children || [])];
-          for (let ci = 0; ci < lc.length; ci++) {
-            const chH = sc[ci]?.offsetHeight || 24;
-            if (!lc[ci].classList.contains('choice-line') && pageUsed > 70 && pageUsed + chH > PAGE_H) {
-              lc[ci].classList.add('auto-page-break'); pageUsed = chH + 8;
-            } else pageUsed += chH + 8;
+      if (!container) return;
+      container.querySelectorAll('.a4-page-guide').forEach(el => el.remove());
+      if (!settings.a4View) return;
+      const PAGE_STEP_PX = 980;
+      const mkGuide = (label) => {
+        const g = document.createElement('div');
+        g.className = 'a4-page-guide';
+        g.setAttribute('contenteditable', 'false');
+        g.textContent = label;
+        return g;
+      };
+      const relTop = (el) => el.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      let pageNum = 1;
+      let nextCutTop = PAGE_STEP_PX;
+      for (const row of [...container.querySelectorAll(':scope > .block-row:not(.filtered-out)')]) {
+        if (row.classList.contains('page-break-before')) {
+          pageNum++;
+          row.parentNode.insertBefore(mkGuide('✂ Manuel Kesme · Sayfa ' + pageNum + ' Başı'), row);
+          nextCutTop = relTop(row) + PAGE_STEP_PX;
+        }
+        if (relTop(row) >= nextCutTop) {
+          pageNum++;
+          row.parentNode.insertBefore(mkGuide('📄 A4 Sayfa ' + pageNum + ' Sınırı'), row);
+          nextCutTop = relTop(row) + PAGE_STEP_PX;
+        }
+        const cc = row.querySelector('.card-content');
+        if (cc && relTop(row) + row.offsetHeight > nextCutTop) {
+          for (const ch of [...cc.children]) {
+            if (ch.classList.contains('a4-page-guide')) continue;
+            const chTop = relTop(ch);
+            if (chTop >= nextCutTop) {
+              pageNum++;
+              ch.parentNode.insertBefore(mkGuide('📄 A4 Sayfa ' + pageNum + ' Sınırı'), ch);
+              nextCutTop = relTop(ch) + PAGE_STEP_PX;
+            } else if ((ch.tagName === 'UL' || ch.tagName === 'OL') && chTop + ch.offsetHeight > nextCutTop) {
+              for (const li of [...ch.children]) {
+                if (li.tagName === 'LI' && relTop(li) >= nextCutTop) {
+                  pageNum++;
+                  li.parentNode.insertBefore(mkGuide('📄 A4 Sayfa ' + pageNum + ' Sınırı'), li);
+                  nextCutTop = relTop(li) + PAGE_STEP_PX;
+                }
+              }
+            }
           }
         }
       }
+    }
+
+    function smartPrintStandalone() {
+      const container = document.getElementById('editorContainer');
+      if (!container) return window.print();
+      document.querySelectorAll('.auto-page-break, .allow-internal-break, .print-keep-with-next, .print-atomic-card').forEach(el => {
+        el.classList.remove('auto-page-break', 'allow-internal-break', 'print-keep-with-next', 'print-atomic-card');
+      });
+      const liveRows = [...container.querySelectorAll(':scope > .block-row:not(.filtered-out)')];
+      const sim = container.cloneNode(true);
+      sim.id = ''; sim.className = 'editor-container print-sim-stage';
+      sim.querySelectorAll('.a4-page-guide').forEach(b => b.remove());
+      document.body.appendChild(sim);
+      const simRows = [...sim.querySelectorAll(':scope > .block-row:not(.filtered-out)')];
+
+      for (let i = 0; i < liveRows.length; i++) {
+        const lr = liveRows[i], sr = simRows[i];
+        if (!sr) continue;
+        const lcCard = lr.querySelector('.lesson-card'), srCard = sr.querySelector('.lesson-card');
+        if (lcCard && srCard && srCard.offsetHeight <= 220) lcCard.classList.add('print-atomic-card');
+        const lc = [...(lr.querySelector('.card-content')?.children || [])];
+        for (let ci = 0; ci < lc.length; ci++) {
+          const el = lc[ci], nextEl = lc[ci + 1];
+          const txt = (el.textContent || '').trim().replace(/\\s+/g, ' ');
+          const isH = /^H[1-6]$/.test(el.tagName);
+          let isPseudo = false;
+          if (!isH && (el.tagName === 'P' || el.tagName === 'DIV') && txt && txt.length <= 130 && !el.querySelector('br')) {
+            const fe = el.firstElementChild;
+            const st = fe && (fe.tagName === 'STRONG' || fe.tagName === 'B') ? fe.textContent.trim().replace(/\\s+/g, ' ') : '';
+            if ((st && st.length >= txt.length * 0.72) || /^(\\d+(\\.\\d+)+\\.?(\\s|$)|Soru\\s*\\d+|S\\d+[:.)])/i.test(txt)) isPseudo = true;
+          }
+          const isQ = Boolean(nextEl && nextEl.classList?.contains('choice-line') && !el.classList?.contains('choice-line'));
+          if (isH || isPseudo || isQ) el.classList.add('print-keep-with-next');
+        }
+      }
       sim.remove();
-      document.body.classList.add('print-fit-tables');
+      document.body.classList.add('print-fit-tables', 'print-clean-book');
       const done = () => {
         window.removeEventListener('afterprint', done);
-        document.body.classList.remove('print-fit-tables');
-        document.querySelectorAll('.auto-page-break').forEach(el => el.classList.remove('auto-page-break'));
-        document.querySelectorAll('.allow-internal-break').forEach(el => el.classList.remove('allow-internal-break'));
+        document.body.classList.remove('print-fit-tables', 'print-clean-book');
+        document.querySelectorAll('.auto-page-break, .allow-internal-break, .print-keep-with-next, .print-atomic-card').forEach(el => {
+          el.classList.remove('auto-page-break', 'allow-internal-break', 'print-keep-with-next', 'print-atomic-card');
+        });
       };
       window.addEventListener('afterprint', done);
       setTimeout(() => window.print(), 30);
@@ -7526,6 +7763,7 @@
       container.querySelectorAll('.inline-photo-card img').forEach(im => { im.style.cursor = 'zoom-in'; im.onclick = () => openPhotoLightbox(im.src); });
       renderMathInContainer(container);
       autoFitWideBlocksInContainer(container);
+      renderA4PageGuides();
       if (inNoteSearchOpen && inNoteSearchQuery.trim()) applyInNoteSearchHighlights(false);
     }
 
@@ -7645,6 +7883,7 @@ ${standaloneExtraCss}</style>
             <button class="reading-tool-row" onclick="toggleGlobalPremises()"><span id="lblGlobalPremises">🙈 Tüm öncülleri kapa</span></button>
             <button class="reading-tool-row" onclick="toggleGlobalSideNotes()"><span id="lblGlobalSideNotes">🙈 Tüm yan notları kapa</span></button>
             <button class="reading-tool-row" onclick="copyAllHighlights()"><span>📋 Tüm vurguları kopyala</span></button>
+            <button class="reading-tool-row" id="btnA4ViewRow" onclick="toggleA4ViewMode()"><span>📄 A4 Sayfa Görünümü</span><span id="a4ViewStateTag" style="font-size:11px;font-weight:700;">Kapalı</span></button>
             <button class="reading-tool-row" onclick="smartPrintStandalone()"><span>🖨️ Akıllı Sayfa Böl &amp; A4 PDF</span></button>
             <div style="border-top:1px solid var(--border-soft);margin-top:8px;padding-top:8px;">
               <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
