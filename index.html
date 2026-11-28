@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.7.1</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.7.2</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1562,11 +1562,6 @@
     .snapshot-row-meta { min-width: 0; flex: 1; }
     .snapshot-row-title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .snapshot-row-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-    body:not(.a4-view-mode) .block-row {
-      contain: layout style;
-      content-visibility: auto;
-      contain-intrinsic-size: auto 240px;
-    }
     .editor-scroll { -webkit-overflow-scrolling: touch; }
     @media (pointer: coarse), (max-width: 1080px) {
       .modal-backdrop, .drawer-backdrop { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
@@ -1702,7 +1697,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.7.1</div>
+            <div class="brand-sub">Ders stüdyosu · v4.7.2</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -2085,11 +2080,11 @@
     </div>
   </div>
 
-  <!-- YEDEKLEME, BULUT SNAPSHOT & YÖNETİCİ ÇÖP KUTUSU (v4.7.1) -->
+  <!-- YEDEKLEME, BULUT SNAPSHOT & YÖNETİCİ ÇÖP KUTUSU (v4.7.2) -->
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box" style="max-width:680px;">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Bulut Yedekleri ve Sürüm Notları (v4.7.1)</strong>
+        <strong>💾 Yedekleme, Bulut Yedekleri ve Sürüm Notları (v4.7.2)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
 
@@ -2133,7 +2128,12 @@
         <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">📜 Sürüm Notları (Son 3 Güncelleme)</div>
 
         <div class="changelog-item">
-          <span class="changelog-ver">v4.7.1 — Engelli Çalışma Parkuru &amp; İlerleme İşaretçisi ("Buraya Geldim") (Güncel)</span>
+          <span class="changelog-ver">v4.7.2 — Windows PC / iOS / Android Sıfır Takılma Optimizasyonu &amp; İç İçe Klasör Yedekleme (Güncel)</span>
+          PC'de sol panel adlandırma ve buton tepkilerindeki hantallık giderildi: adlandırma/sıralama/klasör işlemlerinde editörü ve KaTeX formüllerini baştan çizen gereksiz <code>renderAll()</code> çağrıları kaldırıldı; IndexedDB bağlantısı önbelleğe alındı ve <code>localStorage</code> 5 MB senkron takılma eşiği devreden çıkarılarak <code>JSON.stringify</code> tamamen bekleme süresine taşındı; PC Chrome'da yazım alanını yavaşlatan <code>content-visibility: auto</code> kaldırıldı; tam ZIP ve JSON yedekleri artık tüm alt klasör ağacını ve gruplamaları iç içe korur.
+        </div>
+
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.7.1 — Engelli Çalışma Parkuru &amp; İlerleme İşaretçisi ("Buraya Geldim")</span>
           Her kartın üst araç çubuğuna <strong>🚩 Buraya geldim</strong> (<code>toggleNoteProgressCheckpoint</code>) butonu ve not tepesindeki sabit gezinti çubuğuna animasyonlu kıvrımlı engel rotası (🚩 → 🪨 → 🌉 → ⚡ → 🏆), <code>%</code> tamamlama sayacı, doğrudan konuma atlama (<code>📍 Git</code>) ve aşama kutlama mesajları eklendi; ilerleme bilgisi (<code>progressBlockId</code>) buluta ve bağımsız HTML çıktısına da kaydedilir.
         </div>
 
@@ -2142,14 +2142,13 @@
           iPad Chrome/WebKit takılmalarını gidermek için tekil JSON serileştirme, geciktirmeli IndexedDB yazımı, aktif-not kapsamlı hafif <code>pushUndo()</code>, <code>content-visibility: auto</code> ve dokunmatik ekranlarda hafifletilmiş katmanlar eklendi; <strong>☁️ Buluta Yedekle</strong> (parçalı snapshot) + <strong>tarihli bulut yedek seçicisi</strong> eklendi; yalnızca sahip hesabına özel otomatik kapasite korumalı <strong>🗑️ Çöp Kutusu</strong> eklendi; aynı klasör içinde sürükle-bırak/oklarla özel not sıralama ve sol panelden doğrudan <strong>satır içi klasör/not adı değiştirme</strong> eklendi.
         </div>
 
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--accent);padding:4px 0;">📜 Eski Sürüm Notlarını Göster (v4.6.4 → v1.0.0)</summary>
+          <div style="margin-top:8px;">
         <div class="changelog-item">
           <span class="changelog-ver">v4.6.4 — Klasör Yapısı / İsim Gömme &amp; Yedekleme Penceresi Sadeleştirme</span>
           Her nota klasör yolu (<code>folderTrail</code>) işlenerek gelecekte yalnızca not belgelerinden bile tüm klasör adlarının ve alt klasör ağacının eksiksiz geri kurulması sağlandı; bulut kurtarmada eski <code>main.folders</code> adlarının <code>Kurtarılan Klasör</code> tarafından ezilmesi hatası giderildi ve Yedekleme penceresindeki ilgisiz yazdırma butonu kaldırılıp sürüm notları açılır-kapanır hale getirildi.
         </div>
-
-        <details style="margin-top:8px;">
-          <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--accent);padding:4px 0;">📜 Eski Sürüm Notlarını Göster (v4.6.3 → v1.0.0)</summary>
-          <div style="margin-top:8px;">
         <div class="changelog-item">
           <span class="changelog-ver">v4.6.3 — Tek Tıkla Bulut Kurtarma &amp; Öksüz Klasör Onarımı</span>
           Yedekleme penceresine Firestore'daki tüm <code>note_*</code> ve eski <code>main</code> belgelerini tarayıp geri getiren <strong>🛟 Buluttan Kayıp Notları Kurtar</strong> (<code>recoverCloudNotes</code>) eklendi; klasör kaydı eksik kalan notların sol ağaçta gizlenmesini engelleyen <code>ensureNotesHaveValidFolders()</code> ve eski <code>main.folders</code> klasör adı kurtarma mekanizması devreye alındı.
@@ -2357,7 +2356,7 @@
 
   <script>
     /* ==========================================================================
-       SOHBET OKULU v4.7.1 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
+       SOHBET OKULU v4.7.2 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
        ========================================================================== */
     const DB_KEY = 'ders_studyosu_db_v1';
     const IDB_NAME = 'SohbetOkuluMasterIDB';
@@ -2376,7 +2375,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.7.1',
+      version: '4.7.2',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -2477,36 +2476,44 @@
     window.addEventListener('online', updateNetworkBadge);
     window.addEventListener('offline', updateNetworkBadge);
 
-    /* IndexedDB Hibrit Yedekleme Motoru (5 MB localStorage sınırını aşar) */
-    function writeMasterToIndexedDB(payload) {
-      try {
-        const req = indexedDB.open(IDB_NAME, 1);
-        req.onupgradeneeded = () => {
-          if (!req.result.objectStoreNames.contains('state')) req.result.createObjectStore('state');
-        };
-        req.onsuccess = () => {
-          const tx = req.result.transaction('state', 'readwrite');
-          tx.objectStore('state').put(payload, 'master_db');
-        };
-      } catch (e) {}
-    }
-
-    function readMasterFromIndexedDB() {
-      return new Promise((resolve) => {
+    /* IndexedDB Hibrit Yedekleme Motoru (Önbellekli tek bağlantı + 5 MB localStorage kilidi yok) */
+    let cachedIdbPromise = null;
+    function getMasterIdb() {
+      if (cachedIdbPromise) return cachedIdbPromise;
+      cachedIdbPromise = new Promise((resolve) => {
         try {
           const req = indexedDB.open(IDB_NAME, 1);
           req.onupgradeneeded = () => {
             if (!req.result.objectStoreNames.contains('state')) req.result.createObjectStore('state');
           };
-          req.onsuccess = () => {
-            const tx = req.result.transaction('state', 'readonly');
-            const getReq = tx.objectStore('state').get('master_db');
-            getReq.onsuccess = () => resolve(getReq.result || null);
-            getReq.onerror = () => resolve(null);
-          };
-          req.onerror = () => resolve(null);
-        } catch (e) { resolve(null); }
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => { cachedIdbPromise = null; resolve(null); };
+        } catch (e) { cachedIdbPromise = null; resolve(null); }
       });
+      return cachedIdbPromise;
+    }
+
+    function writeMasterToIndexedDB(payload, onComplete = null) {
+      getMasterIdb().then((idb) => {
+        if (!idb) return;
+        try {
+          const tx = idb.transaction('state', 'readwrite');
+          tx.objectStore('state').put(payload, 'master_db');
+          if (typeof onComplete === 'function') tx.oncomplete = onComplete;
+        } catch (e) {}
+      });
+    }
+
+    function readMasterFromIndexedDB() {
+      return getMasterIdb().then((idb) => new Promise((resolve) => {
+        if (!idb) return resolve(null);
+        try {
+          const tx = idb.transaction('state', 'readonly');
+          const getReq = tx.objectStore('state').get('master_db');
+          getReq.onsuccess = () => resolve(getReq.result || null);
+          getReq.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+      }));
     }
 
     /* Google Giriş & Misafir Durumu Yönetimi */
@@ -2571,15 +2578,29 @@
       return trail;
     }
 
+    let foldersDirty = true;
     function attachFolderTrailsToNotes() {
       const byId = new Map((db.folders || []).map(f => [f.id, f]));
       (db.notes || []).forEach(n => {
         if (!n || n.isQuickPool || !n.folderId) return;
         const folder = byId.get(n.folderId);
-        if (folder && !/^Kurtarılan Klasör\s*\d*$/i.test(String(folder.name || '').trim())) {
+        if (folder) {
           n.folderTrail = getFolderTrailForId(db.folders, n.folderId);
         }
       });
+    }
+
+    function refreshActiveCrumb() {
+      const crumb = document.getElementById('topbarCrumb');
+      if (!crumb) return;
+      const note = getActiveNote();
+      if (!note) {
+        crumb.textContent = 'Kütüphanem / Sohbet Okulu';
+      } else {
+        crumb.textContent = note.isQuickPool
+          ? `Kütüphanem > ⚡ Hızlı Notlar > ${note.title}`
+          : `Kütüphanem > ${getFolderBreadcrumb(note.folderId)}`;
+      }
     }
 
     function ensureNotesHaveValidFolders() {
@@ -2639,7 +2660,7 @@
 
       if (parsed) {
         db = {
-          version: '4.7.1',
+          version: '4.7.2',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2936,7 +2957,7 @@
     }
 
     let localPersistTimer = null;
-    let pendingPersistPayload = null;
+    let persistPending = false;
     let lastDbByteEstimate = 0;
 
     function flushLocalPersistNow() {
@@ -2944,15 +2965,24 @@
         clearTimeout(localPersistTimer);
         localPersistTimer = null;
       }
-      if (!pendingPersistPayload) return;
-      const { serialized, snapshotObj } = pendingPersistPayload;
-      pendingPersistPayload = null;
-      writeMasterToIndexedDB(snapshotObj);
-      try {
-        localStorage.setItem(DB_KEY, serialized);
-      } catch (err) {
-        console.info('localStorage önbellek doldu, tüm veriler IndexedDB üzerinden güvenle yazılıyor.');
+      if (!persistPending) return;
+      persistPending = false;
+      if (foldersDirty) {
+        attachFolderTrailsToNotes();
+        foldersDirty = false;
       }
+      const serialized = JSON.stringify(db);
+      lastDbByteEstimate = serialized.length > 450000 ? new Blob([serialized]).size : serialized.length;
+
+      writeMasterToIndexedDB(db, () => {
+        // Büyük veritabanlarında (>1.5M char / ~3 MB UTF-16) senkron localStorage donmasını önle
+        if (serialized.length < 1500000) {
+          try { localStorage.setItem(DB_KEY, serialized); } catch (_) {}
+        } else {
+          try { localStorage.removeItem(DB_KEY); } catch (_) {}
+        }
+      });
+      updateGlobalBatteryGauge(lastDbByteEstimate);
     }
 
     window.addEventListener('pagehide', flushLocalPersistNow);
@@ -2961,20 +2991,16 @@
     });
 
     function saveDatabase(triggerCloud = true, immediatePersist = false) {
-      db.version = '4.7.1';
-      attachFolderTrailsToNotes();
-      const serialized = JSON.stringify(db);
-      lastDbByteEstimate = new Blob([serialized]).size;
-      pendingPersistPayload = { serialized, snapshotObj: db };
+      db.version = '4.7.2';
+      persistPending = true;
 
       if (immediatePersist) {
         flushLocalPersistNow();
       } else {
         if (localPersistTimer) clearTimeout(localPersistTimer);
-        localPersistTimer = setTimeout(flushLocalPersistNow, 220);
+        localPersistTimer = setTimeout(flushLocalPersistNow, 280);
       }
 
-      updateGlobalBatteryGauge(lastDbByteEstimate);
       if (triggerCloud && typeof window.syncToCloud === 'function') {
         window.syncToCloud(db);
       }
@@ -3227,9 +3253,12 @@
       saveDatabase();
     }
 
+    let lastDynamicTimerMins = -1;
     function setupDynamicThemeTimer() {
-      if (dynamicTimer) clearInterval(dynamicTimer);
-      const mins = db.settings.dynamicMinutes;
+      const mins = Number(db.settings.dynamicMinutes || 0);
+      if (mins === lastDynamicTimerMins && (mins === 0 || dynamicTimer)) return;
+      lastDynamicTimerMins = mins;
+      if (dynamicTimer) { clearInterval(dynamicTimer); dynamicTimer = null; }
       if (!mins) return;
       const dayThemes = ['kenar', 'warm', 'sage', 'nordic', 'sand', 'lavender', 'sepia'];
       dynamicTimer = setInterval(() => {
@@ -3631,7 +3660,10 @@
         }
       }
       dragPayload = null;
-      saveDatabase(); renderAll();
+      foldersDirty = true;
+      saveDatabase();
+      renderSidebar();
+      refreshActiveCrumb();
     }
 
     function moveNoteOrderInFolder(noteId, delta) {
@@ -3679,6 +3711,7 @@
         if (save && nextVal && nextVal !== currentVal) {
           if (type === 'folder') {
             item.name = nextVal;
+            foldersDirty = true;
           } else {
             item.title = nextVal;
             item.updatedAt = Date.now();
@@ -3688,7 +3721,8 @@
             }
           }
           saveDatabase();
-          renderAll();
+          renderSidebar();
+          refreshActiveCrumb();
         } else {
           renderSidebar();
         }
@@ -3710,7 +3744,7 @@
       const f = db.folders.find(x => x.id === id);
       if (!f) return;
       const next = prompt('Klasör adı:', f.name);
-      if (next && next.trim()) { f.name = next.trim(); saveDatabase(); renderAll(); }
+      if (next && next.trim()) { f.name = next.trim(); foldersDirty = true; saveDatabase(); renderSidebar(); refreshActiveCrumb(); }
     }
 
     function createNewFolder(parentId = null) {
@@ -3729,6 +3763,7 @@
         if (parent) parent.collapsed = false;
       }
       activeFolderId = newId;
+      foldersDirty = true;
       setLibraryView('all');
       saveDatabase(); renderSidebar();
     }
@@ -3737,10 +3772,10 @@
       if (f) {
         f.collapsed = !f.collapsed;
         activeFolderId = id;
-        saveDatabase(); renderSidebar();
+        saveDatabase(false); renderSidebar();
       }
     }
-    function toggleFolderPin(id) { const f = db.folders.find(x => x.id === id); if (f) { f.pinned = !f.pinned; saveDatabase(); renderSidebar(); } }
+    function toggleFolderPin(id) { const f = db.folders.find(x => x.id === id); if (f) { f.pinned = !f.pinned; foldersDirty = true; saveDatabase(); renderSidebar(); } }
     function renameFolder(id) {
       startInlineRename('folder', id);
     }
@@ -3756,7 +3791,8 @@
       db.folders.forEach(f => { if (f.parentId === id) f.parentId = target.parentId || null; });
       db.folders = db.folders.filter(f => f.id !== id);
       if (activeFolderId === id) activeFolderId = fallback;
-      saveDatabase(); renderAll();
+      foldersDirty = true;
+      saveDatabase(); renderSidebar(); refreshActiveCrumb();
     }
 
     function createNewNoteInFolder(folderId) {
@@ -3840,8 +3876,9 @@
       n.isQuickPool = false;
       n.updatedAt = Date.now();
       activeFolderId = folderId;
+      foldersDirty = true;
       closeModal('pickerModal');
-      saveDatabase(); renderAll();
+      saveDatabase(); renderSidebar(); refreshActiveCrumb();
     }
 
     function moveActiveQuickNoteToFolder(folderId) {
@@ -3849,6 +3886,7 @@
       if (!n || !folderId) return;
       n.folderId = folderId; n.isQuickPool = false; n.updatedAt = Date.now();
       activeFolderId = folderId;
+      foldersDirty = true;
       setLibraryView('all'); saveDatabase(); renderAll();
     }
 
@@ -5609,8 +5647,9 @@
       note.updatedAt = Date.now();
       const rowLabel = document.querySelector(`[data-inline-note="${note.id}"] .sb-rename-label`);
       if (rowLabel) rowLabel.textContent = (note.pinned ? '☆ ' : '📄 ') + next;
+      if (note.isQuickPool) refreshActiveCrumb();
       if (noteTitleSyncTimer) clearTimeout(noteTitleSyncTimer);
-      noteTitleSyncTimer = setTimeout(() => { saveDatabase(); }, 350);
+      noteTitleSyncTimer = setTimeout(() => { saveDatabase(); }, 400);
     }
 
     function updateNoteTitle(val) {
@@ -5618,7 +5657,7 @@
       const note = getActiveNote();
       if (!note) return;
       note.title = val.trim() || 'Adsız Not'; note.updatedAt = Date.now();
-      saveDatabase(); renderSidebar(); renderRightDrawer();
+      saveDatabase(); renderSidebar(); refreshActiveCrumb();
     }
 
     function saveBlockHtml(blockId, html) {
@@ -7273,21 +7312,40 @@
 
     async function exportZipBackup() {
       if (!window.JSZip) return exportJsonBackup();
+      attachFolderTrailsToNotes();
       const zip = new JSZip();
       const dateStr = new Date().toISOString().slice(0, 10);
       const root = zip.folder(`SohbetOkulu_Yedek_${dateStr}`);
       root.file('sohbet_okulu_tam_yedek.json', JSON.stringify(db, null, 2));
-      db.notes.forEach(n => {
-        const folder = db.folders.find(f => f.id === n.folderId)?.name || 'Hizli_Notlar';
-        const safeFolder = folder.replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'Genel';
-        const safeTitle = (n.title || 'Not').replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || 'Not';
-        root.folder(safeFolder).file(`${safeTitle}_${dateStr}.html`, buildStandaloneNoteHtml(n));
-      });
+
+      const sanitizeName = (s, fallback) => String(s || '').replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, '').trim() || fallback;
+      const usedFolders = new Set();
+      const addFolderTree = (parentId, dir) => {
+        const children = (db.folders || []).filter(f => (f.parentId || null) === parentId);
+        children.forEach(f => {
+          usedFolders.add(f.id);
+          const subDir = dir.folder(sanitizeName(f.name, 'Klasor'));
+          db.notes.filter(n => !n.isQuickPool && n.folderId === f.id).forEach(n => {
+            subDir.file(`${sanitizeName(n.title, 'Not')}_${dateStr}.html`, buildStandaloneNoteHtml(n));
+          });
+          addFolderTree(f.id, subDir);
+        });
+      };
+      addFolderTree(null, root);
+
+      // Hızlı notlar ve eşleşmeyen kalan notları da kaybetmeden ekle
+      const quickNotes = db.notes.filter(n => n.isQuickPool || !usedFolders.has(n.folderId));
+      if (quickNotes.length) {
+        const qDir = root.folder('Hizli_ve_Diger_Notlar');
+        quickNotes.forEach(n => {
+          qDir.file(`${sanitizeName(n.title, 'Not')}_${dateStr}.html`, buildStandaloneNoteHtml(n));
+        });
+      }
       downloadBlob(await zip.generateAsync({ type: 'blob' }), `SohbetOkulu_Yedek_${dateStr}.zip`);
     }
 
     function buildStandaloneNoteHtml(note) {
-      const APP_VER = '4.7.1';
+      const APP_VER = '4.7.2';
       const safeTitle = escapeHtml(note.title || 'Ders Notu');
       const liveCss = document.querySelector('style')?.textContent || '';
       const standaloneExtraCss = `
@@ -8879,9 +8937,11 @@ ${standaloneExtraCss}</style>
       }
       parsed.settings = { ...db.settings, ...(parsed.settings || {}) };
       db = parsed;
-      saveDatabase();
+      ensureNotesHaveValidFolders();
+      foldersDirty = true;
+      saveDatabase(true, true);
       renderAll();
-      alert(`${db.notes.length} adet not başarıyla geri yüklendi.`);
+      alert(`${db.notes.length} adet not ve ${db.folders.length} klasör yapısı başarıyla geri yüklendi.`);
     }
 
     async function importBackupFile(e) {

@@ -46,6 +46,7 @@ function isOwnerAccount() {
 window.isCloudOwnerAccount = isOwnerAccount;
 
 const lastSyncedNoteHashes = new Map();
+const lastCheckedNoteStamps = new Map();
 let lastSyncedMetaHash = '';
 
 function isSeedWelcomeNote(note) {
@@ -178,6 +179,7 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user;
   if (unsubDataCol) { unsubDataCol(); unsubDataCol = null; }
   lastSyncedNoteHashes.clear();
+  lastCheckedNoteStamps.clear();
   lastSyncedMetaHash = '';
   hasInitialServerSnapshot = false;
 
@@ -194,6 +196,7 @@ onAuthStateChanged(auth, (user) => {
     }
 
     const fromCache = Boolean(querySnap.metadata?.fromCache);
+    if (querySnap.metadata?.hasPendingWrites && hasInitialServerSnapshot) return;
 
     if (querySnap.empty) {
       // Önbellekten boş gelmişse sunucu cevabını bekle; yeni cihazın boş karşılama notunu asla buluta yazma!
@@ -347,13 +350,20 @@ async function flushCloudSync(localDb) {
     const dataCol = collection(dbCloud, 'users', currentUser.uid, 'data');
     const currentNoteIds = new Set();
 
-    // Yalnızca değişen veya yeni eklenen notları buluta gönder (Delta Sync)
+    // Yalnızca damgası değişen veya yeni eklenen notları serileştir ve buluta gönder (sıfır gereksiz CPU yükü)
     for (const note of (localDb.notes || [])) {
       if (!note || !note.id) continue;
       currentNoteIds.add(note.id);
-      const cleanNote = JSON.parse(JSON.stringify(note));
-      const serializedNote = JSON.stringify(cleanNote);
-      const noteBytes = new Blob([serializedNote]).size;
+      const lastTrail = Array.isArray(note.folderTrail) && note.folderTrail.length
+        ? note.folderTrail[note.folderTrail.length - 1]
+        : null;
+      const stamp = `${note.updatedAt || 0}|${note.folderId || ''}|${note.pinned ? 1 : 0}|${note.order ?? ''}|${note.title || ''}|${note.progressBlockId || ''}|${note.folderTrail?.length || 0}|${lastTrail?.name || ''}|${lastTrail?.parentId || ''}`;
+      if (lastCheckedNoteStamps.get(note.id) === stamp && lastSyncedNoteHashes.has(note.id)) {
+        continue;
+      }
+
+      const serializedNote = JSON.stringify(note);
+      const noteBytes = serializedNote.length > 450000 ? new Blob([serializedNote]).size : serializedNote.length;
 
       if (noteBytes > 980 * 1024) {
         const warnMsg = `"${note.title || 'Adsız Not'}" notu 1 MB Firestore belge sınırına ulaştı (${Math.round(noteBytes / 1024)} KB) ve buluta gönderilemedi.`;
@@ -364,9 +374,10 @@ async function flushCloudSync(localDb) {
 
       const h = fastHash(serializedNote);
       if (lastSyncedNoteHashes.get(note.id) !== h) {
-        await setDoc(doc(dataCol, 'note_' + note.id), cleanNote);
+        await setDoc(doc(dataCol, 'note_' + note.id), JSON.parse(serializedNote));
         lastSyncedNoteHashes.set(note.id, h);
       }
+      lastCheckedNoteStamps.set(note.id, stamp);
     }
 
     // Silinen notları buluttan kaldır
@@ -374,6 +385,7 @@ async function flushCloudSync(localDb) {
       if (!currentNoteIds.has(prevId)) {
         await deleteDoc(doc(dataCol, 'note_' + prevId));
         lastSyncedNoteHashes.delete(prevId);
+        lastCheckedNoteStamps.delete(prevId);
       }
     }
 
@@ -397,7 +409,7 @@ window.syncToCloud = (localDb, opts = {}) => {
     return flushCloudSync(localDb);
   }
   if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
-  syncDebounceTimer = setTimeout(() => flushCloudSync(localDb), 650);
+  syncDebounceTimer = setTimeout(() => flushCloudSync(localDb), 1000);
 };
 
 window.recoverCloudNotes = async () => {
