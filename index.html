@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.7.0</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.7.1</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1475,7 +1475,7 @@
       .sticky-note-nav, .in-note-search-bar, .scroll-top-fab, .studio-toast,
       .fit-zoom-btn, .selection-popover, .table-action-pill, .inline-photo-bar,
       .premise-box-head button, .side-note-head button, .modal-backdrop,
-      .auto-page-break-badge, .a4-page-guide, .block-row.filtered-out { display: none !important; }
+      .auto-page-break-badge, .a4-page-guide, .parkur-wrap, .parkur-btn, .block-row.filtered-out { display: none !important; }
       body, .app-shell, .workspace-wrap, .editor-scroll, body.a4-view-mode .editor-scroll {
         height: auto !important; overflow: visible !important; background: #fff !important; color: #111827 !important; padding: 0 !important;
       }
@@ -1574,6 +1574,116 @@
       .lesson-card { transition: none !important; }
       .lesson-card:hover { box-shadow: var(--shadow-card) !important; }
     }
+
+    /* ENGELLİ ÇALIŞMA PARKURU & İLERLEME İŞARETÇİSİ */
+    .parkur-wrap {
+      flex: 1 1 100%;
+      border-top: 1px dashed var(--border-soft);
+      padding-top: 7px;
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .parkur-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+    }
+    .parkur-msg {
+      font-weight: 700;
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .parkur-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .parkur-route-box {
+      position: relative;
+      height: 36px;
+      width: 100%;
+      user-select: none;
+    }
+    .parkur-route-box svg {
+      width: 100%;
+      height: 36px;
+      display: block;
+      overflow: visible;
+    }
+    .parkur-milestone {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 13px;
+      line-height: 1;
+      opacity: 0.42;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      pointer-events: none;
+    }
+    .parkur-milestone.reached {
+      opacity: 1;
+      transform: translate(-50%, -58%) scale(1.12);
+    }
+    .parkur-runner {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -54%);
+      min-width: 24px;
+      height: 24px;
+      padding: 0 6px;
+      border-radius: 99px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      box-shadow: 0 3px 10px rgba(20, 53, 40, 0.28);
+      border: 2px solid var(--bg-paper);
+      transition: left 420ms cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 2;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    @keyframes parkurCelebrate {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.025); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.28); }
+      100% { transform: scale(1); }
+    }
+    .parkur-wrap.celebrate { animation: parkurCelebrate 0.65s ease; }
+    .parkur-btn.active-checkpoint {
+      background: var(--accent) !important;
+      color: #fff !important;
+      border-color: var(--accent) !important;
+      font-weight: 700;
+    }
+    .parkur-btn.passed-checkpoint {
+      background: rgba(22, 163, 74, 0.12) !important;
+      color: #15803d !important;
+      border-color: rgba(22, 163, 74, 0.35) !important;
+      font-weight: 600;
+    }
+    .lesson-card.is-checkpoint {
+      box-shadow: 0 0 0 2px var(--accent), var(--shadow-card);
+    }
+    .lesson-card.is-passed {
+      border-top: 2.5px solid rgba(22, 163, 74, 0.45);
+    }
+    @media (max-width: 640px) {
+      .parkur-btn-text { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -1592,7 +1702,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.7.0</div>
+            <div class="brand-sub">Ders stüdyosu · v4.7.1</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1975,11 +2085,11 @@
     </div>
   </div>
 
-  <!-- YEDEKLEME, BULUT SNAPSHOT & YÖNETİCİ ÇÖP KUTUSU (v4.7.0) -->
+  <!-- YEDEKLEME, BULUT SNAPSHOT & YÖNETİCİ ÇÖP KUTUSU (v4.7.1) -->
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box" style="max-width:680px;">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Bulut Yedekleri ve Sürüm Notları (v4.7.0)</strong>
+        <strong>💾 Yedekleme, Bulut Yedekleri ve Sürüm Notları (v4.7.1)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
 
@@ -2023,7 +2133,12 @@
         <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">📜 Sürüm Notları (Son 3 Güncelleme)</div>
 
         <div class="changelog-item">
-          <span class="changelog-ver">v4.7.0 — iPad/WebKit Performans Optimizasyonu, Tarihli Bulut Yedekleri, Yönetici Çöp Kutusu &amp; Sol Panel İçi Düzenleme (Güncel)</span>
+          <span class="changelog-ver">v4.7.1 — Engelli Çalışma Parkuru &amp; İlerleme İşaretçisi ("Buraya Geldim") (Güncel)</span>
+          Her kartın üst araç çubuğuna <strong>🚩 Buraya geldim</strong> (<code>toggleNoteProgressCheckpoint</code>) butonu ve not tepesindeki sabit gezinti çubuğuna animasyonlu kıvrımlı engel rotası (🚩 → 🪨 → 🌉 → ⚡ → 🏆), <code>%</code> tamamlama sayacı, doğrudan konuma atlama (<code>📍 Git</code>) ve aşama kutlama mesajları eklendi; ilerleme bilgisi (<code>progressBlockId</code>) buluta ve bağımsız HTML çıktısına da kaydedilir.
+        </div>
+
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.7.0 — iPad/WebKit Performans Optimizasyonu, Tarihli Bulut Yedekleri, Yönetici Çöp Kutusu &amp; Sol Panel İçi Düzenleme</span>
           iPad Chrome/WebKit takılmalarını gidermek için tekil JSON serileştirme, geciktirmeli IndexedDB yazımı, aktif-not kapsamlı hafif <code>pushUndo()</code>, <code>content-visibility: auto</code> ve dokunmatik ekranlarda hafifletilmiş katmanlar eklendi; <strong>☁️ Buluta Yedekle</strong> (parçalı snapshot) + <strong>tarihli bulut yedek seçicisi</strong> eklendi; yalnızca sahip hesabına özel otomatik kapasite korumalı <strong>🗑️ Çöp Kutusu</strong> eklendi; aynı klasör içinde sürükle-bırak/oklarla özel not sıralama ve sol panelden doğrudan <strong>satır içi klasör/not adı değiştirme</strong> eklendi.
         </div>
 
@@ -2032,14 +2147,13 @@
           Her nota klasör yolu (<code>folderTrail</code>) işlenerek gelecekte yalnızca not belgelerinden bile tüm klasör adlarının ve alt klasör ağacının eksiksiz geri kurulması sağlandı; bulut kurtarmada eski <code>main.folders</code> adlarının <code>Kurtarılan Klasör</code> tarafından ezilmesi hatası giderildi ve Yedekleme penceresindeki ilgisiz yazdırma butonu kaldırılıp sürüm notları açılır-kapanır hale getirildi.
         </div>
 
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--accent);padding:4px 0;">📜 Eski Sürüm Notlarını Göster (v4.6.3 → v1.0.0)</summary>
+          <div style="margin-top:8px;">
         <div class="changelog-item">
           <span class="changelog-ver">v4.6.3 — Tek Tıkla Bulut Kurtarma &amp; Öksüz Klasör Onarımı</span>
           Yedekleme penceresine Firestore'daki tüm <code>note_*</code> ve eski <code>main</code> belgelerini tarayıp geri getiren <strong>🛟 Buluttan Kayıp Notları Kurtar</strong> (<code>recoverCloudNotes</code>) eklendi; klasör kaydı eksik kalan notların sol ağaçta gizlenmesini engelleyen <code>ensureNotesHaveValidFolders()</code> ve eski <code>main.folders</code> klasör adı kurtarma mekanizması devreye alındı.
         </div>
-
-        <details style="margin-top:8px;">
-          <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--accent);padding:4px 0;">📜 Eski Sürüm Notlarını Göster (v4.6.2 → v1.0.0)</summary>
-          <div style="margin-top:8px;">
 
         <div class="changelog-item">
           <span class="changelog-ver">v4.6.2 — Çoklu Cihaz (iPad/Mobil) Google Bulut Eşitleme Güvenliği &amp; Yarış Durumu Düzeltmesi</span>
@@ -2243,7 +2357,7 @@
 
   <script>
     /* ==========================================================================
-       SOHBET OKULU v4.7.0 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
+       SOHBET OKULU v4.7.1 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
        ========================================================================== */
     const DB_KEY = 'ders_studyosu_db_v1';
     const IDB_NAME = 'SohbetOkuluMasterIDB';
@@ -2262,7 +2376,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.7.0',
+      version: '4.7.1',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -2525,7 +2639,7 @@
 
       if (parsed) {
         db = {
-          version: '4.7.0',
+          version: '4.7.1',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2847,7 +2961,7 @@
     });
 
     function saveDatabase(triggerCloud = true, immediatePersist = false) {
-      db.version = '4.7.0';
+      db.version = '4.7.1';
       attachFolderTrailsToNotes();
       const serialized = JSON.stringify(db);
       lastDbByteEstimate = new Blob([serialized]).size;
@@ -4108,6 +4222,96 @@
       return clone.innerHTML;
     }
 
+    function getParkurStats(noteObj) {
+      const blocks = Array.isArray(noteObj?.blocks) ? noteObj.blocks : [];
+      const total = blocks.length;
+      const doneIdx = noteObj?.progressBlockId ? blocks.findIndex(b => b.id === noteObj.progressBlockId) : -1;
+      const doneCount = doneIdx >= 0 ? (doneIdx + 1) : 0;
+      const pct = total > 0 && doneCount > 0 ? Math.min(100, Math.round((doneCount / total) * 100)) : 0;
+      return { total, doneIdx, doneCount, pct };
+    }
+
+    function buildParkurBannerHtml(noteObj, celebrate = false) {
+      const { total, doneIdx, doneCount, pct } = getParkurStats(noteObj);
+      let msg = '🏁 Çalışma Parkuru hazır — Karttaki "🚩 Buraya geldim" ile işaretle';
+      if (pct === 100) msg = `🏆 Tebrikler! Parkurun %100'ünü tamamladın (${total}/${total} kart)!`;
+      else if (pct >= 75) msg = `⚡ Son virajdasın! %${pct} tamamlandı — bitişe çok az kaldı!`;
+      else if (pct >= 50) msg = `🌉 Köprüden geçtin, yarıyı devirdin! %${pct} tamamlandı!`;
+      else if (pct >= 25) msg = `🪨 İlk engeli aştın! %${pct} tamamlandı — ritim harika!`;
+      else if (pct > 0) msg = `👟 Harika başlangıç! Yolun %${pct}'i tamamlandı (${doneCount}/${total})`;
+
+      const clipW = Math.round(16 + 568 * (pct / 100));
+      const runnerLeft = Math.min(96, Math.max(4, Math.round(2.5 + 95 * (pct / 100))));
+      const runnerEmoji = pct === 100 ? '🏆' : pct > 0 ? '🏃' : '👟';
+      const uid = 'pk_' + String(noteObj?.id || 'note').replace(/[^a-zA-Z0-9_]/g, '');
+      const milestones = [
+        { p: 0, icon: '🚩', left: 3, title: 'Başlangıç' },
+        { p: 25, icon: '🪨', left: 26, title: '%25 Engel' },
+        { p: 50, icon: '🌉', left: 50, title: '%50 Köprü' },
+        { p: 75, icon: '⚡', left: 74, title: '%75 Rampa' },
+        { p: 100, icon: '🏆', left: 97, title: '%100 Bitiş' }
+      ];
+
+      return `
+        <div class="parkur-wrap ${celebrate ? 'celebrate' : ''}" id="noteProgressTrack">
+          <div class="parkur-head">
+            <span class="parkur-msg">${msg}</span>
+            <span class="parkur-controls">
+              <span>${doneCount}/${total} kart</span>
+              ${doneIdx >= 0 ? `<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="scrollToBlock('${noteObj.progressBlockId}')" title="Kaldığın karta atla">📍 Git</button>` : ''}
+              ${doneIdx >= 0 ? `<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="clearNoteProgress()" title="Parkuru sıfırla">↺</button>` : ''}
+            </span>
+          </div>
+          <div class="parkur-route-box" title="Kartlardaki 🚩 Buraya geldim butonuyla parkurda ilerleyin">
+            <svg viewBox="0 0 600 36" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <clipPath id="${uid}_clip">
+                  <rect x="0" y="0" width="${clipW}" height="36"></rect>
+                </clipPath>
+              </defs>
+              <path d="M 16 20 C 62 6, 98 6, 138 20 C 178 33, 218 33, 258 20 C 298 6, 338 6, 378 20 C 418 33, 458 33, 498 20 C 534 9, 558 12, 584 18"
+                    fill="none" stroke="var(--border-soft)" stroke-width="4.5" stroke-dasharray="7 5" stroke-linecap="round"></path>
+              <path d="M 16 20 C 62 6, 98 6, 138 20 C 178 33, 218 33, 258 20 C 298 6, 338 6, 378 20 C 418 33, 458 33, 498 20 C 534 9, 558 12, 584 18"
+                    fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" clip-path="url(#${uid}_clip)"></path>
+            </svg>
+            ${milestones.map(m => `<span class="parkur-milestone ${pct >= m.p && pct > 0 ? 'reached' : ''}" style="left:${m.left}%;" title="${m.title}">${m.icon}</span>`).join('')}
+            <div class="parkur-runner" style="left:${runnerLeft}%;"><span>${runnerEmoji}</span><span>%${pct}</span></div>
+          </div>
+        </div>
+      `;
+    }
+
+    let lastCelebrateNoteKey = '';
+    function toggleNoteProgressCheckpoint(blockId) {
+      const note = getActiveNote();
+      if (!note) return;
+      note.progressBlockId = (note.progressBlockId === blockId) ? null : blockId;
+      note.updatedAt = Date.now();
+      const { pct, doneCount, total } = getParkurStats(note);
+      lastCelebrateNoteKey = note.progressBlockId ? `${note.id}:${note.progressBlockId}` : '';
+      saveDatabase();
+      renderEditor();
+
+      if (pct === 100) {
+        showStudioToast(`🎉🏆 Tebrikler! "${note.title}" parkurunun %100'ünü tamamladın (${doneCount}/${total})!`, null, null, 5500);
+      } else if (pct >= 75) {
+        showStudioToast(`⚡ Son viraj! %${pct} tamamlandı, bitişe çok az kaldı!`, null, null, 3800);
+      } else if (pct >= 50) {
+        showStudioToast(`🌉 Yarıyı devirdin! %${pct} tamamlandı, harika gidiyorsun!`, null, null, 3500);
+      } else if (pct > 0) {
+        showStudioToast(`📍 İlerleme kaydedildi: %${pct} (${doneCount}/${total} kart)`, null, null, 2600);
+      }
+    }
+
+    function clearNoteProgress() {
+      const note = getActiveNote();
+      if (!note || !note.progressBlockId) return;
+      note.progressBlockId = null;
+      note.updatedAt = Date.now();
+      saveDatabase();
+      renderEditor();
+    }
+
     function renderEditor() {
       const container = document.getElementById('editorContainer');
       const note = getActiveNote();
@@ -4147,6 +4351,10 @@
       const noteSizeCls = noteKb >= 920 ? 'danger' : noteKb >= 750 ? 'warn' : '';
       const filteredList = note.blocks.map((b, i) => ({ b, i })).filter(({ b }) => blockMatchesMultiFilter(b));
 
+      const parkurStats = getParkurStats(note);
+      const celebrateNow = Boolean(note.progressBlockId && lastCelebrateNoteKey === `${note.id}:${note.progressBlockId}`);
+      lastCelebrateNoteKey = '';
+
       let html = `
         <!-- KOMPAKT NOT BAŞLIĞI + KÜÇÜK İSTATİSTİKLER & 1MB SINIR GÖSTERGESİ -->
         <header class="note-header-compact">
@@ -4177,10 +4385,10 @@
           <button class="card-mini-btn" onclick="closeInNoteSearchBar()" title="Aramayı Kapat">✕</button>
         </div>
 
-        <!-- NOT TEPESİNE HIZLI GEZİNTİ & ÇOKLU SÜZGEÇ ÇUBUĞU (MOBİLDE AÇ/KAPA) -->
+        <!-- NOT TEPESİNE HIZLI GEZİNTİ, ÇOKLU SÜZGEÇ & ENGELLİ ÇALIŞMA PARKURU -->
         <div class="sticky-note-nav ${mobileNavBarExpanded ? '' : 'mob-collapsed'}" id="stickyNoteNav">
           <button class="sticky-nav-mobile-toggle" onclick="toggleMobileNavBar()">
-            <span>🧭 Gezinti, Pin & Odak ${activeMultiFilters.size > 0 ? `(${activeMultiFilters.size} süzgeç)` : ''} ${db.settings.spotlightOn ? '· ⛶ Odak Açık' : ''}</span>
+            <span>🧭 Gezinti, Pin &amp; Parkur (%${parkurStats.pct}) ${activeMultiFilters.size > 0 ? `(${activeMultiFilters.size} süzgeç)` : ''} ${db.settings.spotlightOn ? '· ⛶ Odak' : ''}</span>
             <span>${mobileNavBarExpanded ? '▴ Kapat' : '▾ Aç'}</span>
           </button>
           <div class="sticky-nav-filters">
@@ -4203,6 +4411,7 @@
             <button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(-1)" title="Önceki Kart">▲</button>
             <button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(1)" title="Sonraki Kart">▼</button>
           </div>
+          ${buildParkurBannerHtml(note, celebrateNow)}
         </div>
       `;
 
@@ -4234,10 +4443,12 @@
         const remainSec = showDictationMove ? Math.max(1, Math.ceil((30000 - (Date.now() - blk.dictationCreatedAt)) / 1000)) : 0;
         const numStr = '#' + String(idx + 1).padStart(2, '0');
         const optionalRole = (blk.role || '').trim();
+        const isCheckpoint = parkurStats.doneIdx === idx;
+        const isPassed = parkurStats.doneIdx > idx;
 
         html += `
           <div class="block-row ${hasPin ? 'has-pin' : ''} ${hasHl ? 'has-highlight' : ''} ${blk.pageBreak ? 'page-break-before' : ''} ${blk.sideNotesHidden ? 'side-notes-hidden' : ''} ${!isVisible ? 'filtered-out' : ''}" id="row_${blk.id}">
-            <article class="lesson-card ${isBulkSel ? 'bulk-selected' : ''}" data-pin="${blk.pin || ''}">
+            <article class="lesson-card ${isBulkSel ? 'bulk-selected' : ''} ${isCheckpoint ? 'is-checkpoint' : isPassed ? 'is-passed' : ''}" data-pin="${blk.pin || ''}">
               <div class="card-toolbar">
                 <div class="card-left-meta">
                   <input type="checkbox" class="card-bulk-chk" ${isBulkSel ? 'checked' : ''} onchange="toggleBlockBulkSelect('${blk.id}')" title="Çoklu taşımak veya aktarmak için kartı seç" />
@@ -4246,6 +4457,7 @@
                   ${blk.pageBreak ? `<span class="card-optional-tag" title="PDF sayfa kesmesi aktif">📄 Sayfa Kesmesi</span>` : ''}
                 </div>
                 <div class="card-actions">
+                  <button class="card-mini-btn parkur-btn ${isCheckpoint ? 'active-checkpoint' : isPassed ? 'passed-checkpoint' : ''}" onclick="toggleNoteProgressCheckpoint('${blk.id}')" title="Çalışma parkurunda buraya kadar geldiğini işaretle">${isCheckpoint ? '📍 <span class="parkur-btn-text">Buradayım</span>' : isPassed ? '✓ <span class="parkur-btn-text">Geçildi</span>' : '🚩 <span class="parkur-btn-text">Buraya geldim</span>'}</button>
                   <button class="card-mini-btn ${blk.pin === 'red' ? 'pin-active' : ''}" onclick="toggleBlockPin('${blk.id}', 'red')" title="Anlamadım">🔴 <span class="pin-label-text">Anlamadım</span></button>
                   <button class="card-mini-btn ${blk.pin === 'yellow' ? 'pin-active' : ''}" onclick="toggleBlockPin('${blk.id}', 'yellow')" title="Tekrar">🟡 <span class="pin-label-text">Tekrar</span></button>
                   <button class="card-mini-btn ${blk.pin === 'purple' ? 'pin-active' : ''}" onclick="toggleBlockPin('${blk.id}', 'purple')" title="Önemli">🟣 <span class="pin-label-text">Önemli</span></button>
@@ -7075,7 +7287,7 @@
     }
 
     function buildStandaloneNoteHtml(note) {
-      const APP_VER = '4.7.0';
+      const APP_VER = '4.7.1';
       const safeTitle = escapeHtml(note.title || 'Ders Notu');
       const liveCss = document.querySelector('style')?.textContent || '';
       const standaloneExtraCss = `
@@ -7118,6 +7330,7 @@
       const cleanNote = {
         id: String(note.id || 'shared_note'),
         title: String(note.title || 'Ders Notu'),
+        progressBlockId: note.progressBlockId || null,
         createdAt: Number(note.createdAt || Date.now()),
         updatedAt: Number(note.updatedAt || Date.now()),
         blocks: (note.blocks || []).map((b, bi) => ({
@@ -8186,11 +8399,70 @@
         '<span class="touch-resize-grip" onpointerdown="startTouchBoxResize(event, \\'side\\', \\'' + blockId + '\\', \\'' + sn.id + '\\')">↘</span></div>';
     }
 
+    function getParkurStats(noteObj) {
+      const blocks = Array.isArray(noteObj && noteObj.blocks) ? noteObj.blocks : [];
+      const total = blocks.length;
+      const doneIdx = noteObj && noteObj.progressBlockId ? blocks.findIndex(b => b.id === noteObj.progressBlockId) : -1;
+      const doneCount = doneIdx >= 0 ? (doneIdx + 1) : 0;
+      const pct = total > 0 && doneCount > 0 ? Math.min(100, Math.round((doneCount / total) * 100)) : 0;
+      return { total, doneIdx, doneCount, pct };
+    }
+
+    function buildParkurBannerHtml(noteObj, celebrate) {
+      const stats = getParkurStats(noteObj);
+      const total = stats.total, doneIdx = stats.doneIdx, doneCount = stats.doneCount, pct = stats.pct;
+      let msg = '🏁 Çalışma Parkuru hazır — Karttaki "🚩 Buraya geldim" ile işaretle';
+      if (pct === 100) msg = '🏆 Tebrikler! Parkurun %100ünü tamamladın (' + total + '/' + total + ' kart)!';
+      else if (pct >= 75) msg = '⚡ Son virajdasın! %' + pct + ' tamamlandı — bitişe çok az kaldı!';
+      else if (pct >= 50) msg = '🌉 Köprüden geçtin, yarıyı devirdin! %' + pct + ' tamamlandı!';
+      else if (pct >= 25) msg = '🪨 İlk engeli aştın! %' + pct + ' tamamlandı — ritim harika!';
+      else if (pct > 0) msg = '👟 Harika başlangıç! Yolun %' + pct + ' tamamlandı (' + doneCount + '/' + total + ')';
+
+      const clipW = Math.round(16 + 568 * (pct / 100));
+      const runnerLeft = Math.min(96, Math.max(4, Math.round(2.5 + 95 * (pct / 100))));
+      const runnerEmoji = pct === 100 ? '🏆' : pct > 0 ? '🏃' : '👟';
+      const milestones = [
+        { p: 0, icon: '🚩', left: 3, title: 'Başlangıç' },
+        { p: 25, icon: '🪨', left: 26, title: '%25 Engel' },
+        { p: 50, icon: '🌉', left: 50, title: '%50 Köprü' },
+        { p: 75, icon: '⚡', left: 74, title: '%75 Rampa' },
+        { p: 100, icon: '🏆', left: 97, title: '%100 Bitiş' }
+      ];
+      return '<div class="parkur-wrap ' + (celebrate ? 'celebrate' : '') + '" id="noteProgressTrack">' +
+        '<div class="parkur-head"><span class="parkur-msg">' + msg + '</span><span class="parkur-controls">' +
+        '<span>' + doneCount + '/' + total + ' kart</span>' +
+        (doneIdx >= 0 ? '<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="scrollToBlock(\\'' + noteObj.progressBlockId + '\\')">📍 Git</button><button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="clearNoteProgress()">↺</button>' : '') +
+        '</span></div>' +
+        '<div class="parkur-route-box"><svg viewBox="0 0 600 36" preserveAspectRatio="none" aria-hidden="true"><defs><clipPath id="pk_st_clip"><rect x="0" y="0" width="' + clipW + '" height="36"></rect></clipPath></defs>' +
+        '<path d="M 16 20 C 62 6, 98 6, 138 20 C 178 33, 218 33, 258 20 C 298 6, 338 6, 378 20 C 418 33, 458 33, 498 20 C 534 9, 558 12, 584 18" fill="none" stroke="var(--border-soft)" stroke-width="4.5" stroke-dasharray="7 5" stroke-linecap="round"></path>' +
+        '<path d="M 16 20 C 62 6, 98 6, 138 20 C 178 33, 218 33, 258 20 C 298 6, 338 6, 378 20 C 418 33, 458 33, 498 20 C 534 9, 558 12, 584 18" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" clip-path="url(#pk_st_clip)"></path></svg>' +
+        milestones.map(m => '<span class="parkur-milestone ' + (pct >= m.p && pct > 0 ? 'reached' : '') + '" style="left:' + m.left + '%;" title="' + m.title + '">' + m.icon + '</span>').join('') +
+        '<div class="parkur-runner" style="left:' + runnerLeft + '%;"><span>' + runnerEmoji + '</span><span>%' + pct + '</span></div></div></div>';
+    }
+
+    let lastCelebrateKey = '';
+    function toggleNoteProgressCheckpoint(blockId) {
+      noteData.progressBlockId = (noteData.progressBlockId === blockId) ? null : blockId;
+      noteData.updatedAt = Date.now();
+      lastCelebrateKey = noteData.progressBlockId || '';
+      syncEmbeddedDataTag();
+      renderEditor();
+    }
+    function clearNoteProgress() {
+      noteData.progressBlockId = null;
+      noteData.updatedAt = Date.now();
+      syncEmbeddedDataTag();
+      renderEditor();
+    }
+
     function renderEditor() {
       const container = document.getElementById('editorContainer');
       updateBulkMoveBar();
       applySettingsToDOM();
       document.getElementById('topbarCrumb').textContent = noteData.title;
+      const parkurStats = getParkurStats(noteData);
+      const celebrateNow = Boolean(noteData.progressBlockId && lastCelebrateKey === noteData.progressBlockId);
+      lastCelebrateKey = '';
 
       const redCount = noteData.blocks.filter(b => b.pin === 'red').length;
       const yellowCount = noteData.blocks.filter(b => b.pin === 'yellow').length;
@@ -8242,7 +8514,8 @@
           return '<option value="' + b.id + '">#' + String(i + 1).padStart(2, '0') + ' · ' + pIcon + escapeAttr(prev.slice(0, 42)) + '</option>';
         }).join('') +
         '</select><button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(-1)">▲</button>' +
-        '<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(1)">▼</button></div></div>';
+        '<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="jumpFilteredCard(1)">▼</button></div>' +
+        buildParkurBannerHtml(noteData, celebrateNow) + '</div>';
 
       noteData.blocks.forEach((blk, idx) => {
         const premises = blk.premises || [];
@@ -8255,15 +8528,18 @@
         const isVisible = blockMatchesMultiFilter(blk);
         const numStr = '#' + String(idx + 1).padStart(2, '0');
         const optionalRole = (blk.role || '').trim();
+        const isCheckpoint = parkurStats.doneIdx === idx;
+        const isPassed = parkurStats.doneIdx > idx;
 
         html += '<div class="block-row ' + (hasPin ? 'has-pin' : '') + ' ' + (hasHl ? 'has-highlight' : '') + ' ' + (blk.pageBreak ? 'page-break-before' : '') + ' ' + (blk.sideNotesHidden ? 'side-notes-hidden' : '') + ' ' + (!isVisible ? 'filtered-out' : '') + '" id="row_' + blk.id + '">' +
-          '<article class="lesson-card ' + (isBulkSel ? 'bulk-selected' : '') + '" data-pin="' + (blk.pin || '') + '">' +
+          '<article class="lesson-card ' + (isBulkSel ? 'bulk-selected' : '') + ' ' + (isCheckpoint ? 'is-checkpoint' : isPassed ? 'is-passed' : '') + '" data-pin="' + (blk.pin || '') + '">' +
           '<div class="card-toolbar"><div class="card-left-meta">' +
           '<input type="checkbox" class="card-bulk-chk" ' + (isBulkSel ? 'checked' : '') + ' onchange="toggleBlockBulkSelect(\\'' + blk.id + '\\')" />' +
           '<span class="card-index-num">' + numStr + '</span>' +
           (optionalRole ? '<span class="card-optional-tag">' + escapeHtml(optionalRole) + '</span>' : '') +
           (blk.pageBreak ? '<span class="card-optional-tag">📄 Sayfa Kesmesi</span>' : '') +
           '</div><div class="card-actions">' +
+          '<button class="card-mini-btn parkur-btn ' + (isCheckpoint ? 'active-checkpoint' : isPassed ? 'passed-checkpoint' : '') + '" onclick="toggleNoteProgressCheckpoint(\\'' + blk.id + '\\')">' + (isCheckpoint ? '📍 <span class="parkur-btn-text">Buradayım</span>' : isPassed ? '✓ <span class="parkur-btn-text">Geçildi</span>' : '🚩 <span class="parkur-btn-text">Buraya geldim</span>') + '</button>' +
           '<button class="card-mini-btn ' + (blk.pin === 'red' ? 'pin-active' : '') + '" onclick="toggleBlockPin(\\'' + blk.id + '\\', \\'red\\')">🔴 <span class="pin-label-text">Anlamadım</span></button>' +
           '<button class="card-mini-btn ' + (blk.pin === 'yellow' ? 'pin-active' : '') + '" onclick="toggleBlockPin(\\'' + blk.id + '\\', \\'yellow\\')">🟡 <span class="pin-label-text">Tekrar</span></button>' +
           '<button class="card-mini-btn ' + (blk.pin === 'purple' ? 'pin-active' : '') + '" onclick="toggleBlockPin(\\'' + blk.id + '\\', \\'purple\\')">🟣 <span class="pin-label-text">Önemli</span></button>' +
