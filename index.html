@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.3</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.4</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1525,7 +1525,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.6.3</div>
+            <div class="brand-sub">Ders stüdyosu · v4.6.4</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1907,27 +1907,31 @@
     </div>
   </div>
 
-  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.6.3) -->
+  <!-- YEDEKLEME & BULUT KURTARMA (v4.6.4) -->
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.6.3)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Bulut Kurtarma (v4.6.4)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
         <button class="tool-btn active" onclick="exportActiveNoteHtml()">📄 Aktif Notu HTML İndir</button>
         <button class="tool-btn" onclick="exportZipBackup()">📦 Tarihli ZIP Yedek İndir</button>
         <button class="tool-btn" onclick="exportJsonBackup()">🗂️ JSON Yedek İndir</button>
         <label class="tool-btn" style="cursor:pointer;">📂 Yedek Yükle (.zip/.json)<input type="file" accept=".zip,.json" hidden onchange="importBackupFile(event)" /></label>
         <button class="tool-btn active" onclick="triggerCloudRecovery()">🛟 Buluttan Kayıp Notları Kurtar</button>
-        <button class="tool-btn" onclick="openPrintOptimizerModal()">🖨️ Akıllı Sayfa Böl &amp; PDF</button>
       </div>
 
-      <div style="border-top:1px solid var(--border-soft);padding-top:12px;">
-        <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
+      <details style="border-top:1px solid var(--border-soft);padding-top:12px;">
+        <summary style="cursor:pointer;font-weight:700;font-size:13.5px;margin-bottom:10px;">📜 Sürüm Notları ve Gelişim Günlüğü (v1.0.0 → v4.6.4)</summary>
 
         <div class="changelog-item">
-          <span class="changelog-ver">v4.6.3 — Tek Tıkla Bulut Kurtarma &amp; Öksüz Klasör Onarımı (Güncel)</span>
+          <span class="changelog-ver">v4.6.4 — Klasör Yapısı / İsim Gömme &amp; Yedekleme Penceresi Sadeleştirme (Güncel)</span>
+          Her nota klasör yolu (<code>folderTrail</code>) işlenerek gelecekte yalnızca not belgelerinden bile tüm klasör adlarının ve alt klasör ağacının eksiksiz geri kurulması sağlandı; bulut kurtarmada eski <code>main.folders</code> adlarının <code>Kurtarılan Klasör</code> tarafından ezilmesi hatası giderildi ve Yedekleme penceresindeki ilgisiz yazdırma butonu kaldırılıp sürüm notları açılır-kapanır hale getirildi.
+        </div>
+
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.6.3 — Tek Tıkla Bulut Kurtarma &amp; Öksüz Klasör Onarımı</span>
           Yedekleme penceresine Firestore'daki tüm <code>note_*</code> ve eski <code>main</code> belgelerini tarayıp geri getiren <strong>🛟 Buluttan Kayıp Notları Kurtar</strong> (<code>recoverCloudNotes</code>) eklendi; klasör kaydı eksik kalan notların sol ağaçta gizlenmesini engelleyen <code>ensureNotesHaveValidFolders()</code> ve eski <code>main.folders</code> klasör adı kurtarma mekanizması devreye alındı.
         </div>
 
@@ -2010,7 +2014,7 @@
           <span class="changelog-ver">v1.0.0 — İlk Sürüm: Kart Tabanlı Ders Çalışma & Sohbet Düzenleyici</span>
           Klasör ve not ağacı, kart bazlı soru-cevap düzenleme, kırmızı/sarı/mor pin işaretleme, odak modu, A4 PDF yazdırma ve JSON/ZIP yerel yedekleme altyapısı oluşturuldu.
         </div>
-      </div>
+      </details>
     </div>
   </div>
 
@@ -2131,7 +2135,7 @@
 
   <script>
     /* ==========================================================================
-       SOHBET OKULU v4.6.3 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
+       SOHBET OKULU v4.6.4 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
        ========================================================================== */
     const DB_KEY = 'ders_studyosu_db_v1';
     const IDB_NAME = 'SohbetOkuluMasterIDB';
@@ -2150,7 +2154,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.6.3',
+      version: '4.6.4',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -2322,11 +2326,55 @@
     const appDbReadyPromise = new Promise(res => { resolveAppDbReady = res; });
     window.waitForAppDbReady = () => appDbReadyPromise;
 
+    function getFolderTrailForId(folders, folderId) {
+      const byId = new Map((folders || []).map(f => [f.id, f]));
+      const trail = [];
+      const seen = new Set();
+      let cur = byId.get(folderId);
+      while (cur && !seen.has(cur.id)) {
+        seen.add(cur.id);
+        trail.unshift({
+          id: cur.id,
+          name: cur.name,
+          parentId: cur.parentId || null,
+          pinned: Boolean(cur.pinned),
+          order: Number(cur.order || 0)
+        });
+        cur = cur.parentId ? byId.get(cur.parentId) : null;
+      }
+      return trail;
+    }
+
+    function attachFolderTrailsToNotes() {
+      const byId = new Map((db.folders || []).map(f => [f.id, f]));
+      (db.notes || []).forEach(n => {
+        if (!n || n.isQuickPool || !n.folderId) return;
+        const folder = byId.get(n.folderId);
+        if (folder && !/^Kurtarılan Klasör\s*\d*$/i.test(String(folder.name || '').trim())) {
+          n.folderTrail = getFolderTrailForId(db.folders, n.folderId);
+        }
+      });
+    }
+
     function ensureNotesHaveValidFolders() {
       if (!Array.isArray(db.folders)) db.folders = [];
       if (!db.folders.length) {
         db.folders.push({ id: 'folder_general', parentId: null, name: 'Genel Dersler', pinned: false, collapsed: false, order: 0 });
       }
+      const folderMap = new Map(db.folders.map(f => [f.id, f]));
+      // Notlarda gömülü folderTrail varsa kayıp/geçici klasör adlarını ve üst yapısını onar
+      (db.notes || []).forEach(n => {
+        if (!n || !Array.isArray(n.folderTrail)) return;
+        n.folderTrail.forEach(tf => {
+          if (!tf || !tf.id || !tf.name) return;
+          const existing = folderMap.get(tf.id);
+          if (!existing || /^Kurtarılan Klasör\s*\d*$/i.test(String(existing.name || '').trim())) {
+            const restored = { id: tf.id, parentId: tf.parentId || null, name: tf.name, pinned: Boolean(tf.pinned), collapsed: false, order: Number(tf.order ?? db.folders.length) };
+            if (existing) Object.assign(existing, restored);
+            else { db.folders.push(restored); folderMap.set(tf.id, restored); }
+          }
+        });
+      });
       const folderIds = new Set(db.folders.map(f => f.id));
       // Üst klasörü silinmiş alt klasörleri ana düzeye çıkar ki görünmez kalmasınlar
       db.folders.forEach(f => {
@@ -2365,7 +2413,7 @@
 
       if (parsed) {
         db = {
-          version: '4.6.3',
+          version: '4.6.4',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2511,7 +2559,8 @@
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.6.3';
+      db.version = '4.6.4';
+      attachFolderTrailsToNotes();
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -6587,7 +6636,7 @@
     }
 
     function buildStandaloneNoteHtml(note) {
-      const APP_VER = '4.6.3';
+      const APP_VER = '4.6.4';
       const safeTitle = escapeHtml(note.title || 'Ders Notu');
       const liveCss = document.querySelector('style')?.textContent || '';
       const standaloneExtraCss = `

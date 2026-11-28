@@ -56,6 +56,31 @@ function isSeedOnlyDb(database) {
   return notes.length === 0 || (notes.length === 1 && isSeedWelcomeNote(notes[0]));
 }
 
+function isPlaceholderFolderName(name) {
+  return /^Kurtarılan Klasör\s*\d*$/i.test(String(name || '').trim());
+}
+
+function mergeFoldersSafely(notes, ...folderLists) {
+  const fMap = new Map();
+  const upsert = (f) => {
+    if (!f || !f.id) return;
+    const prev = fMap.get(f.id);
+    const fIsPlaceholder = isPlaceholderFolderName(f.name);
+    const prevIsPlaceholder = isPlaceholderFolderName(prev?.name);
+    if (prev && !prevIsPlaceholder && fIsPlaceholder) return;
+    fMap.set(f.id, prev ? { ...prev, ...f } : { ...f });
+  };
+  for (const n of (notes || [])) {
+    if (Array.isArray(n?.folderTrail)) {
+      n.folderTrail.forEach(tf => upsert(tf));
+    }
+  }
+  for (const list of folderLists) {
+    if (Array.isArray(list)) list.forEach(f => upsert(f));
+  }
+  return [...fMap.values()];
+}
+
 getRedirectResult(auth).then((res) => {
   const cred = res ? GoogleAuthProvider.credentialFromResult(res) : null;
   if (cred?.accessToken) {
@@ -258,19 +283,30 @@ onAuthStateChanged(auth, (user) => {
       }
     }
 
-    // 3. Klasör ve ayar güncellemelerini uygula (eski main belgesindeki klasör isimlerini kaybolmuşsa geri kurtar)
+    // 3. Klasör ve ayar güncellemelerini uygula (eski main belgesi ve note.folderTrail ile gerçek klasör adlarını koru)
     const mergedDb = { ...local };
     const shouldApplyMeta = metaDoc && (localWasSeedOnly || (metaDoc.updatedAt || 0) > (local.updatedAt || 0));
-    if (shouldApplyMeta) {
-      const fMap = new Map();
-      for (const f of (legacyMainDoc?.folders || [])) if (f?.id) fMap.set(f.id, f);
-      for (const f of (local.folders || [])) if (f?.id) fMap.set(f.id, f);
-      for (const f of (metaDoc.folders || [])) if (f?.id) fMap.set(f.id, f);
-      if (fMap.size > 0) mergedDb.folders = [...fMap.values()];
-      if (metaDoc.settings) mergedDb.settings = { ...local.settings, ...metaDoc.settings };
-      if (metaDoc.activeNoteId && localNotesMap.has(metaDoc.activeNoteId)) mergedDb.activeNoteId = metaDoc.activeNoteId;
-      mergedDb.updatedAt = metaDoc.updatedAt || Date.now();
+    const hasPlaceholderLocally = (local.folders || []).some(f => isPlaceholderFolderName(f?.name));
+    const allCurrentNotes = [...localNotesMap.values()];
+    const mergedFolders = mergeFoldersSafely(
+      allCurrentNotes,
+      legacyMainDoc?.folders,
+      remoteMetaOrEmpty(metaDoc),
+      local.folders
+    );
+
+    if (shouldApplyMeta || (hasPlaceholderLocally && mergedFolders.length > 0)) {
+      if (mergedFolders.length > 0) mergedDb.folders = mergedFolders;
+      if (shouldApplyMeta) {
+        if (metaDoc.settings) mergedDb.settings = { ...local.settings, ...metaDoc.settings };
+        if (metaDoc.activeNoteId && localNotesMap.has(metaDoc.activeNoteId)) mergedDb.activeNoteId = metaDoc.activeNoteId;
+        mergedDb.updatedAt = metaDoc.updatedAt || Date.now();
+      }
       changed = true;
+    }
+
+    function remoteMetaOrEmpty(m) {
+      return Array.isArray(m?.folders) ? m.folders : [];
     }
 
     if (changed) {
@@ -411,14 +447,16 @@ window.recoverCloudNotes = async () => {
       return 0;
     }
 
-    const folderMap = new Map();
-    for (const f of (legacyMain?.folders || [])) if (f?.id) folderMap.set(f.id, f);
-    for (const f of (remoteMeta?.folders || [])) if (f?.id) folderMap.set(f.id, f);
-    for (const f of (local.folders || [])) if (f?.id) folderMap.set(f.id, f);
+    const restoredFolders = mergeFoldersSafely(
+      restoredNotes,
+      legacyMain?.folders,
+      remoteMeta?.folders,
+      local.folders
+    );
 
     const nextDb = {
       ...local,
-      folders: [...folderMap.values()],
+      folders: restoredFolders,
       notes: restoredNotes,
       activeNoteId: restoredNotes[0].id,
       updatedAt: Date.now()
