@@ -4,6 +4,8 @@ import {
   getFirestore,
   doc,
   collection,
+  getDocs,
+  getDocsFromServer,
   setDoc,
   deleteDoc,
   writeBatch,
@@ -243,24 +245,28 @@ onAuthStateChanged(auth, (user) => {
       }
     }
 
-    // 2. Uzakta silinmiş notları yerelden de temizle (boş/karşılama bulutu ise asla yerel gerçek notu silme!)
+    // 2. Uzakta silinmiş notları yerelden de temizle (Firestore'da hala duran note_* belgelerini ve boş bulutu ASLA silme!)
     if (metaDoc && Array.isArray(metaDoc.noteIds) && remoteHasRealNotes && (metaDoc.updatedAt || 0) > (local.updatedAt || 0)) {
       const validIds = new Set(metaDoc.noteIds);
       for (const localId of [...localNotesMap.keys()]) {
         const lNote = localNotesMap.get(localId);
         const lTime = lNote?.updatedAt || lNote?.createdAt || 0;
-        if (!validIds.has(localId) && lTime <= (metaDoc.updatedAt || 0)) {
+        if (!remoteNotesMap.has(localId) && !validIds.has(localId) && lTime <= (metaDoc.updatedAt || 0)) {
           localNotesMap.delete(localId);
           changed = true;
         }
       }
     }
 
-    // 3. Klasör ve ayar güncellemelerini uygula
+    // 3. Klasör ve ayar güncellemelerini uygula (eski main belgesindeki klasör isimlerini kaybolmuşsa geri kurtar)
     const mergedDb = { ...local };
     const shouldApplyMeta = metaDoc && (localWasSeedOnly || (metaDoc.updatedAt || 0) > (local.updatedAt || 0));
     if (shouldApplyMeta) {
-      if (Array.isArray(metaDoc.folders) && metaDoc.folders.length) mergedDb.folders = metaDoc.folders;
+      const fMap = new Map();
+      for (const f of (legacyMainDoc?.folders || [])) if (f?.id) fMap.set(f.id, f);
+      for (const f of (local.folders || [])) if (f?.id) fMap.set(f.id, f);
+      for (const f of (metaDoc.folders || [])) if (f?.id) fMap.set(f.id, f);
+      if (fMap.size > 0) mergedDb.folders = [...fMap.values()];
       if (metaDoc.settings) mergedDb.settings = { ...local.settings, ...metaDoc.settings };
       if (metaDoc.activeNoteId && localNotesMap.has(metaDoc.activeNoteId)) mergedDb.activeNoteId = metaDoc.activeNoteId;
       mergedDb.updatedAt = metaDoc.updatedAt || Date.now();
@@ -350,6 +356,86 @@ window.syncToCloud = (localDb, opts = {}) => {
   }
   if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
   syncDebounceTimer = setTimeout(() => flushCloudSync(localDb), 650);
+};
+
+window.recoverCloudNotes = async () => {
+  if (!currentUser) {
+    alert('Önce Google hesabınızla giriş yapın.');
+    return 0;
+  }
+  try {
+    const dataCol = collection(dbCloud, 'users', currentUser.uid, 'data');
+    let snap = null;
+    try {
+      snap = await getDocsFromServer(dataCol);
+    } catch (_) {
+      snap = await getDocs(dataCol);
+    }
+
+    const foundMap = new Map();
+    let legacyMain = null;
+    let remoteMeta = null;
+
+    snap.forEach((d) => {
+      const data = d.data();
+      if (d.id === 'meta') remoteMeta = data;
+      else if (d.id === 'main') legacyMain = data;
+      else if (d.id.startsWith('note_') && data && data.id && !isSeedWelcomeNote(data)) {
+        foundMap.set(data.id, data);
+      }
+    });
+
+    if (legacyMain && Array.isArray(legacyMain.notes)) {
+      for (const ln of legacyMain.notes) {
+        if (ln && ln.id && !isSeedWelcomeNote(ln) && !foundMap.has(ln.id)) {
+          foundMap.set(ln.id, ln);
+        }
+      }
+    }
+
+    const local = window.getAppDb?.() || { folders: [], notes: [], settings: {} };
+    const mergedMap = new Map();
+    for (const ln of (local.notes || [])) {
+      if (ln && ln.id && !isSeedWelcomeNote(ln)) mergedMap.set(ln.id, ln);
+    }
+    for (const [id, rn] of foundMap.entries()) {
+      const cur = mergedMap.get(id);
+      if (!cur || (rn.updatedAt || 0) >= (cur.updatedAt || 0)) {
+        mergedMap.set(id, rn);
+      }
+    }
+
+    const restoredNotes = [...mergedMap.values()];
+    if (!restoredNotes.length) {
+      alert('Bu Google hesabının Firestore veritabanında (note_* veya eski main belgesinde) kurtarılacak eski not bulunamadı.');
+      return 0;
+    }
+
+    const folderMap = new Map();
+    for (const f of (legacyMain?.folders || [])) if (f?.id) folderMap.set(f.id, f);
+    for (const f of (remoteMeta?.folders || [])) if (f?.id) folderMap.set(f.id, f);
+    for (const f of (local.folders || [])) if (f?.id) folderMap.set(f.id, f);
+
+    const nextDb = {
+      ...local,
+      folders: [...folderMap.values()],
+      notes: restoredNotes,
+      activeNoteId: restoredNotes[0].id,
+      updatedAt: Date.now()
+    };
+
+    isApplyingRemote = true;
+    window.setAppDb?.(nextDb);
+    isApplyingRemote = false;
+    hasInitialServerSnapshot = true;
+    await flushCloudSync(window.getAppDb?.() || nextDb);
+
+    alert(`Buluttan ${foundMap.size} not bulundu; toplam ${restoredNotes.length} not ve klasörleri geri yüklendi!`);
+    return restoredNotes.length;
+  } catch (err) {
+    alert('Bulut kurtarma hatası: ' + (err?.message || err));
+    return 0;
+  }
 };
 
 async function checkDailyDriveBackup(data) {

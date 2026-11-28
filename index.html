@@ -1919,6 +1919,7 @@
         <button class="tool-btn" onclick="exportZipBackup()">📦 Tarihli ZIP Yedek İndir</button>
         <button class="tool-btn" onclick="exportJsonBackup()">🗂️ JSON Yedek İndir</button>
         <label class="tool-btn" style="cursor:pointer;">📂 Yedek Yükle (.zip/.json)<input type="file" accept=".zip,.json" hidden onchange="importBackupFile(event)" /></label>
+        <button class="tool-btn" onclick="triggerCloudRecovery()">🛟 Buluttan Kayıp Notları Kurtar</button>
         <button class="tool-btn" onclick="openPrintOptimizerModal()">🖨️ Akıllı Sayfa Böl &amp; PDF</button>
       </div>
 
@@ -2316,6 +2317,36 @@
     const appDbReadyPromise = new Promise(res => { resolveAppDbReady = res; });
     window.waitForAppDbReady = () => appDbReadyPromise;
 
+    function ensureNotesHaveValidFolders() {
+      if (!Array.isArray(db.folders)) db.folders = [];
+      if (!db.folders.length) {
+        db.folders.push({ id: 'folder_general', parentId: null, name: 'Genel Dersler', pinned: false, collapsed: false, order: 0 });
+      }
+      const folderIds = new Set(db.folders.map(f => f.id));
+      // Üst klasörü silinmiş alt klasörleri ana düzeye çıkar ki görünmez kalmasınlar
+      db.folders.forEach(f => {
+        if (f.parentId && !folderIds.has(f.parentId)) f.parentId = null;
+      });
+      let orphanIdx = 0;
+      (db.notes || []).forEach(n => {
+        if (!n || n.isQuickPool) return;
+        if (!n.folderId) {
+          n.folderId = db.folders[0].id;
+        } else if (!folderIds.has(n.folderId)) {
+          orphanIdx++;
+          db.folders.push({
+            id: n.folderId,
+            parentId: null,
+            name: 'Kurtarılan Klasör ' + orphanIdx,
+            pinned: false,
+            collapsed: false,
+            order: db.folders.length
+          });
+          folderIds.add(n.folderId);
+        }
+      });
+    }
+
     async function loadDatabase() {
       let parsed = null;
       try {
@@ -2392,9 +2423,7 @@
           const mergedSettings = { ...db.settings, ...(remoteDb.settings || {}) };
           const validFolders = Array.isArray(remoteDb.folders) && remoteDb.folders.length ? remoteDb.folders : db.folders;
           db = { ...db, ...remoteDb, folders: validFolders, settings: mergedSettings };
-          if (!db.folders.length) {
-            db.folders.push({ id: 'folder_general', parentId: null, name: 'Genel Dersler', pinned: false, collapsed: false, order: 0 });
-          }
+          ensureNotesHaveValidFolders();
           if (!db.notes.some(n => n.id === db.activeNoteId)) {
             db.activeNoteId = db.notes[0]?.id || null;
           }
@@ -2406,6 +2435,7 @@
         if (info?.message) showStudioToast(info.message, null, null, 6000);
       };
 
+      ensureNotesHaveValidFolders();
       applySettingsToDOM();
       saveDatabase(false);
       if (resolveAppDbReady) { resolveAppDbReady(db); resolveAppDbReady = null; }
@@ -2446,6 +2476,14 @@
         alert('Bulut eşitleme tamamlandı.');
       }
       updateGlobalBatteryGauge();
+    }
+
+    async function triggerCloudRecovery() {
+      if (typeof window.recoverCloudNotes === 'function') {
+        await window.recoverCloudNotes();
+      } else {
+        alert('Bulut kurtarma modülü (cloud.js) henüz yüklenmedi. Sayfanın https:// üzerinden açık olduğundan ve Google ile giriş yaptığınızdan emin olun.');
+      }
     }
 
     function pushUndo() {
@@ -3018,6 +3056,7 @@
         return;
       }
 
+      ensureNotesHaveValidFolders();
       tree.innerHTML = renderFolderBranch(null);
     }
 
