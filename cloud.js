@@ -31,6 +31,7 @@ enableIndexedDbPersistence(dbCloud).catch(() => {});
 const provider = new GoogleAuthProvider();
 provider.addScope('https://www.googleapis.com/auth/drive.file');
 
+const OWNER_ADMIN_UID = 'HdgIuerxCehDTxrPrEoDaZuQBXc2';
 let currentUser = null;
 let driveToken = sessionStorage.getItem('drive_token') || null;
 let unsubDataCol = null;
@@ -38,6 +39,11 @@ let isApplyingRemote = false;
 let syncDebounceTimer = null;
 let isMigratingLegacy = false;
 let hasInitialServerSnapshot = false;
+
+function isOwnerAccount() {
+  return Boolean(currentUser && currentUser.uid === OWNER_ADMIN_UID);
+}
+window.isCloudOwnerAccount = isOwnerAccount;
 
 const lastSyncedNoteHashes = new Map();
 let lastSyncedMetaHash = '';
@@ -474,6 +480,238 @@ window.recoverCloudNotes = async () => {
     alert('Bulut kurtarma hatası: ' + (err?.message || err));
     return 0;
   }
+};
+
+/* ==========================================================================
+   MANUEL TARİHLİ BULUT YEDEKLEME (PARÇA-BELGE SNAPSHOT) & YÖNETİCİ ÇÖP KUTUSU
+   ========================================================================== */
+const SNAPSHOT_CHUNK_CHARS = 450000;
+const TRASH_SOFT_LIMIT_BYTES = Math.round(880 * 1024 * 1024);
+
+window.createManualCloudSnapshot = async (customLabel = '') => {
+  if (!currentUser) {
+    alert('Önce Google hesabınızla giriş yapın.');
+    return null;
+  }
+  const localDb = window.getAppDb?.();
+  if (!localDb || !Array.isArray(localDb.notes)) return null;
+
+  const ts = Date.now();
+  const snapId = 'snap_' + ts;
+  const notesJson = JSON.stringify(localDb.notes);
+  const totalBytes = new Blob([notesJson]).size;
+  const chunks = [];
+  for (let i = 0; i < notesJson.length; i += SNAPSHOT_CHUNK_CHARS) {
+    chunks.push(notesJson.slice(i, i + SNAPSHOT_CHUNK_CHARS));
+  }
+  if (!chunks.length) chunks.push('[]');
+
+  const snapCol = collection(dbCloud, 'users', currentUser.uid, 'snapshots');
+  const batch = writeBatch(dbCloud);
+  const headerPayload = {
+    id: snapId,
+    createdAt: ts,
+    label: String(customLabel || '').trim() || ('Manuel Yedek · ' + new Date(ts).toLocaleString('tr-TR')),
+    noteCount: localDb.notes.length,
+    folderCount: (localDb.folders || []).length,
+    totalBytes,
+    chunkCount: chunks.length,
+    folders: JSON.parse(JSON.stringify(localDb.folders || [])),
+    activeNoteId: localDb.activeNoteId || null,
+    settings: JSON.parse(JSON.stringify(localDb.settings || {}))
+  };
+  batch.set(doc(snapCol, snapId), headerPayload);
+
+  chunks.forEach((chunkStr, idx) => {
+    batch.set(doc(snapCol, `${snapId}_c${idx}`), {
+      snapshotId: snapId,
+      chunkIndex: idx,
+      data: chunkStr
+    });
+  });
+
+  await batch.commit();
+  return headerPayload;
+};
+
+window.listCloudSnapshots = async () => {
+  if (!currentUser) return [];
+  const snapCol = collection(dbCloud, 'users', currentUser.uid, 'snapshots');
+  let snap;
+  try {
+    snap = await getDocsFromServer(snapCol);
+  } catch (_) {
+    snap = await getDocs(snapCol);
+  }
+  const headers = [];
+  snap.forEach((d) => {
+    const data = d.data();
+    if (data && !data.snapshotId && data.id) {
+      headers.push(data);
+    }
+  });
+  headers.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  return headers;
+};
+
+window.restoreCloudSnapshot = async (snapId) => {
+  if (!currentUser || !snapId) return false;
+  const snapCol = collection(dbCloud, 'users', currentUser.uid, 'snapshots');
+  let snap;
+  try {
+    snap = await getDocsFromServer(snapCol);
+  } catch (_) {
+    snap = await getDocs(snapCol);
+  }
+  let header = null;
+  const chunks = [];
+  snap.forEach((d) => {
+    const data = d.data();
+    if (!data) return;
+    if (d.id === snapId && !data.snapshotId) header = data;
+    else if (data.snapshotId === snapId) chunks.push(data);
+  });
+  if (!header || !chunks.length) {
+    alert('Seçilen bulut yedeğinin verisi bulunamadı.');
+    return false;
+  }
+  chunks.sort((a, b) => (a.chunkIndex || 0) - (b.chunkIndex || 0));
+  const notesJson = chunks.map(c => c.data || '').join('');
+  const restoredNotes = JSON.parse(notesJson);
+  const local = window.getAppDb?.() || { folders: [], notes: [], settings: {} };
+  const mergedFolders = mergeFoldersSafely(restoredNotes, header.folders, local.folders);
+
+  const nextDb = {
+    ...local,
+    folders: mergedFolders,
+    notes: restoredNotes,
+    activeNoteId: restoredNotes.some(n => n.id === header.activeNoteId) ? header.activeNoteId : (restoredNotes[0]?.id || null),
+    settings: header.settings ? { ...local.settings, ...header.settings } : local.settings,
+    updatedAt: Date.now()
+  };
+
+  isApplyingRemote = true;
+  window.setAppDb?.(nextDb);
+  isApplyingRemote = false;
+  hasInitialServerSnapshot = true;
+  await flushCloudSync(window.getAppDb?.() || nextDb);
+  return true;
+};
+
+window.deleteCloudSnapshot = async (snapId) => {
+  if (!currentUser || !snapId) return;
+  const snapCol = collection(dbCloud, 'users', currentUser.uid, 'snapshots');
+  const snap = await getDocs(snapCol);
+  const batch = writeBatch(dbCloud);
+  snap.forEach((d) => {
+    const data = d.data();
+    if (d.id === snapId || data?.snapshotId === snapId) {
+      batch.delete(doc(snapCol, d.id));
+    }
+  });
+  await batch.commit();
+};
+
+window.moveNoteToCloudTrash = async (note) => {
+  if (!isOwnerAccount() || !note || !note.id || isSeedWelcomeNote(note)) return false;
+  try {
+    const dataCol = collection(dbCloud, 'users', currentUser.uid, 'data');
+    const snap = await getDocs(dataCol);
+    let totalBytes = 0;
+    const trashList = [];
+    snap.forEach((d) => {
+      const data = d.data();
+      const b = new Blob([JSON.stringify(data)]).size;
+      totalBytes += b;
+      if (d.id.startsWith('trash_') && data) {
+        trashList.push({ docId: d.id, deletedAt: data.deletedAt || 0, bytes: b });
+      }
+    });
+
+    const cleanNote = JSON.parse(JSON.stringify(note));
+    cleanNote.deletedAt = Date.now();
+    cleanNote.isTrashed = true;
+    let payloadStr = JSON.stringify(cleanNote);
+    let noteBytes = new Blob([payloadStr]).size;
+
+    // Tekil belge 980 KB üstündeyse görsel gömmelerini çıkarıp metin/formülleri kurtar
+    if (noteBytes > 980 * 1024) {
+      cleanNote.blocks = (cleanNote.blocks || []).map(b => ({
+        ...b,
+        html: String(b.html || '').replace(/<img[^>]+src=["']data:image\/[^"']+["'][^>]*>/gi, '<p><em>[Çöp kutusu boyut koruması: gömülü görsel çıkarıldı]</em></p>')
+      }));
+      payloadStr = JSON.stringify(cleanNote);
+      noteBytes = new Blob([payloadStr]).size;
+    }
+    if (noteBytes > 980 * 1024) return false;
+
+    // 1 GB limite (%86) yaklaşılırsa en eski çöp kutusu öğelerini otomatik temizle
+    trashList.sort((a, b) => (a.deletedAt || 0) - (b.deletedAt || 0));
+    while (totalBytes + noteBytes > TRASH_SOFT_LIMIT_BYTES && trashList.length > 0) {
+      const oldest = trashList.shift();
+      await deleteDoc(doc(dataCol, oldest.docId));
+      totalBytes -= oldest.bytes;
+    }
+
+    await setDoc(doc(dataCol, 'trash_' + cleanNote.id), cleanNote);
+    return true;
+  } catch (err) {
+    console.warn('Çöp kutusu kaydı atlandı:', err);
+    return false;
+  }
+};
+
+window.listCloudTrash = async () => {
+  if (!isOwnerAccount()) return [];
+  const dataCol = collection(dbCloud, 'users', currentUser.uid, 'data');
+  let snap;
+  try {
+    snap = await getDocsFromServer(dataCol);
+  } catch (_) {
+    snap = await getDocs(dataCol);
+  }
+  const list = [];
+  snap.forEach((d) => {
+    if (d.id.startsWith('trash_')) {
+      const data = d.data();
+      if (data && data.id) list.push(data);
+    }
+  });
+  list.sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
+  return list;
+};
+
+window.restoreCloudTrashNote = async (noteId) => {
+  if (!isOwnerAccount() || !noteId) return false;
+  const dataCol = collection(dbCloud, 'users', currentUser.uid, 'data');
+  const snap = await getDocs(dataCol);
+  let target = null;
+  snap.forEach((d) => {
+    if (d.id === 'trash_' + noteId) target = d.data();
+  });
+  if (!target) return false;
+  delete target.deletedAt;
+  delete target.isTrashed;
+  target.updatedAt = Date.now();
+
+  const local = window.getAppDb?.() || { folders: [], notes: [], settings: {} };
+  const mergedFolders = mergeFoldersSafely([target], local.folders);
+  const nextNotes = [target, ...(local.notes || []).filter(n => n.id !== target.id)];
+  const nextDb = { ...local, folders: mergedFolders, notes: nextNotes, activeNoteId: target.id, updatedAt: Date.now() };
+
+  isApplyingRemote = true;
+  window.setAppDb?.(nextDb);
+  isApplyingRemote = false;
+  hasInitialServerSnapshot = true;
+  await deleteDoc(doc(dataCol, 'trash_' + noteId));
+  await flushCloudSync(window.getAppDb?.() || nextDb);
+  return true;
+};
+
+window.purgeCloudTrashNote = async (noteId) => {
+  if (!isOwnerAccount() || !noteId) return;
+  const dataCol = collection(dbCloud, 'users', currentUser.uid, 'data');
+  await deleteDoc(doc(dataCol, 'trash_' + noteId));
 };
 
 async function checkDailyDriveBackup(data) {
