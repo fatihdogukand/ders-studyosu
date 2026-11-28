@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.2</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.3</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1525,7 +1525,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.6.2</div>
+            <div class="brand-sub">Ders stüdyosu · v4.6.3</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1907,11 +1907,11 @@
     </div>
   </div>
 
-  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.6.2) -->
+  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.6.3) -->
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.6.2)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.6.3)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -1919,7 +1919,7 @@
         <button class="tool-btn" onclick="exportZipBackup()">📦 Tarihli ZIP Yedek İndir</button>
         <button class="tool-btn" onclick="exportJsonBackup()">🗂️ JSON Yedek İndir</button>
         <label class="tool-btn" style="cursor:pointer;">📂 Yedek Yükle (.zip/.json)<input type="file" accept=".zip,.json" hidden onchange="importBackupFile(event)" /></label>
-        <button class="tool-btn" onclick="triggerCloudRecovery()">🛟 Buluttan Kayıp Notları Kurtar</button>
+        <button class="tool-btn active" onclick="triggerCloudRecovery()">🛟 Buluttan Kayıp Notları Kurtar</button>
         <button class="tool-btn" onclick="openPrintOptimizerModal()">🖨️ Akıllı Sayfa Böl &amp; PDF</button>
       </div>
 
@@ -1927,7 +1927,12 @@
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
 
         <div class="changelog-item">
-          <span class="changelog-ver">v4.6.2 — Çoklu Cihaz (iPad/Mobil) Google Bulut Eşitleme Güvenliği &amp; Yarış Durumu Düzeltmesi (Güncel)</span>
+          <span class="changelog-ver">v4.6.3 — Tek Tıkla Bulut Kurtarma &amp; Öksüz Klasör Onarımı (Güncel)</span>
+          Yedekleme penceresine Firestore'daki tüm <code>note_*</code> ve eski <code>main</code> belgelerini tarayıp geri getiren <strong>🛟 Buluttan Kayıp Notları Kurtar</strong> (<code>recoverCloudNotes</code>) eklendi; klasör kaydı eksik kalan notların sol ağaçta gizlenmesini engelleyen <code>ensureNotesHaveValidFolders()</code> ve eski <code>main.folders</code> klasör adı kurtarma mekanizması devreye alındı.
+        </div>
+
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.6.2 — Çoklu Cihaz (iPad/Mobil) Google Bulut Eşitleme Güvenliği &amp; Yarış Durumu Düzeltmesi</span>
           Yeni bir cihazdan (ör. iPad) Google ile ilk girişte oluşan boş karşılama notunun gerçek bulut notlarını ezme veya <code>loadDatabase()</code> yüklenmesi bitmeden gelen ilk bulut anlık görüntüsünün kaçırılma riski giderildi (<code>waitForAppDbReady</code>, <code>fromCache</code> koruması, <code>hasInitialServerSnapshot</code> kilidi ve Safari/PWA <code>signInWithRedirect</code> yedeği eklendi).
         </div>
 
@@ -2126,7 +2131,7 @@
 
   <script>
     /* ==========================================================================
-       SOHBET OKULU v4.6.2 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
+       SOHBET OKULU v4.6.3 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
        ========================================================================== */
     const DB_KEY = 'ders_studyosu_db_v1';
     const IDB_NAME = 'SohbetOkuluMasterIDB';
@@ -2145,7 +2150,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.6.2',
+      version: '4.6.3',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -2360,7 +2365,7 @@
 
       if (parsed) {
         db = {
-          version: '4.6.2',
+          version: '4.6.3',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2506,7 +2511,7 @@
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.6.2';
+      db.version = '4.6.3';
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -6582,7 +6587,7 @@
     }
 
     function buildStandaloneNoteHtml(note) {
-      const APP_VER = '4.6.2';
+      const APP_VER = '4.6.3';
       const safeTitle = escapeHtml(note.title || 'Ders Notu');
       const liveCss = document.querySelector('style')?.textContent || '';
       const standaloneExtraCss = `
