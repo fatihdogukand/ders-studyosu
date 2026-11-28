@@ -74,8 +74,12 @@ function mergeFoldersSafely(notes, ...folderLists) {
     const prev = fMap.get(f.id);
     const fIsPlaceholder = isPlaceholderFolderName(f.name);
     const prevIsPlaceholder = isPlaceholderFolderName(prev?.name);
-    if (prev && !prevIsPlaceholder && fIsPlaceholder) return;
-    fMap.set(f.id, prev ? { ...prev, ...f } : { ...f });
+    if (prev && !prevIsPlaceholder && fIsPlaceholder) {
+      if (typeof f.collapsed === 'boolean') prev.collapsed = f.collapsed;
+      return;
+    }
+    const keptCollapsed = typeof f.collapsed === 'boolean' ? f.collapsed : Boolean(prev?.collapsed);
+    fMap.set(f.id, prev ? { ...prev, ...f, collapsed: keptCollapsed } : { ...f, collapsed: keptCollapsed });
   };
   for (const n of (notes || [])) {
     if (Array.isArray(n?.folderTrail)) {

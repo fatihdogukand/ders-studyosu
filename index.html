@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.7.2</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.7.3</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -364,7 +364,7 @@
     .folder-header.drag-top::before, .note-item.drag-top::before { content: ''; position: absolute; left: 8px; right: 8px; top: -2px; height: 2px; background: #d9e89c; }
     .folder-header.drag-bottom::after, .note-item.drag-bottom::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: -2px; height: 2px; background: #d9e89c; }
     .folder-children { padding-left: 14px; margin-top: 2px; display: flex; flex-direction: column; gap: 2px; }
-    .folder-block.collapsed .folder-children { display: none; }
+    .folder-block.collapsed > .folder-children { display: none !important; }
 
 
     .folder-header.active-folder { background: rgba(217, 232, 156, 0.14); color: #fff; }
@@ -1475,7 +1475,7 @@
       .sticky-note-nav, .in-note-search-bar, .scroll-top-fab, .studio-toast,
       .fit-zoom-btn, .selection-popover, .table-action-pill, .inline-photo-bar,
       .premise-box-head button, .side-note-head button, .modal-backdrop,
-      .auto-page-break-badge, .a4-page-guide, .parkur-wrap, .parkur-btn, .block-row.filtered-out { display: none !important; }
+      .auto-page-break-badge, .a4-page-guide, .parkur-wrap, .parkur-btn, .so-progress-marker, .block-row.filtered-out { display: none !important; }
       body, .app-shell, .workspace-wrap, .editor-scroll, body.a4-view-mode .editor-scroll {
         height: auto !important; overflow: visible !important; background: #fff !important; color: #111827 !important; padding: 0 !important;
       }
@@ -1676,6 +1676,31 @@
     .lesson-card.is-passed {
       border-top: 2.5px solid rgba(22, 163, 74, 0.45);
     }
+    .so-progress-marker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 10px 0;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, rgba(22, 163, 74, 0.14), rgba(217, 232, 156, 0.25));
+      border: 1.5px dashed var(--accent);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      user-select: none;
+    }
+    .so-pm-flag { display: inline-flex; align-items: center; gap: 6px; }
+    .so-pm-clear {
+      cursor: pointer;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.08);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .so-pm-clear:hover { background: rgba(220, 38, 38, 0.16); color: #b91c1c; }
     @media (max-width: 640px) {
       .parkur-btn-text { display: none; }
     }
@@ -1697,7 +1722,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.7.2</div>
+            <div class="brand-sub">Ders stüdyosu · v4.7.3</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1996,6 +2021,7 @@
     <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('italic')" title="İtalik (Ctrl+I)"><em>I</em></button>
     <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('underline')" title="Altı Çizili (Ctrl+U)"><u>U</u></button>
     <button class="fmt-btn" onpointerdown="event.preventDefault();toggleMathFocusSelection()" title="Formül / Çözüm Olarak Büyüt (fx)"><strong>fx</strong></button>
+    <button class="fmt-btn" onpointerdown="event.preventDefault();placeProgressMarkerAtSelection()" title="Buraya Geldim İşaretçisi (Marker) Koy">🚩</button>
   </div>
 
   <!-- Yukarı Çık Butonu (Mobilde Aşağı Kaydırınca Görünür) -->
@@ -2080,11 +2106,11 @@
     </div>
   </div>
 
-  <!-- YEDEKLEME, BULUT SNAPSHOT & YÖNETİCİ ÇÖP KUTUSU (v4.7.2) -->
+  <!-- YEDEKLEME, BULUT SNAPSHOT & YÖNETİCİ ÇÖP KUTUSU (v4.7.3) -->
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box" style="max-width:680px;">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Bulut Yedekleri ve Sürüm Notları (v4.7.2)</strong>
+        <strong>💾 Yedekleme, Bulut Yedekleri ve Sürüm Notları (v4.7.3)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
 
@@ -2128,7 +2154,12 @@
         <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">📜 Sürüm Notları (Son 3 Güncelleme)</div>
 
         <div class="changelog-item">
-          <span class="changelog-ver">v4.7.2 — Windows PC / iOS / Android Sıfır Takılma Optimizasyonu &amp; İç İçe Klasör Yedekleme (Güncel)</span>
+          <span class="changelog-ver">v4.7.3 — Bölüm Bazlı Konum İşaretçisi (Marker) &amp; Klasör Aç/Kapa Düzeltmesi (Güncel)</span>
+          Tek karttan oluşan uzun notlarda da çalışabilmesi için <strong>🚩 Buraya geldim</strong> butonu akıllı bölüm seçicisiyle (<code>openCardSectionMarkerPicker</code>) birleştirildi ve metin seçim çubuğuna doğrudan kart içi <code>📍 Buraya Kadar Geldim</code> işaretçisi (<code>.so-progress-marker</code>, <code>placeProgressMarkerAtSelection</code>) eklendi (çok kartlı notlarda eski kartlar <code>✓ Geçildi</code> kalırken işaretli kart içi yüzdeyle birlikte hesaplanır); <code>ensureNotesHaveValidFolders()</code> ve <code>cloud.js</code> içinde <code>Kurtarılan Klasör</code> daraltma (<code>collapsed</code>) durumunun sıfırlanmasına yol açan hata giderildi.
+        </div>
+
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.7.2 — Windows PC / iOS / Android Sıfır Takılma Optimizasyonu &amp; İç İçe Klasör Yedekleme</span>
           PC'de sol panel adlandırma ve buton tepkilerindeki hantallık giderildi: adlandırma/sıralama/klasör işlemlerinde editörü ve KaTeX formüllerini baştan çizen gereksiz <code>renderAll()</code> çağrıları kaldırıldı; IndexedDB bağlantısı önbelleğe alındı ve <code>localStorage</code> 5 MB senkron takılma eşiği devreden çıkarılarak <code>JSON.stringify</code> tamamen bekleme süresine taşındı; PC Chrome'da yazım alanını yavaşlatan <code>content-visibility: auto</code> kaldırıldı; tam ZIP ve JSON yedekleri artık tüm alt klasör ağacını ve gruplamaları iç içe korur.
         </div>
 
@@ -2137,14 +2168,13 @@
           Her kartın üst araç çubuğuna <strong>🚩 Buraya geldim</strong> (<code>toggleNoteProgressCheckpoint</code>) butonu ve not tepesindeki sabit gezinti çubuğuna animasyonlu kıvrımlı engel rotası (🚩 → 🪨 → 🌉 → ⚡ → 🏆), <code>%</code> tamamlama sayacı, doğrudan konuma atlama (<code>📍 Git</code>) ve aşama kutlama mesajları eklendi; ilerleme bilgisi (<code>progressBlockId</code>) buluta ve bağımsız HTML çıktısına da kaydedilir.
         </div>
 
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--accent);padding:4px 0;">📜 Eski Sürüm Notlarını Göster (v4.7.0 → v1.0.0)</summary>
+          <div style="margin-top:8px;">
         <div class="changelog-item">
           <span class="changelog-ver">v4.7.0 — iPad/WebKit Performans Optimizasyonu, Tarihli Bulut Yedekleri, Yönetici Çöp Kutusu &amp; Sol Panel İçi Düzenleme</span>
           iPad Chrome/WebKit takılmalarını gidermek için tekil JSON serileştirme, geciktirmeli IndexedDB yazımı, aktif-not kapsamlı hafif <code>pushUndo()</code>, <code>content-visibility: auto</code> ve dokunmatik ekranlarda hafifletilmiş katmanlar eklendi; <strong>☁️ Buluta Yedekle</strong> (parçalı snapshot) + <strong>tarihli bulut yedek seçicisi</strong> eklendi; yalnızca sahip hesabına özel otomatik kapasite korumalı <strong>🗑️ Çöp Kutusu</strong> eklendi; aynı klasör içinde sürükle-bırak/oklarla özel not sıralama ve sol panelden doğrudan <strong>satır içi klasör/not adı değiştirme</strong> eklendi.
         </div>
-
-        <details style="margin-top:8px;">
-          <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--accent);padding:4px 0;">📜 Eski Sürüm Notlarını Göster (v4.6.4 → v1.0.0)</summary>
-          <div style="margin-top:8px;">
         <div class="changelog-item">
           <span class="changelog-ver">v4.6.4 — Klasör Yapısı / İsim Gömme &amp; Yedekleme Penceresi Sadeleştirme</span>
           Her nota klasör yolu (<code>folderTrail</code>) işlenerek gelecekte yalnızca not belgelerinden bile tüm klasör adlarının ve alt klasör ağacının eksiksiz geri kurulması sağlandı; bulut kurtarmada eski <code>main.folders</code> adlarının <code>Kurtarılan Klasör</code> tarafından ezilmesi hatası giderildi ve Yedekleme penceresindeki ilgisiz yazdırma butonu kaldırılıp sürüm notları açılır-kapanır hale getirildi.
@@ -2356,7 +2386,7 @@
 
   <script>
     /* ==========================================================================
-       SOHBET OKULU v4.7.2 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
+       SOHBET OKULU v4.7.3 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
        ========================================================================== */
     const DB_KEY = 'ders_studyosu_db_v1';
     const IDB_NAME = 'SohbetOkuluMasterIDB';
@@ -2375,7 +2405,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.7.2',
+      version: '4.7.3',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -2609,16 +2639,20 @@
         db.folders.push({ id: 'folder_general', parentId: null, name: 'Genel Dersler', pinned: false, collapsed: false, order: 0 });
       }
       const folderMap = new Map(db.folders.map(f => [f.id, f]));
-      // Notlarda gömülü folderTrail varsa kayıp/geçici klasör adlarını ve üst yapısını onar
+      const isPh = (s) => /^Kurtarılan Klasör\s*\d*$/i.test(String(s || '').trim());
+      // Notlarda gömülü folderTrail varsa yalnızca eksik/gerçek adları tamamla; mevcut collapsed durumunu ASLA sıfırlama!
       (db.notes || []).forEach(n => {
         if (!n || !Array.isArray(n.folderTrail)) return;
         n.folderTrail.forEach(tf => {
           if (!tf || !tf.id || !tf.name) return;
           const existing = folderMap.get(tf.id);
-          if (!existing || /^Kurtarılan Klasör\s*\d*$/i.test(String(existing.name || '').trim())) {
+          if (!existing) {
             const restored = { id: tf.id, parentId: tf.parentId || null, name: tf.name, pinned: Boolean(tf.pinned), collapsed: false, order: Number(tf.order ?? db.folders.length) };
-            if (existing) Object.assign(existing, restored);
-            else { db.folders.push(restored); folderMap.set(tf.id, restored); }
+            db.folders.push(restored);
+            folderMap.set(tf.id, restored);
+          } else if (isPh(existing.name) && !isPh(tf.name)) {
+            existing.name = tf.name;
+            if (tf.parentId && !existing.parentId) existing.parentId = tf.parentId;
           }
         });
       });
@@ -2660,7 +2694,7 @@
 
       if (parsed) {
         db = {
-          version: '4.7.2',
+          version: '4.7.3',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2991,7 +3025,7 @@
     });
 
     function saveDatabase(triggerCloud = true, immediatePersist = false) {
-      db.version = '4.7.2';
+      db.version = '4.7.3';
       persistPending = true;
 
       if (immediatePersist) {
@@ -4264,24 +4298,28 @@
       const blocks = Array.isArray(noteObj?.blocks) ? noteObj.blocks : [];
       const total = blocks.length;
       const doneIdx = noteObj?.progressBlockId ? blocks.findIndex(b => b.id === noteObj.progressBlockId) : -1;
+      const ratio = doneIdx >= 0 ? Math.min(1, Math.max(0.05, Number(noteObj?.progressRatio || 1))) : 0;
       const doneCount = doneIdx >= 0 ? (doneIdx + 1) : 0;
-      const pct = total > 0 && doneCount > 0 ? Math.min(100, Math.round((doneCount / total) * 100)) : 0;
-      return { total, doneIdx, doneCount, pct };
+      const pct = total > 0 && doneIdx >= 0 ? Math.min(100, Math.max(1, Math.round(((doneIdx + ratio) / total) * 100))) : 0;
+      return { total, doneIdx, doneCount, pct, ratio };
     }
 
     function buildParkurBannerHtml(noteObj, celebrate = false) {
-      const { total, doneIdx, doneCount, pct } = getParkurStats(noteObj);
-      let msg = '🏁 Çalışma Parkuru hazır — Karttaki "🚩 Buraya geldim" ile işaretle';
-      if (pct === 100) msg = `🏆 Tebrikler! Parkurun %100'ünü tamamladın (${total}/${total} kart)!`;
+      const { total, doneIdx, doneCount, pct, ratio } = getParkurStats(noteObj);
+      let msg = '🏁 Çalışma Parkuru hazır — Kartta "🚩 Buraya geldim" ya da metin seçip "🚩" ile işaretle';
+      if (pct === 100) msg = `🏆 Tebrikler! Parkurun %100'ünü tamamladın!`;
       else if (pct >= 75) msg = `⚡ Son virajdasın! %${pct} tamamlandı — bitişe çok az kaldı!`;
       else if (pct >= 50) msg = `🌉 Köprüden geçtin, yarıyı devirdin! %${pct} tamamlandı!`;
       else if (pct >= 25) msg = `🪨 İlk engeli aştın! %${pct} tamamlandı — ritim harika!`;
-      else if (pct > 0) msg = `👟 Harika başlangıç! Yolun %${pct}'i tamamlandı (${doneCount}/${total})`;
+      else if (pct > 0) msg = `👟 Harika başlangıç! Yolun %${pct}'i tamamlandı`;
 
       const clipW = Math.round(16 + 568 * (pct / 100));
       const runnerLeft = Math.min(96, Math.max(4, Math.round(2.5 + 95 * (pct / 100))));
       const runnerEmoji = pct === 100 ? '🏆' : pct > 0 ? '🏃' : '👟';
       const uid = 'pk_' + String(noteObj?.id || 'note').replace(/[^a-zA-Z0-9_]/g, '');
+      const statusPill = total === 1
+        ? `%${pct} tamam`
+        : (ratio < 0.99 && doneIdx >= 0 ? `${doneCount}/${total} kart (içi %${Math.round(ratio * 100)})` : `${doneCount}/${total} kart`);
       const milestones = [
         { p: 0, icon: '🚩', left: 3, title: 'Başlangıç' },
         { p: 25, icon: '🪨', left: 26, title: '%25 Engel' },
@@ -4295,12 +4333,12 @@
           <div class="parkur-head">
             <span class="parkur-msg">${msg}</span>
             <span class="parkur-controls">
-              <span>${doneCount}/${total} kart</span>
-              ${doneIdx >= 0 ? `<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="scrollToBlock('${noteObj.progressBlockId}')" title="Kaldığın karta atla">📍 Git</button>` : ''}
+              <span>${statusPill}</span>
+              ${doneIdx >= 0 ? `<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="scrollToNoteProgress()" title="İşaretli konuma atla">📍 Git</button>` : ''}
               ${doneIdx >= 0 ? `<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="clearNoteProgress()" title="Parkuru sıfırla">↺</button>` : ''}
             </span>
           </div>
-          <div class="parkur-route-box" title="Kartlardaki 🚩 Buraya geldim butonuyla parkurda ilerleyin">
+          <div class="parkur-route-box" title="Kartlardaki 🚩 Buraya geldim butonuyla veya metin seçip 🚩 koyarak ilerleyin">
             <svg viewBox="0 0 600 36" preserveAspectRatio="none" aria-hidden="true">
               <defs>
                 <clipPath id="${uid}_clip">
@@ -4319,32 +4357,207 @@
       `;
     }
 
-    let lastCelebrateNoteKey = '';
-    function toggleNoteProgressCheckpoint(blockId) {
-      const note = getActiveNote();
-      if (!note) return;
-      note.progressBlockId = (note.progressBlockId === blockId) ? null : blockId;
-      note.updatedAt = Date.now();
-      const { pct, doneCount, total } = getParkurStats(note);
-      lastCelebrateNoteKey = note.progressBlockId ? `${note.id}:${note.progressBlockId}` : '';
-      saveDatabase();
-      renderEditor();
+    function createProgressMarkerNode() {
+      const m = document.createElement('div');
+      m.className = 'so-progress-marker';
+      m.setAttribute('data-so-marker', '1');
+      m.setAttribute('contenteditable', 'false');
+      m.innerHTML = '<span class="so-pm-flag">📍 Buraya Kadar Geldim</span><span class="so-pm-clear" onclick="event.stopPropagation();clearNoteProgress()" title="İşaretçiyi kaldır">✕</span>';
+      return m;
+    }
 
+    function stripProgressMarkersFromNote(noteObj) {
+      if (!noteObj || !Array.isArray(noteObj.blocks)) return;
+      noteObj.blocks.forEach(b => {
+        if (b && typeof b.html === 'string' && b.html.indexOf('so-progress-marker') !== -1) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = b.html;
+          tmp.querySelectorAll('.so-progress-marker').forEach(el => el.remove());
+          b.html = tmp.innerHTML;
+        }
+      });
+    }
+
+    let lastCelebrateNoteKey = '';
+    function announceParkurProgress(note) {
+      const { pct, doneCount, total } = getParkurStats(note);
       if (pct === 100) {
-        showStudioToast(`🎉🏆 Tebrikler! "${note.title}" parkurunun %100'ünü tamamladın (${doneCount}/${total})!`, null, null, 5500);
+        showStudioToast(`🎉🏆 Tebrikler! "${note.title}" parkurunun %100'ünü tamamladın!`, null, null, 5500);
       } else if (pct >= 75) {
         showStudioToast(`⚡ Son viraj! %${pct} tamamlandı, bitişe çok az kaldı!`, null, null, 3800);
       } else if (pct >= 50) {
         showStudioToast(`🌉 Yarıyı devirdin! %${pct} tamamlandı, harika gidiyorsun!`, null, null, 3500);
       } else if (pct > 0) {
-        showStudioToast(`📍 İlerleme kaydedildi: %${pct} (${doneCount}/${total} kart)`, null, null, 2600);
+        showStudioToast(`📍 İlerleme kaydedildi: %${pct}` + (total > 1 ? ` (${doneCount}/${total} kart)` : ''), null, null, 2600);
       }
+    }
+
+    function toggleNoteProgressCheckpoint(blockId) {
+      const note = getActiveNote();
+      if (!note) return;
+      const cardContent = document.querySelector(`#row_${blockId} .card-content`);
+      const children = cardContent ? [...cardContent.children].filter(el => !el.classList.contains('so-progress-marker') && !el.classList.contains('a4-page-guide')) : [];
+
+      // Tek kartlı veya çok bölümlü uzun kartlarda içerideki bölüm/başlık seçicisini aç (hem PC hem iPad okuma modunda çalışır)
+      if (children.length > 4) {
+        openCardSectionMarkerPicker(blockId, cardContent, children);
+        return;
+      }
+
+      const removing = (note.progressBlockId === blockId);
+      stripProgressMarkersFromNote(note);
+      note.progressBlockId = removing ? null : blockId;
+      note.progressRatio = removing ? 0 : 1;
+      note.updatedAt = Date.now();
+      lastCelebrateNoteKey = note.progressBlockId ? `${note.id}:${note.progressBlockId}` : '';
+      saveDatabase();
+      renderEditor();
+      if (!removing) announceParkurProgress(note);
+    }
+
+    function openCardSectionMarkerPicker(blockId, cardContent, children) {
+      const note = getActiveNote();
+      if (!note) return;
+      const body = document.getElementById('pickerModalBody');
+      const blkIdx = note.blocks.findIndex(b => b.id === blockId);
+      const totalBlocks = note.blocks.length || 1;
+      document.getElementById('pickerModalTitle').textContent = '🚩 Bu Kartta Nereye Kadar Geldin?';
+
+      const targets = [];
+      const maxDirect = 18;
+      const step = children.length > maxDirect ? Math.ceil(children.length / maxDirect) : 1;
+      children.forEach((ch, idx) => {
+        const txt = (ch.textContent || '').trim().replace(/\s+/g, ' ');
+        if (!txt) return;
+        const isHeading = /^H[1-6]$/.test(ch.tagName) || Boolean(ch.querySelector('strong, b') && txt.length <= 120);
+        if (isHeading || idx % step === 0 || idx === children.length - 1) {
+          const ratio = (idx + 1) / children.length;
+          const totalPct = Math.min(100, Math.max(1, Math.round(((blkIdx + ratio) / totalBlocks) * 100)));
+          targets.push({ idx, label: txt.slice(0, 72), isHeading, totalPct, ratio });
+        }
+      });
+
+      const isThisCardActive = note.progressBlockId === blockId;
+      let html = `
+        <button class="picker-option-btn" style="background:var(--accent-soft);border-color:var(--accent);margin-bottom:8px;" onclick="setWholeCardAsProgress('${blockId}')">
+          <span>✅ Bu Kartın Tamamını Bitirdim</span>
+          <strong>%${Math.min(100, Math.round(((blkIdx + 1) / totalBlocks) * 100))}</strong>
+        </button>
+      `;
+      if (isThisCardActive) {
+        html += `
+          <button class="picker-option-btn" style="color:#dc2626;margin-bottom:8px;" onclick="closeModal('pickerModal');clearNoteProgress()">
+            <span>✕ Bu Nottaki İlerleme İşaretini Kaldır</span>
+            <span>Sıfırla</span>
+          </button>
+        `;
+      }
+      html += `<div style="font-size:11.5px;color:var(--text-muted);margin:6px 0 6px;">Veya kart içinden tam kaldığın bölümü seç (marker eklenir):</div>`;
+      html += targets.map(t => `
+        <button class="picker-option-btn" onclick="placeProgressMarkerAtChildIndex('${blockId}', ${t.idx})">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.isHeading ? '📌 ' : '• '}${escapeHtml(t.label)}</span>
+          <small style="color:var(--accent);font-weight:700;">%${t.totalPct}</small>
+        </button>
+      `).join('');
+
+      body.innerHTML = html;
+      document.getElementById('pickerModal').classList.add('open');
+    }
+
+    function setWholeCardAsProgress(blockId) {
+      closeModal('pickerModal');
+      const note = getActiveNote();
+      if (!note) return;
+      stripProgressMarkersFromNote(note);
+      note.progressBlockId = blockId;
+      note.progressRatio = 1;
+      note.updatedAt = Date.now();
+      lastCelebrateNoteKey = `${note.id}:${blockId}`;
+      saveDatabase();
+      renderEditor();
+      announceParkurProgress(note);
+    }
+
+    function placeProgressMarkerAtChildIndex(blockId, childIdx) {
+      closeModal('pickerModal');
+      const note = getActiveNote();
+      const blk = note?.blocks.find(b => b.id === blockId);
+      const cardContent = document.querySelector(`#row_${blockId} .card-content`);
+      if (!note || !blk || !cardContent) return;
+
+      const children = [...cardContent.children].filter(el => !el.classList.contains('so-progress-marker') && !el.classList.contains('a4-page-guide'));
+      const targetEl = children[childIdx];
+      if (!targetEl) return setWholeCardAsProgress(blockId);
+
+      stripProgressMarkersFromNote(note);
+      cardContent.querySelectorAll('.so-progress-marker').forEach(el => el.remove());
+      targetEl.parentNode.insertBefore(createProgressMarkerNode(), targetEl);
+      blk.html = extractCleanEditorHtml(cardContent);
+
+      note.progressBlockId = blockId;
+      note.progressRatio = Math.min(1, Math.max(0.05, (childIdx + 1) / Math.max(1, children.length)));
+      note.updatedAt = Date.now();
+      lastCelebrateNoteKey = `${note.id}:${blockId}`;
+      saveDatabase();
+      renderEditor();
+      announceParkurProgress(note);
+    }
+
+    function placeProgressMarkerAtSelection() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      const node = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+      const cardContent = node?.closest('.card-content');
+      const row = cardContent?.closest('.block-row');
+      const blockId = row?.id?.replace('row_', '');
+      const note = getActiveNote();
+      const blk = note?.blocks.find(b => b.id === blockId);
+      if (!note || !blk || !cardContent) return alert('Lütfen işaretçi koymak için kart metni içinde bir yer seçin.');
+
+      const children = [...cardContent.children].filter(el => !el.classList.contains('so-progress-marker') && !el.classList.contains('a4-page-guide'));
+      let anchorChild = node;
+      while (anchorChild && anchorChild.parentElement !== cardContent) {
+        anchorChild = anchorChild.parentElement;
+      }
+      const idx = Math.max(0, children.indexOf(anchorChild));
+      stripProgressMarkersFromNote(note);
+      cardContent.querySelectorAll('.so-progress-marker').forEach(el => el.remove());
+
+      if (anchorChild && anchorChild.parentElement === cardContent) {
+        cardContent.insertBefore(createProgressMarkerNode(), anchorChild);
+      } else {
+        cardContent.appendChild(createProgressMarkerNode());
+      }
+      blk.html = extractCleanEditorHtml(cardContent);
+      note.progressBlockId = blockId;
+      note.progressRatio = Math.min(1, Math.max(0.05, (idx + 1) / Math.max(1, children.length)));
+      note.updatedAt = Date.now();
+      lastCelebrateNoteKey = `${note.id}:${blockId}`;
+      const pop = document.getElementById('selectionPopover');
+      if (pop) pop.style.display = 'none';
+      sel.removeAllRanges();
+      saveDatabase();
+      renderEditor();
+      announceParkurProgress(note);
+    }
+
+    function scrollToNoteProgress() {
+      const marker = document.querySelector('#editorContainer .so-progress-marker');
+      if (marker) {
+        marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      const note = getActiveNote();
+      if (note?.progressBlockId) scrollToBlock(note.progressBlockId);
     }
 
     function clearNoteProgress() {
       const note = getActiveNote();
-      if (!note || !note.progressBlockId) return;
+      if (!note) return;
+      stripProgressMarkersFromNote(note);
       note.progressBlockId = null;
+      note.progressRatio = 0;
       note.updatedAt = Date.now();
       saveDatabase();
       renderEditor();
@@ -5534,6 +5747,9 @@
         if (/hl-pink/.test(cls)) keepClasses.push('hl-pink');
         if (/choice-line/.test(cls)) keepClasses.push('choice-line');
         if (/math-focus/.test(cls)) keepClasses.push('math-focus');
+        if (/so-progress-marker/.test(cls)) keepClasses.push('so-progress-marker');
+        if (/so-pm-flag/.test(cls)) keepClasses.push('so-pm-flag');
+        if (/so-pm-clear/.test(cls)) keepClasses.push('so-pm-clear');
         if (el.tagName === 'TABLE') {
           cls.split(/\s+/).filter(c => /^so-tbl-[a-z-]+$/.test(c)).forEach(c => keepClasses.push(c));
         }
@@ -7345,7 +7561,7 @@
     }
 
     function buildStandaloneNoteHtml(note) {
-      const APP_VER = '4.7.2';
+      const APP_VER = '4.7.3';
       const safeTitle = escapeHtml(note.title || 'Ders Notu');
       const liveCss = document.querySelector('style')?.textContent || '';
       const standaloneExtraCss = `
@@ -7389,6 +7605,7 @@
         id: String(note.id || 'shared_note'),
         title: String(note.title || 'Ders Notu'),
         progressBlockId: note.progressBlockId || null,
+        progressRatio: Number(note.progressRatio || 0),
         createdAt: Number(note.createdAt || Date.now()),
         updatedAt: Number(note.updatedAt || Date.now()),
         blocks: (note.blocks || []).map((b, bi) => ({
@@ -8461,20 +8678,21 @@
       const blocks = Array.isArray(noteObj && noteObj.blocks) ? noteObj.blocks : [];
       const total = blocks.length;
       const doneIdx = noteObj && noteObj.progressBlockId ? blocks.findIndex(b => b.id === noteObj.progressBlockId) : -1;
+      const ratio = doneIdx >= 0 ? Math.min(1, Math.max(0.05, Number(noteObj && noteObj.progressRatio || 1))) : 0;
       const doneCount = doneIdx >= 0 ? (doneIdx + 1) : 0;
-      const pct = total > 0 && doneCount > 0 ? Math.min(100, Math.round((doneCount / total) * 100)) : 0;
-      return { total, doneIdx, doneCount, pct };
+      const pct = total > 0 && doneIdx >= 0 ? Math.min(100, Math.max(1, Math.round(((doneIdx + ratio) / total) * 100))) : 0;
+      return { total, doneIdx, doneCount, pct, ratio };
     }
 
     function buildParkurBannerHtml(noteObj, celebrate) {
       const stats = getParkurStats(noteObj);
       const total = stats.total, doneIdx = stats.doneIdx, doneCount = stats.doneCount, pct = stats.pct;
-      let msg = '🏁 Çalışma Parkuru hazır — Karttaki "🚩 Buraya geldim" ile işaretle';
-      if (pct === 100) msg = '🏆 Tebrikler! Parkurun %100ünü tamamladın (' + total + '/' + total + ' kart)!';
+      let msg = '🏁 Çalışma Parkuru hazır — Kartta "🚩 Buraya geldim" ya da metin seçip "🚩" ile işaretle';
+      if (pct === 100) msg = '🏆 Tebrikler! Parkurun %100ünü tamamladın!';
       else if (pct >= 75) msg = '⚡ Son virajdasın! %' + pct + ' tamamlandı — bitişe çok az kaldı!';
       else if (pct >= 50) msg = '🌉 Köprüden geçtin, yarıyı devirdin! %' + pct + ' tamamlandı!';
       else if (pct >= 25) msg = '🪨 İlk engeli aştın! %' + pct + ' tamamlandı — ritim harika!';
-      else if (pct > 0) msg = '👟 Harika başlangıç! Yolun %' + pct + ' tamamlandı (' + doneCount + '/' + total + ')';
+      else if (pct > 0) msg = '👟 Harika başlangıç! Yolun %' + pct + ' tamamlandı';
 
       const clipW = Math.round(16 + 568 * (pct / 100));
       const runnerLeft = Math.min(96, Math.max(4, Math.round(2.5 + 95 * (pct / 100))));
@@ -8488,8 +8706,8 @@
       ];
       return '<div class="parkur-wrap ' + (celebrate ? 'celebrate' : '') + '" id="noteProgressTrack">' +
         '<div class="parkur-head"><span class="parkur-msg">' + msg + '</span><span class="parkur-controls">' +
-        '<span>' + doneCount + '/' + total + ' kart</span>' +
-        (doneIdx >= 0 ? '<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="scrollToBlock(\\'' + noteObj.progressBlockId + '\\')">📍 Git</button><button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="clearNoteProgress()">↺</button>' : '') +
+        '<span>' + (total === 1 ? '%' + pct + ' tamam' : doneCount + '/' + total + ' kart') + '</span>' +
+        (doneIdx >= 0 ? '<button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="scrollToNoteProgress()">📍 Git</button><button class="card-mini-btn" style="border:1px solid var(--border-soft);background:var(--bg-subtle);" onclick="clearNoteProgress()">↺</button>' : '') +
         '</span></div>' +
         '<div class="parkur-route-box"><svg viewBox="0 0 600 36" preserveAspectRatio="none" aria-hidden="true"><defs><clipPath id="pk_st_clip"><rect x="0" y="0" width="' + clipW + '" height="36"></rect></clipPath></defs>' +
         '<path d="M 16 20 C 62 6, 98 6, 138 20 C 178 33, 218 33, 258 20 C 298 6, 338 6, 378 20 C 418 33, 458 33, 498 20 C 534 9, 558 12, 584 18" fill="none" stroke="var(--border-soft)" stroke-width="4.5" stroke-dasharray="7 5" stroke-linecap="round"></path>' +
@@ -8498,16 +8716,70 @@
         '<div class="parkur-runner" style="left:' + runnerLeft + '%;"><span>' + runnerEmoji + '</span><span>%' + pct + '</span></div></div></div>';
     }
 
+    function stripProgressMarkers() {
+      (noteData.blocks || []).forEach(b => {
+        if (b && typeof b.html === 'string' && b.html.indexOf('so-progress-marker') !== -1) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = b.html;
+          tmp.querySelectorAll('.so-progress-marker').forEach(el => el.remove());
+          b.html = tmp.innerHTML;
+        }
+      });
+    }
+
     let lastCelebrateKey = '';
     function toggleNoteProgressCheckpoint(blockId) {
-      noteData.progressBlockId = (noteData.progressBlockId === blockId) ? null : blockId;
+      const removing = (noteData.progressBlockId === blockId);
+      stripProgressMarkers();
+      noteData.progressBlockId = removing ? null : blockId;
+      noteData.progressRatio = removing ? 0 : 1;
       noteData.updatedAt = Date.now();
       lastCelebrateKey = noteData.progressBlockId || '';
       syncEmbeddedDataTag();
       renderEditor();
     }
+    function placeProgressMarkerAtSelection() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      const node = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+      const cardContent = node?.closest('.card-content');
+      const row = cardContent?.closest('.block-row');
+      const blockId = row?.id?.replace('row_', '');
+      const blk = noteData.blocks.find(b => b.id === blockId);
+      if (!blk || !cardContent) return;
+      const children = [...cardContent.children].filter(el => !el.classList.contains('so-progress-marker') && !el.classList.contains('a4-page-guide'));
+      let anchor = node;
+      while (anchor && anchor.parentElement !== cardContent) anchor = anchor.parentElement;
+      const idx = Math.max(0, children.indexOf(anchor));
+      stripProgressMarkers();
+      cardContent.querySelectorAll('.so-progress-marker').forEach(el => el.remove());
+      const m = document.createElement('div');
+      m.className = 'so-progress-marker';
+      m.setAttribute('data-so-marker', '1');
+      m.setAttribute('contenteditable', 'false');
+      m.innerHTML = '<span class="so-pm-flag">📍 Buraya Kadar Geldim</span><span class="so-pm-clear" onclick="event.stopPropagation();clearNoteProgress()">✕</span>';
+      if (anchor && anchor.parentElement === cardContent) cardContent.insertBefore(m, anchor);
+      else cardContent.appendChild(m);
+      blk.html = extractCleanEditorHtml(cardContent);
+      noteData.progressBlockId = blockId;
+      noteData.progressRatio = Math.min(1, Math.max(0.05, (idx + 1) / Math.max(1, children.length)));
+      noteData.updatedAt = Date.now();
+      lastCelebrateKey = blockId;
+      document.getElementById('selectionPopover').style.display = 'none';
+      sel.removeAllRanges();
+      syncEmbeddedDataTag();
+      renderEditor();
+    }
+    function scrollToNoteProgress() {
+      const m = document.querySelector('#editorContainer .so-progress-marker');
+      if (m) { m.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+      if (noteData.progressBlockId) scrollToBlock(noteData.progressBlockId);
+    }
     function clearNoteProgress() {
+      stripProgressMarkers();
       noteData.progressBlockId = null;
+      noteData.progressRatio = 0;
       noteData.updatedAt = Date.now();
       syncEmbeddedDataTag();
       renderEditor();
@@ -8849,6 +9121,7 @@ ${standaloneExtraCss}</style>
     <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('italic')" title="İtalik"><em>I</em></button>
     <button class="fmt-btn" onpointerdown="event.preventDefault();applyTextStyle('underline')" title="Altı Çizili"><u>U</u></button>
     <button class="fmt-btn" onpointerdown="event.preventDefault();toggleMathFocusSelection()" title="Formül / Çözüm Büyüt (fx)"><strong>fx</strong></button>
+    <button class="fmt-btn" onpointerdown="event.preventDefault();placeProgressMarkerAtSelection()" title="Buraya Geldim İşaretçisi (Marker) Koy">🚩</button>
   </div>
 
   <button class="scroll-top-fab" id="scrollTopFab" onclick="document.getElementById('editorScroll').scrollTo({top:0,behavior:'smooth'})">↑ Başa Dön</button>
