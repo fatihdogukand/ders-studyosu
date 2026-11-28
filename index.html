@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#143528" />
-  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.1</title>
+  <title>Sohbet Okulu · Ders Çalışma Stüdyosu v4.6.2</title>
 
   <!-- 8 Eğitim & Okuma Yazı Tipi (Offline'da sistem fontlarına sorunsuz düşer) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1525,7 +1525,7 @@
           </div>
           <div>
             <div class="brand-title">Sohbet Okulu</div>
-            <div class="brand-sub">Ders stüdyosu · v4.6.1</div>
+            <div class="brand-sub">Ders stüdyosu · v4.6.2</div>
           </div>
         </div>
         <button class="sidebar-collapse-icon" onclick="toggleSidebar()" title="Sol Paneli Daralt">◧</button>
@@ -1907,11 +1907,11 @@
     </div>
   </div>
 
-  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.6.1) -->
+  <!-- YEDEKLEME & KRONOLOJİK SÜRÜM GÜNLÜĞÜ (v1.0.0 → v4.6.2) -->
   <div class="modal-backdrop" id="backupModal">
     <div class="modal-box">
       <div class="modal-head">
-        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.6.1)</strong>
+        <strong>💾 Yedekleme, Dışa Aktarma ve Sürüm Günlüğü (v1.0.0 → v4.6.2)</strong>
         <button class="card-mini-btn" onclick="closeModal('backupModal')">✕ Kapat</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -1926,7 +1926,12 @@
         <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📜 Sohbet Okulu · Tüm Sürümler Gelişim Günlüğü</div>
 
         <div class="changelog-item">
-          <span class="changelog-ver">v4.6.1 — A4 Sayfa Görünümü &amp; Boşluksuz Akıllı A4 PDF Akışı (Güncel)</span>
+          <span class="changelog-ver">v4.6.2 — Çoklu Cihaz (iPad/Mobil) Google Bulut Eşitleme Güvenliği &amp; Yarış Durumu Düzeltmesi (Güncel)</span>
+          Yeni bir cihazdan (ör. iPad) Google ile ilk girişte oluşan boş karşılama notunun gerçek bulut notlarını ezme veya <code>loadDatabase()</code> yüklenmesi bitmeden gelen ilk bulut anlık görüntüsünün kaçırılma riski giderildi (<code>waitForAppDbReady</code>, <code>fromCache</code> koruması, <code>hasInitialServerSnapshot</code> kilidi ve Safari/PWA <code>signInWithRedirect</code> yedeği eklendi).
+        </div>
+
+        <div class="changelog-item">
+          <span class="changelog-ver">v4.6.1 — A4 Sayfa Görünümü &amp; Boşluksuz Akıllı A4 PDF Akışı</span>
           Sağ ayarlar paneline ve bağımsız HTML çıktısına notu canlı A4 kâğıdı boyutunda ve sayfa sınır çizgileriyle görüntülemeyi sağlayan <strong>📄 A4 Sayfa Görünümü</strong> modu eklendi; yazdırma motorundaki sahte başlık (<code>&lt;p&gt;&lt;strong&gt;...&lt;/strong&gt;&lt;/p&gt;</code>) + uzun liste kaynaklı dev boşluk ve boş sayfa hatası semantik akışla (<code>print-keep-with-next</code>, ünite başlangıcı koruma eşiği ve <em>Boşluksuz Ders Notu Akışı</em>) tamamen giderildi.
         </div>
 
@@ -2120,7 +2125,7 @@
 
   <script>
     /* ==========================================================================
-       SOHBET OKULU v4.6.1 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
+       SOHBET OKULU v4.6.2 — HİBRİT DEPOLAMA (LOCALSTORAGE + INDEXEDDB) & MODEL
        ========================================================================== */
     const DB_KEY = 'ders_studyosu_db_v1';
     const IDB_NAME = 'SohbetOkuluMasterIDB';
@@ -2139,7 +2144,7 @@
     const ROMANS = ['I.', 'II.', 'III.', 'IV.', 'V.', 'VI.'];
 
     let db = {
-      version: '4.6.1',
+      version: '4.6.2',
       folders: [],
       notes: [],
       activeNoteId: null,
@@ -2307,6 +2312,10 @@
       }
     }
 
+    let resolveAppDbReady = null;
+    const appDbReadyPromise = new Promise(res => { resolveAppDbReady = res; });
+    window.waitForAppDbReady = () => appDbReadyPromise;
+
     async function loadDatabase() {
       let parsed = null;
       try {
@@ -2320,7 +2329,7 @@
 
       if (parsed) {
         db = {
-          version: '4.6.1',
+          version: '4.6.2',
           folders: Array.isArray(parsed.folders) ? parsed.folders : [],
           notes: Array.isArray(parsed.notes) ? parsed.notes : [],
           activeNoteId: parsed.activeNoteId || null,
@@ -2350,6 +2359,7 @@
           id: welcomeId,
           folderId: db.folders[0].id,
           isQuickPool: false,
+          isWelcomeSeed: true,
           title: 'Sohbet Okulu · Ders Çalışma Stüdyosu',
           pinned: true,
           createdAt: Date.now(),
@@ -2380,7 +2390,11 @@
       window.setAppDb = (remoteDb) => {
         if (remoteDb && Array.isArray(remoteDb.notes)) {
           const mergedSettings = { ...db.settings, ...(remoteDb.settings || {}) };
-          db = { ...db, ...remoteDb, settings: mergedSettings };
+          const validFolders = Array.isArray(remoteDb.folders) && remoteDb.folders.length ? remoteDb.folders : db.folders;
+          db = { ...db, ...remoteDb, folders: validFolders, settings: mergedSettings };
+          if (!db.folders.length) {
+            db.folders.push({ id: 'folder_general', parentId: null, name: 'Genel Dersler', pinned: false, collapsed: false, order: 0 });
+          }
           if (!db.notes.some(n => n.id === db.activeNoteId)) {
             db.activeNoteId = db.notes[0]?.id || null;
           }
@@ -2394,6 +2408,7 @@
 
       applySettingsToDOM();
       saveDatabase(false);
+      if (resolveAppDbReady) { resolveAppDbReady(db); resolveAppDbReady = null; }
     }
 
     let studioToastTimer = null;
@@ -2453,7 +2468,7 @@
     }
 
     function saveDatabase(triggerCloud = true) {
-      db.version = '4.6.1';
+      db.version = '4.6.2';
       const serialized = JSON.stringify(db);
       writeMasterToIndexedDB(db);
       try {
@@ -6528,7 +6543,7 @@
     }
 
     function buildStandaloneNoteHtml(note) {
-      const APP_VER = '4.6.1';
+      const APP_VER = '4.6.2';
       const safeTitle = escapeHtml(note.title || 'Ders Notu');
       const liveCss = document.querySelector('style')?.textContent || '';
       const standaloneExtraCss = `

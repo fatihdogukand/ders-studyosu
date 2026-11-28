@@ -1,4 +1,4 @@
-const CACHE = 'sohbet-okulu-v4.6.0';
+const CACHE = 'sohbet-okulu-v4.6.2';
 const CORE_ASSETS = [
   './',
   './index.html',

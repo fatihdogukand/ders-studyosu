@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore,
   doc,
@@ -35,9 +35,32 @@ let unsubDataCol = null;
 let isApplyingRemote = false;
 let syncDebounceTimer = null;
 let isMigratingLegacy = false;
+let hasInitialServerSnapshot = false;
 
 const lastSyncedNoteHashes = new Map();
 let lastSyncedMetaHash = '';
+
+function isSeedWelcomeNote(note) {
+  if (!note) return false;
+  if (note.isWelcomeSeed) return true;
+  return note.title === 'Sohbet Okulu · Ders Çalışma Stüdyosu'
+    && Array.isArray(note.blocks)
+    && note.blocks.length === 1
+    && note.blocks[0]?.id === 'blk_1';
+}
+
+function isSeedOnlyDb(database) {
+  const notes = Array.isArray(database?.notes) ? database.notes : [];
+  return notes.length === 0 || (notes.length === 1 && isSeedWelcomeNote(notes[0]));
+}
+
+getRedirectResult(auth).then((res) => {
+  const cred = res ? GoogleAuthProvider.credentialFromResult(res) : null;
+  if (cred?.accessToken) {
+    driveToken = cred.accessToken;
+    sessionStorage.setItem('drive_token', driveToken);
+  }
+}).catch(() => {});
 
 function fastHash(str) {
   let h = 2166136261;
@@ -57,6 +80,16 @@ async function loginWithGoogle() {
       sessionStorage.setItem('drive_token', driveToken);
     }
   } catch (e) {
+    const code = e?.code || '';
+    if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+      try {
+        await signInWithRedirect(auth, provider);
+        return;
+      } catch (re) {
+        alert('Yönlendirme giriş hatası: ' + re.message);
+        return;
+      }
+    }
     alert('Giriş hatası: ' + e.message);
   }
 }
@@ -113,6 +146,7 @@ onAuthStateChanged(auth, (user) => {
   if (unsubDataCol) { unsubDataCol(); unsubDataCol = null; }
   lastSyncedNoteHashes.clear();
   lastSyncedMetaHash = '';
+  hasInitialServerSnapshot = false;
 
   window.setAuthUserUI?.(user);
 
@@ -120,10 +154,27 @@ onAuthStateChanged(auth, (user) => {
 
   const dataCol = collection(dbCloud, 'users', user.uid, 'data');
 
-  unsubDataCol = onSnapshot(dataCol, async (querySnap) => {
+  unsubDataCol = onSnapshot(dataCol, { includeMetadataChanges: true }, async (querySnap) => {
+    // Yerel IndexedDB yüklemesi bitmeden bulut birleştirmesi yapma (yarış durumu önlemi)
+    if (typeof window.waitForAppDbReady === 'function') {
+      await window.waitForAppDbReady();
+    }
+
+    const fromCache = Boolean(querySnap.metadata?.fromCache);
+
     if (querySnap.empty) {
+      // Önbellekten boş gelmişse sunucu cevabını bekle; yeni cihazın boş karşılama notunu asla buluta yazma!
+      if (fromCache) return;
+      hasInitialServerSnapshot = true;
       const local = window.getAppDb?.();
-      if (local) await window.syncToCloud?.(local, { immediate: true });
+      if (local && !isSeedOnlyDb(local)) {
+        await window.syncToCloud?.(local, { immediate: true });
+      } else {
+        window.onCloudSyncStatus?.({
+          type: 'info',
+          message: 'Bu Google hesabında henüz bulut notu yok. PC veya diğer cihazınızdan Google ile giriş yapıp eşitleyin.'
+        });
+      }
       return;
     }
 
@@ -144,14 +195,21 @@ onAuthStateChanged(auth, (user) => {
       }
     });
 
-    // İlk kez v4.5.0'a geçiliyorsa eski tek parça 'main' belgesini otomatik olarak not bazlı belgelere böl
+    if (!fromCache) {
+      hasInitialServerSnapshot = true;
+    }
+
+    // İlk kez v4.5.0+ yapısına geçiliyorsa eski tek parça 'main' belgesini otomatik olarak not bazlı belgelere böl
     if (!metaDoc && legacyMainDoc && Array.isArray(legacyMainDoc.notes)) {
       const local = window.getAppDb?.() || {};
-      const sourceDb = (legacyMainDoc.updatedAt || 0) >= (local.updatedAt || 0) ? legacyMainDoc : local;
+      const preferRemote = isSeedOnlyDb(local) || (legacyMainDoc.updatedAt || 0) >= (local.updatedAt || 0);
+      const sourceDb = preferRemote ? legacyMainDoc : local;
       isApplyingRemote = true;
       window.setAppDb?.(sourceDb);
       isApplyingRemote = false;
-      await migrateLegacyMainToPerNote(user.uid, sourceDb);
+      if (!fromCache) {
+        await migrateLegacyMainToPerNote(user.uid, sourceDb);
+      }
       checkDailyDriveBackup(sourceDb);
       return;
     }
@@ -161,8 +219,20 @@ onAuthStateChanged(auth, (user) => {
     }
 
     const local = window.getAppDb?.() || { folders: [], notes: [], settings: {} };
+    const localWasSeedOnly = isSeedOnlyDb(local);
     const localNotesMap = new Map((local.notes || []).map(n => [n.id, n]));
     let changed = false;
+
+    // Bulutta gerçek notlar varsa yeni cihazda oluşan geçici karşılama notunu temizle
+    const remoteHasRealNotes = [...remoteNotesMap.values()].some(n => !isSeedWelcomeNote(n));
+    if (remoteHasRealNotes) {
+      for (const [lid, ln] of [...localNotesMap.entries()]) {
+        if (isSeedWelcomeNote(ln) && !remoteNotesMap.has(lid)) {
+          localNotesMap.delete(lid);
+          changed = true;
+        }
+      }
+    }
 
     // 1. Uzaktan gelen yeni veya güncellenmiş notları birleştir
     for (const [noteId, rNote] of remoteNotesMap.entries()) {
@@ -173,13 +243,13 @@ onAuthStateChanged(auth, (user) => {
       }
     }
 
-    // 2. Uzakta silinmiş notları yerelden de temizle (yalnızca yerel not metaDoc'tan eskiyse; offline yeni notları koru)
-    if (metaDoc && Array.isArray(metaDoc.noteIds) && (metaDoc.updatedAt || 0) > (local.updatedAt || 0)) {
+    // 2. Uzakta silinmiş notları yerelden de temizle (boş/karşılama bulutu ise asla yerel gerçek notu silme!)
+    if (metaDoc && Array.isArray(metaDoc.noteIds) && remoteHasRealNotes && (metaDoc.updatedAt || 0) > (local.updatedAt || 0)) {
       const validIds = new Set(metaDoc.noteIds);
       for (const localId of [...localNotesMap.keys()]) {
         const lNote = localNotesMap.get(localId);
         const lTime = lNote?.updatedAt || lNote?.createdAt || 0;
-        if (!validIds.has(localId) && remoteNotesMap.size > 0 && lTime <= (metaDoc.updatedAt || 0)) {
+        if (!validIds.has(localId) && lTime <= (metaDoc.updatedAt || 0)) {
           localNotesMap.delete(localId);
           changed = true;
         }
@@ -188,16 +258,16 @@ onAuthStateChanged(auth, (user) => {
 
     // 3. Klasör ve ayar güncellemelerini uygula
     const mergedDb = { ...local };
-    if (metaDoc && (metaDoc.updatedAt || 0) > (local.updatedAt || 0)) {
+    const shouldApplyMeta = metaDoc && (localWasSeedOnly || (metaDoc.updatedAt || 0) > (local.updatedAt || 0));
+    if (shouldApplyMeta) {
       if (Array.isArray(metaDoc.folders) && metaDoc.folders.length) mergedDb.folders = metaDoc.folders;
       if (metaDoc.settings) mergedDb.settings = { ...local.settings, ...metaDoc.settings };
       if (metaDoc.activeNoteId && localNotesMap.has(metaDoc.activeNoteId)) mergedDb.activeNoteId = metaDoc.activeNoteId;
-      mergedDb.updatedAt = metaDoc.updatedAt;
+      mergedDb.updatedAt = metaDoc.updatedAt || Date.now();
       changed = true;
     }
 
     if (changed) {
-      // Sıralamayı metaDoc.noteIds sırasına göre koru
       const orderedNotes = [];
       const seen = new Set();
       if (metaDoc && Array.isArray(metaDoc.noteIds)) {
@@ -223,7 +293,8 @@ onAuthStateChanged(auth, (user) => {
 });
 
 async function flushCloudSync(localDb) {
-  if (!currentUser || isApplyingRemote || !localDb) return;
+  if (!currentUser || isApplyingRemote || !localDb || !hasInitialServerSnapshot) return;
+  if (lastSyncedNoteHashes.size === 0 && isSeedOnlyDb(localDb)) return;
   try {
     const dataCol = collection(dbCloud, 'users', currentUser.uid, 'data');
     const currentNoteIds = new Set();
@@ -272,7 +343,7 @@ async function flushCloudSync(localDb) {
 }
 
 window.syncToCloud = (localDb, opts = {}) => {
-  if (!currentUser || isApplyingRemote || !localDb) return;
+  if (!currentUser || isApplyingRemote || !localDb || !hasInitialServerSnapshot) return;
   if (opts && opts.immediate) {
     if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
     return flushCloudSync(localDb);
